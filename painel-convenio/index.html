@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel Convênio · Alchemypet</title>
+<style>
+  :root{
+    --grafite:#1f2933;
+    --marinho:#1e3a5f;
+    --marinho-2:#274b78;
+    --bg:#f7f9fb;
+    --bg-soft:#eef2f6;
+    --card:#ffffff;
+    --texto:#2b3640;
+    --texto-suave:#5a6b7a;
+    --linha:#dde5ec;
+    --destaque:#0fa3a3;      /* teal sóbrio */
+    --destaque-2:#c9a24b;    /* dourado sóbrio */
+    --ok:#2e9e6b;
+    --alerta:#d98a2b;
+    --erro:#c0532f;
+    --info:#3d6fb4;
+    --sombra:0 10px 30px rgba(31,41,51,.08);
+    --sombra-forte:0 18px 50px rgba(31,41,51,.14);
+    --raio:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--texto);background:var(--bg);line-height:1.5;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{color:var(--grafite);line-height:1.2;font-weight:700;letter-spacing:-.01em}
+  a{color:var(--destaque)}
+  button{font-family:inherit}
+  .wrap{max-width:1360px;margin:0 auto;padding:0 22px}
+
+  /* ===== Topbar ===== */
+  header.top{
+    position:sticky;top:0;z-index:50;background:rgba(247,249,251,.9);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--linha);
+  }
+  .top-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    max-width:1360px;margin:0 auto;padding:12px 22px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .dot{width:30px;height:30px;border-radius:9px;flex:none;
+    background:linear-gradient(135deg,var(--marinho),var(--destaque))}
+  .brand .name{font-weight:800;color:var(--grafite);letter-spacing:-.02em;font-size:1.05rem;line-height:1.05}
+  .brand .sub{font-size:.72rem;color:var(--texto-suave);font-weight:600;letter-spacing:.02em}
+  .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+  .filechip{font-size:.78rem;color:var(--texto-suave);display:flex;align-items:center;gap:7px;
+    background:var(--bg-soft);border:1px solid var(--linha);padding:6px 11px;border-radius:999px;max-width:260px}
+  .filechip .g{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+  .filechip b{color:var(--grafite);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .btn{border:0;cursor:pointer;border-radius:10px;padding:9px 15px;font-weight:700;font-size:.85rem;
+    display:inline-flex;align-items:center;gap:7px;transition:.15s;white-space:nowrap}
+  .btn.primary{background:linear-gradient(135deg,var(--marinho-2),var(--destaque));color:#fff;box-shadow:var(--sombra)}
+  .btn.primary:hover{filter:brightness(1.06);transform:translateY(-1px)}
+  .btn.ghost{background:var(--card);color:var(--marinho);border:1px solid var(--linha)}
+  .btn.ghost:hover{border-color:var(--destaque);color:var(--destaque)}
+  .btn.sm{padding:6px 11px;font-size:.78rem;border-radius:8px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ===== Empty state ===== */
+  #empty{padding:60px 0 80px}
+  .drop{
+    max-width:720px;margin:0 auto;background:var(--card);border:2px dashed var(--linha);
+    border-radius:20px;padding:52px 40px;text-align:center;transition:.2s;box-shadow:var(--sombra)}
+  .drop.hover{border-color:var(--destaque);background:#f2fbfb;transform:scale(1.005)}
+  .drop .ic{width:66px;height:66px;border-radius:18px;margin:0 auto 20px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--marinho),var(--destaque));color:#fff;font-size:1.8rem}
+  .drop h2{font-size:1.5rem;margin-bottom:10px}
+  .drop p{color:var(--texto-suave);max-width:520px;margin:0 auto 8px}
+  .drop .hint{font-size:.82rem;color:var(--texto-suave);margin-top:20px;
+    background:var(--bg-soft);border-radius:10px;padding:12px 16px;text-align:left;display:inline-block}
+  .drop .hint code{background:#fff;border:1px solid var(--linha);border-radius:5px;padding:1px 6px;font-size:.78rem}
+  .eyebrow{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--destaque);margin-bottom:12px}
+
+  /* ===== Dashboard ===== */
+  #dash{display:none;padding:22px 0 90px}
+  .section-title{display:flex;align-items:center;gap:10px;margin:26px 0 14px}
+  .section-title h3{font-size:1.02rem}
+  .section-title .bar{width:4px;height:18px;border-radius:3px;background:var(--destaque)}
+  .muted{color:var(--texto-suave);font-size:.85rem}
+
+  /* KPIs */
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+  .kpi{background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);padding:16px 16px 14px;
+    box-shadow:var(--sombra);position:relative;overflow:hidden}
+  .kpi .lab{font-size:.72rem;font-weight:700;color:var(--texto-suave);text-transform:uppercase;letter-spacing:.06em}
+  .kpi .val{font-size:1.72rem;font-weight:800;color:var(--grafite);margin-top:6px;letter-spacing:-.02em}
+  .kpi .sub{font-size:.74rem;color:var(--texto-suave);margin-top:2px}
+  .kpi .tag{position:absolute;top:14px;right:14px;width:10px;height:10px;border-radius:50%}
+  .kpi.t-pend .val{color:var(--erro)} .kpi.t-pend .tag{background:var(--erro)}
+  .kpi.t-trat .val{color:var(--alerta)} .kpi.t-trat .tag{background:var(--alerta)}
+  .kpi.t-ok .val{color:var(--ok)} .kpi.t-ok .tag{background:var(--ok)}
+  .kpi.t-taxa .val{color:var(--info)} .kpi.t-taxa .tag{background:var(--info)}
+  .kpi.t-tempo .tag{background:var(--destaque-2)}
+
+  /* Filtros */
+  .filters{background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);
+    padding:14px 16px;box-shadow:var(--sombra);display:grid;
+    grid-template-columns:repeat(6,1fr);gap:12px;align-items:end}
+  .fgroup{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .fgroup.wide{grid-column:span 2}
+  .fgroup label{font-size:.72rem;font-weight:700;color:var(--texto-suave);text-transform:uppercase;letter-spacing:.05em}
+  .fgroup select,.fgroup input{width:100%;padding:8px 10px;border:1px solid var(--linha);border-radius:9px;
+    font-size:.86rem;color:var(--texto);background:#fff;font-family:inherit}
+  .fgroup input:focus,.fgroup select:focus{outline:none;border-color:var(--destaque);box-shadow:0 0 0 3px rgba(15,163,163,.12)}
+  .filters .actions{grid-column:span 6;display:flex;gap:10px;justify-content:space-between;align-items:center;
+    border-top:1px solid var(--linha);padding-top:12px;margin-top:2px}
+  .filters .actions .left{color:var(--texto-suave);font-size:.84rem}
+  .filters .actions .left b{color:var(--grafite)}
+
+  /* Charts */
+  .grid-charts{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+  .card{background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);
+    box-shadow:var(--sombra);padding:16px 18px}
+  .card h4{font-size:.92rem;margin-bottom:2px}
+  .card .csub{font-size:.76rem;color:var(--texto-suave);margin-bottom:12px}
+  .grid-charts-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.76rem;color:var(--texto-suave);margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .hbars{display:flex;flex-direction:column;gap:9px}
+  .hbar{display:grid;grid-template-columns:130px 1fr 48px;align-items:center;gap:10px;font-size:.8rem}
+  .hbar .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--texto);font-weight:600}
+  .hbar .track{background:var(--bg-soft);border-radius:6px;height:16px;overflow:hidden}
+  .hbar .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--marinho-2),var(--destaque))}
+  .hbar .num{text-align:right;font-weight:700;color:var(--grafite);font-variant-numeric:tabular-nums}
+  .hbar.alt .fill{background:linear-gradient(90deg,#b07d1f,var(--destaque-2))}
+
+  /* Table */
+  .tablewrap{background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);
+    box-shadow:var(--sombra);overflow:hidden;margin-top:16px}
+  .tabletools{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px 16px;border-bottom:1px solid var(--linha);flex-wrap:wrap}
+  .tabletools .t-left{font-weight:700;color:var(--grafite);font-size:.92rem;display:flex;align-items:center;gap:9px}
+  .tabletools .count{font-size:.74rem;font-weight:700;color:var(--destaque);background:#e8f7f7;padding:3px 9px;border-radius:999px}
+  .scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  thead th{background:var(--bg-soft);text-align:left;padding:11px 12px;font-size:.72rem;text-transform:uppercase;
+    letter-spacing:.04em;color:var(--texto-suave);font-weight:800;white-space:nowrap;position:sticky;top:0;cursor:pointer;user-select:none}
+  thead th.nosort{cursor:default}
+  thead th .arw{opacity:.35;font-size:.7rem;margin-left:3px}
+  thead th.on .arw{opacity:1;color:var(--destaque)}
+  tbody td{padding:10px 12px;border-top:1px solid var(--linha);vertical-align:top}
+  tbody tr:hover{background:#fafcfe}
+  td.wrap{max-width:280px;white-space:normal;line-height:1.35}
+  td.nowrap{white-space:nowrap}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .badge .d{width:7px;height:7px;border-radius:50%}
+  .b-pend{background:#fbeae4;color:#a8431f} .b-pend .d{background:var(--erro)}
+  .b-trat{background:#fbf1e0;color:#8a5a13} .b-trat .d{background:var(--alerta)}
+  .b-ok{background:#e4f4ec;color:#1d7048} .b-ok .d{background:var(--ok)}
+  .gsel{border:1px solid var(--linha);border-radius:8px;padding:4px 7px;font-size:.76rem;font-weight:700;background:#fff;cursor:pointer;font-family:inherit}
+  .gsel.g-aberto{color:var(--erro);border-color:#f0cabb}
+  .gsel.g-andamento{color:var(--alerta);border-color:#efd9b3}
+  .gsel.g-resolvido{color:var(--ok);border-color:#bde0cd}
+  .notebtn{border:1px solid var(--linha);background:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:.74rem;color:var(--texto-suave);font-weight:700}
+  .notebtn.has{color:var(--info);border-color:#c5d7ef;background:#f0f5fc}
+  .notetxt{font-size:.76rem;color:var(--texto-suave);margin-top:4px;font-style:italic;max-width:200px;white-space:normal}
+
+  .pager{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--linha);flex-wrap:wrap;gap:10px}
+  .pager .pinfo{font-size:.8rem;color:var(--texto-suave)}
+  .pager .pbtns{display:flex;gap:6px;align-items:center}
+  .pbtns button{border:1px solid var(--linha);background:#fff;border-radius:8px;padding:6px 11px;cursor:pointer;font-weight:700;font-size:.8rem;color:var(--marinho)}
+  .pbtns button:disabled{opacity:.4;cursor:default}
+  .pbtns .cur{font-size:.82rem;color:var(--texto-suave);padding:0 6px}
+
+  .empty-row{text-align:center;padding:44px;color:var(--texto-suave)}
+
+  /* Modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(24,34,46,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal-bg.on{display:flex}
+  .modal{background:#fff;border-radius:16px;box-shadow:var(--sombra-forte);max-width:520px;width:100%;padding:22px 24px}
+  .modal h3{font-size:1.1rem;margin-bottom:4px}
+  .modal .m-sub{font-size:.82rem;color:var(--texto-suave);margin-bottom:16px}
+  .modal .field{margin-bottom:14px}
+  .modal label{font-size:.74rem;font-weight:700;color:var(--texto-suave);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px}
+  .modal textarea{width:100%;min-height:96px;border:1px solid var(--linha);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.9rem;resize:vertical}
+  .modal textarea:focus{outline:none;border-color:var(--destaque);box-shadow:0 0 0 3px rgba(15,163,163,.12)}
+  .modal .m-info{background:var(--bg-soft);border-radius:10px;padding:11px 13px;font-size:.82rem;color:var(--texto);margin-bottom:16px;line-height:1.45}
+  .modal .m-info b{color:var(--grafite)}
+  .modal .m-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
+
+  /* Toast */
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:var(--grafite);color:#fff;padding:11px 20px;border-radius:999px;font-size:.85rem;font-weight:600;
+    z-index:200;transition:.25s;box-shadow:var(--sombra-forte);pointer-events:none}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* Loading */
+  #loading{display:none;padding:80px 0;text-align:center}
+  .spinner{width:44px;height:44px;border:4px solid var(--bg-soft);border-top-color:var(--destaque);border-radius:50%;
+    margin:0 auto 18px;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media(max-width:1100px){
+    .kpis{grid-template-columns:repeat(3,1fr)}
+    .grid-charts{grid-template-columns:1fr}
+    .grid-charts-2{grid-template-columns:1fr}
+    .filters{grid-template-columns:repeat(3,1fr)}
+    .fgroup.wide{grid-column:span 3}
+    .filters .actions{grid-column:span 3}
+  }
+  @media(max-width:640px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .filters{grid-template-columns:repeat(2,1fr)}
+    .fgroup.wide{grid-column:span 2}
+    .filters .actions{grid-column:span 2;flex-direction:column;align-items:stretch}
+    .hbar{grid-template-columns:96px 1fr 40px}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        <div class="name">Painel Convênio</div>
+        <div class="sub">Alchemypet · Gestão de Pendências</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="filechip" class="filechip" style="display:none"><span class="g"></span><b id="filechip-name"></b></span>
+      <button id="btn-export" class="btn ghost" style="display:none">⬇ Exportar CSV</button>
+      <button id="btn-upload" class="btn primary">⬆ Importar planilha</button>
+      <input id="file" type="file" accept=".xlsx,.xls,.xlsm" hidden />
+    </div>
+  </div>
+</header>
+
+<!-- ===== EMPTY STATE ===== -->
+<section id="empty">
+  <div class="wrap">
+    <div class="drop" id="drop">
+      <div class="ic">📋</div>
+      <span class="eyebrow">Painel Convênio</span>
+      <h2>Importe a planilha de pendências</h2>
+      <p>Arraste o arquivo <b>Pendências Convênio.xlsx</b> aqui ou clique para selecionar. O painel processa <b>todas as abas mensais</b> automaticamente e monta os indicadores de gestão.</p>
+      <p class="muted">Os dados são processados <b>localmente no seu navegador</b> — nada é enviado a servidores.</p>
+      <div class="hint">
+        Reconhece automaticamente as colunas: <code>Guia</code> <code>Paciente</code> <code>Clínica</code>
+        <code>Informação necessária</code> <code>Responsável</code> <code>Resposta do Cliente</code>
+        <code>Data da devolutiva</code> <code>Confirmação</code> <code>Triagem</code> — em qualquer ordem.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LOADING ===== -->
+<section id="loading">
+  <div class="wrap">
+    <div class="spinner"></div>
+    <p class="muted" id="loadmsg">Processando planilha…</p>
+  </div>
+</section>
+
+<!-- ===== DASHBOARD ===== -->
+<section id="dash">
+  <div class="wrap">
+
+    <div class="section-title"><span class="bar"></span><h3>Visão geral</h3>
+      <span class="muted" id="periodo-info"></span></div>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="section-title"><span class="bar"></span><h3>Filtros</h3></div>
+    <div class="filters" id="filters">
+      <div class="fgroup"><label>Ano</label><select id="f-ano"></select></div>
+      <div class="fgroup"><label>Mês (de)</label><select id="f-mes-de"></select></div>
+      <div class="fgroup"><label>Mês (até)</label><select id="f-mes-ate"></select></div>
+      <div class="fgroup"><label>Status planilha</label><select id="f-status">
+        <option value="">Todos</option><option value="pendente">Pendente</option>
+        <option value="tratativa">Em tratativa</option><option value="concluido">Concluído</option></select></div>
+      <div class="fgroup"><label>Gestão</label><select id="f-gestao">
+        <option value="">Todas</option><option value="aberto">Aberto</option>
+        <option value="andamento">Em andamento</option><option value="resolvido">Resolvido</option></select></div>
+      <div class="fgroup"><label>Triagem</label><select id="f-triagem"></select></div>
+      <div class="fgroup wide"><label>Clínica</label><select id="f-clinica"></select></div>
+      <div class="fgroup wide"><label>Responsável</label><select id="f-resp"></select></div>
+      <div class="fgroup wide"><label>Buscar (paciente, guia, clínica, informação)</label><input id="f-busca" type="search" placeholder="Digite para filtrar…" /></div>
+      <div class="actions">
+        <div class="left"><b id="filtered-count">0</b> pendências no filtro atual · <span id="filtered-pct"></span></div>
+        <button class="btn ghost sm" id="btn-clear">Limpar filtros</button>
+      </div>
+    </div>
+
+    <div class="section-title"><span class="bar"></span><h3>Análise</h3></div>
+    <div class="grid-charts">
+      <div class="card">
+        <h4>Evolução mensal</h4>
+        <div class="csub">Volume de pendências por mês, separado por status da planilha</div>
+        <div id="chart-mensal"></div>
+        <div class="legend">
+          <span><i style="background:var(--erro)"></i>Pendente</span>
+          <span><i style="background:var(--alerta)"></i>Em tratativa</span>
+          <span><i style="background:var(--ok)"></i>Concluído</span>
+        </div>
+      </div>
+      <div class="card">
+        <h4>Distribuição por status</h4>
+        <div class="csub">Situação atual do conjunto filtrado</div>
+        <div id="chart-donut" style="display:flex;align-items:center;gap:18px;justify-content:center;padding:8px 0"></div>
+      </div>
+    </div>
+
+    <div class="grid-charts-2">
+      <div class="card">
+        <h4>Top clínicas com pendências</h4>
+        <div class="csub">Clínicas que mais geram pendências no filtro</div>
+        <div class="hbars" id="chart-clinicas"></div>
+      </div>
+      <div class="card">
+        <h4>Tipos de informação necessária</h4>
+        <div class="csub">Motivos mais frequentes de pendência</div>
+        <div class="hbars" id="chart-info"></div>
+      </div>
+    </div>
+
+    <div class="section-title"><span class="bar"></span><h3>Pendências</h3></div>
+    <div class="tablewrap">
+      <div class="tabletools">
+        <div class="t-left">Registros <span class="count" id="tbl-count">0</span></div>
+        <div class="muted" id="tbl-hint">Clique nos cabeçalhos para ordenar · Ajuste a “Gestão” e adicione observações — tudo salvo no seu navegador</div>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead><tr id="thead-row"></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <div class="pinfo" id="pinfo"></div>
+        <div class="pbtns">
+          <button id="pg-first">« Início</button>
+          <button id="pg-prev">‹ Anterior</button>
+          <span class="cur" id="pg-cur"></span>
+          <button id="pg-next">Próxima ›</button>
+          <button id="pg-last">Fim »</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Note modal -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3>Gestão da pendência</h3>
+    <div class="m-sub">Registre a tratativa. As alterações ficam salvas neste navegador.</div>
+    <div class="m-info" id="modal-info"></div>
+    <div class="field">
+      <label>Situação (gestão)</label>
+      <select id="modal-gestao" class="gsel" style="width:100%;padding:9px 11px">
+        <option value="aberto">Aberto</option>
+        <option value="andamento">Em andamento</option>
+        <option value="resolvido">Resolvido</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Observação / tratativa</label>
+      <textarea id="modal-nota" placeholder="Ex.: Cliente confirmou por telefone que é particular. Lançado no sistema."></textarea>
+    </div>
+    <div class="m-actions">
+      <button class="btn ghost" id="modal-cancel">Cancelar</button>
+      <button class="btn primary" id="modal-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script>
+/* =========================================================================
+   Painel Convênio — Alchemypet
+   App client-side: importa a planilha de pendências (todas as abas mensais),
+   normaliza, calcula indicadores e permite gestão local (status + notas).
+   ========================================================================= */
+"use strict";
+
+/* ---------- Estado ---------- */
+const state = {
+  records: [],        // registros normalizados
+  fileName: '',
+  importedAt: null,
+  overrides: {},      // { id: {gestao, nota, updatedAt} }
+  filters: {},
+  sort: { key: 'periodo', dir: 'desc' },
+  page: 1,
+  perPage: 25,
+  filtered: [],
+};
+
+const LS_OVERRIDES = 'pc_overrides_v1';
+const IDB_NAME = 'painelConvenio';
+const IDB_STORE = 'dataset';
+
+/* ---------- Utils ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const el = (t, c, h) => { const e=document.createElement(t); if(c) e.className=c; if(h!=null) e.innerHTML=h; return e; };
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmtInt = n => (n||0).toLocaleString('pt-BR');
+
+function normStr(v){
+  if(v==null) return '';
+  if(v instanceof Date) return isNaN(v) ? '' : fmtDate(isoFromDate(v)); // datas em células de texto (planilha desalinhada) -> dd/mm/aaaa limpo
+  return String(v).replace(/\s+/g,' ').trim();
+}
+function stripAccents(s){ return String(s).normalize('NFD').replace(/[̀-ͯ]/g,''); }
+function normKey(s){ return stripAccents(normStr(s)).toLowerCase(); }
+
+const MESES = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_FULL = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MES_MAP = {janeiro:1,fevereiro:2,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
+
+function parsePeriodo(sheetName){
+  const n = normKey(sheetName);
+  let m = n.match(/([a-z]+)\s*0?(\d{4})/);
+  if(m && MES_MAP[m[1]]) return { ano:+m[2], mes:MES_MAP[m[1]] };
+  m = n.match(/([a-z]+?)0?(\d{4})/);
+  if(m && MES_MAP[m[1]]) return { ano:+m[2], mes:MES_MAP[m[1]] };
+  return null;
+}
+
+/* Excel serial / Date / string -> ISO yyyy-mm-dd (ou '') */
+function toISO(v){
+  if(v==null || v==='') return '';
+  if(v instanceof Date && !isNaN(v)) return isoFromDate(v);
+  if(typeof v === 'number'){
+    if(v>20000 && v<80000){ // serial de data plausível (1954..2119)
+      const d = new Date(Math.round((v-25569)*86400*1000));
+      if(!isNaN(d)) return isoFromDate(d);
+    }
+    return '';
+  }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if(m){ let [_,d,mo,y]=m; y=+y; if(y<100) y+=2000; return `${y}-${String(+mo).padStart(2,'0')}-${String(+d).padStart(2,'0')}`; }
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  return '';
+}
+function isoFromDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function fmtDate(iso){ if(!iso) return '—'; const p=iso.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; }
+function diffDays(a,b){ if(!a||!b) return null; const da=new Date(a), db=new Date(b); if(isNaN(da)||isNaN(db)) return null; return Math.round((db-da)/86400000); }
+
+/* hash simples p/ id estável do registro */
+function hashId(str){ let h=5381; for(let i=0;i<str.length;i++){ h=((h<<5)+h+str.charCodeAt(i))|0; } return (h>>>0).toString(36); }
+
+/* ---------- Detecção de colunas por cabeçalho ---------- */
+const FIELD_SYN = {
+  guia:        ['guia'],
+  paciente:    ['paciente','pacinte'],
+  cod_clinica: ['codigo da clinica','cod da clinica','cod. clinica','cod clinica'],
+  clinica:     ['clinica'],
+  info:        ['informacao necessaria','acao/comentario atendimento','acao/comentario-atendimento','acao/comentario'],
+  responsavel: ['responsavel'],
+  resposta:    ['resposta do cliente'],
+  data_dev:    ['data da devolutiva','data da devulativa','data devolutiva'],
+  colaborador: ['colaborador do atendimento','colaborador'],
+  confirmacao: ['confirmacao para a clinica','confitmacao p/ a clinica','confirmacao p/ a clinica','confirmacao'],
+  triagem:     ['triagem'],
+  status:      ['status'],
+  data_pedido: ['data do pedido da inf.','data do pedido inf.','data do pedido da inf','data da solicitacao','data de entrada'],
+  data_guia:   ['data da guia'],
+  data_gen:    ['data'],
+};
+
+function buildColMap(headerRow){
+  const map = {};
+  headerRow.forEach((cell, idx) => {
+    const h = normKey(cell);
+    if(!h) return;
+    for(const field in FIELD_SYN){
+      if(map[field]!=null) continue;
+      if(FIELD_SYN[field].includes(h)){ map[field]=idx; break; }
+    }
+  });
+  return map;
+}
+
+/* ---------- Parse do workbook ---------- */
+function parseWorkbook(wb){
+  const records = [];
+  wb.SheetNames.forEach(sheetName => {
+    if(/^p[áa]gina/i.test(sheetName)) return; // abas auxiliares vazias
+    const ws = wb.Sheets[sheetName];
+    if(!ws) return;
+    const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval:null, blankrows:false });
+    if(!rows.length) return;
+
+    // localizar linha de cabeçalho (contém "guia") nas primeiras 6 linhas
+    let hIdx = -1;
+    for(let i=0;i<Math.min(6, rows.length);i++){
+      if((rows[i]||[]).some(c => normKey(c)==='guia')){ hIdx=i; break; }
+    }
+    if(hIdx<0) return;
+    const map = buildColMap(rows[hIdx]);
+    if(map.guia==null && map.paciente==null) return;
+
+    const periodo = parsePeriodo(sheetName);
+    const get = (row, field) => map[field]==null ? '' : row[map[field]];
+
+    for(let r=hIdx+1; r<rows.length; r++){
+      const row = rows[r] || [];
+      const guia = normStr(get(row,'guia'));
+      const paciente = normStr(get(row,'paciente'));
+      const info = normStr(get(row,'info'));
+      if(!guia && !paciente) continue; // linha vazia ou marcador (ex.: "ENCERRADA")
+
+      const dataPedido = toISO(get(row,'data_pedido')) || toISO(get(row,'data_guia')) || toISO(get(row,'data_gen'));
+      const dataDev = toISO(get(row,'data_dev'));
+      const clinica = normStr(get(row,'clinica'));
+      const responsavel = normStr(get(row,'responsavel'));
+      const resposta = normStr(get(row,'resposta'));
+      const confirmacao = normStr(get(row,'confirmacao'));
+      const triagem = normStr(get(row,'triagem'));
+      const colaborador = normStr(get(row,'colaborador'));
+      const codClinica = normStr(get(row,'cod_clinica'));
+      const statusPlan = normStr(get(row,'status'));
+
+      const ano = periodo ? periodo.ano : (dataPedido ? +dataPedido.slice(0,4) : null);
+      const mes = periodo ? periodo.mes : (dataPedido ? +dataPedido.slice(5,7) : null);
+      const periodoNum = (ano && mes) ? ano*100+mes : 0;
+
+      // status derivado da planilha
+      const conf = normKey(confirmacao);
+      let sit;
+      if(conf==='ok' || conf.startsWith('ok ') || conf==='okk') sit='concluido';
+      else if(resposta || dataDev) sit='tratativa';
+      else sit='pendente';
+
+      const id = hashId([sheetName, guia, paciente, info].join('|'));
+      records.push({
+        id, aba:sheetName, ano, mes, periodoNum,
+        dataPedido, dataDev, guia, paciente, codClinica, clinica,
+        info, responsavel, resposta, confirmacao, triagem, colaborador, statusPlan,
+        situacao: sit,
+        tempoDev: diffDays(dataPedido, dataDev),
+      });
+    }
+  });
+  return records;
+}
+
+/* ---------- Gestão (override) ---------- */
+function loadOverrides(){ try{ state.overrides = JSON.parse(localStorage.getItem(LS_OVERRIDES)||'{}'); }catch(e){ state.overrides={}; } }
+function saveOverrides(){ try{ localStorage.setItem(LS_OVERRIDES, JSON.stringify(state.overrides)); }catch(e){ toast('Não foi possível salvar (armazenamento cheio).'); } }
+function gestaoDe(rec){
+  const ov = state.overrides[rec.id];
+  if(ov && ov.gestao) return ov.gestao;
+  return rec.situacao==='concluido' ? 'resolvido' : 'aberto';
+}
+function notaDe(rec){ const ov=state.overrides[rec.id]; return ov && ov.nota ? ov.nota : ''; }
+function setGestao(rec, gestao){
+  const ov = state.overrides[rec.id] || {};
+  ov.gestao = gestao; ov.updatedAt = new Date().toISOString();
+  state.overrides[rec.id] = ov; saveOverrides();
+}
+function setNota(rec, gestao, nota){
+  const ov = state.overrides[rec.id] || {};
+  ov.gestao = gestao; ov.nota = nota; ov.updatedAt = new Date().toISOString();
+  if(!nota && (gestao === (rec.situacao==='concluido'?'resolvido':'aberto'))) delete state.overrides[rec.id];
+  else state.overrides[rec.id] = ov;
+  saveOverrides();
+}
+
+/* ---------- IndexedDB (persistência do dataset) ---------- */
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function idbSet(val){
+  try{ const db=await idbOpen(); await new Promise((res,rej)=>{ const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).put(val,'current'); tx.oncomplete=res; tx.onerror=()=>rej(tx.error);}); }catch(e){}
+}
+async function idbGet(){
+  try{ const db=await idbOpen(); return await new Promise((res,rej)=>{ const tx=db.transaction(IDB_STORE,'readonly'); const rq=tx.objectStore(IDB_STORE).get('current'); rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error);}); }catch(e){ return null; }
+}
+
+/* ---------- Import ---------- */
+function handleFile(file){
+  if(!file) return;
+  showLoading('Lendo arquivo…');
+  const reader = new FileReader();
+  reader.onload = e => {
+    setTimeout(()=>{
+      try{
+        $('#loadmsg').textContent = 'Processando abas…';
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type:'array', cellDates:true });
+        const records = parseWorkbook(wb);
+        if(!records.length){ hideLoading(); toast('Nenhum registro reconhecido na planilha.'); return; }
+        state.records = records;
+        state.fileName = file.name;
+        state.importedAt = new Date().toISOString();
+        idbSet({ records, fileName:file.name, importedAt:state.importedAt });
+        initDashboard();
+        toast(`${fmtInt(records.length)} pendências importadas de ${new Set(records.map(r=>r.aba)).size} abas.`);
+      }catch(err){
+        console.error(err); hideLoading();
+        toast('Erro ao ler a planilha. Verifique o formato (.xlsx).');
+      }
+    }, 30);
+  };
+  reader.onerror = () => { hideLoading(); toast('Falha ao ler o arquivo.'); };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ---------- UI: telas ---------- */
+function showLoading(msg){ $('#empty').style.display='none'; $('#dash').style.display='none'; $('#loading').style.display='block'; if(msg) $('#loadmsg').textContent=msg; }
+function hideLoading(){ $('#loading').style.display='none'; }
+function showEmpty(){ $('#empty').style.display='block'; $('#dash').style.display='none'; $('#loading').style.display='none'; $('#filechip').style.display='none'; $('#btn-export').style.display='none'; }
+
+function initDashboard(){
+  hideLoading();
+  $('#empty').style.display='none';
+  $('#dash').style.display='block';
+  $('#filechip').style.display='flex';
+  $('#filechip-name').textContent = state.fileName || 'planilha';
+  $('#btn-export').style.display='inline-flex';
+  buildFilterOptions();
+  buildTableHead();
+  applyFilters();
+}
+
+/* ---------- Filtros ---------- */
+function distinct(field){
+  const s = new Set();
+  state.records.forEach(r=>{ if(r[field]) s.add(r[field]); });
+  return Array.from(s).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+function buildFilterOptions(){
+  const anos = Array.from(new Set(state.records.map(r=>r.ano).filter(Boolean))).sort((a,b)=>b-a);
+  const anoSel = $('#f-ano');
+  anoSel.innerHTML = '<option value="">Todos</option>' + anos.map(a=>`<option value="${a}">${a}</option>`).join('');
+
+  const mesOpts = '<option value="">—</option>' + MESES_FULL.slice(1).map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  $('#f-mes-de').innerHTML = mesOpts;
+  $('#f-mes-ate').innerHTML = mesOpts;
+
+  fillSelect('#f-clinica', distinct('clinica'), 'Todas as clínicas');
+  fillSelect('#f-resp', distinct('responsavel'), 'Todos');
+  fillSelect('#f-triagem', distinct('triagem'), 'Todas');
+
+  // período disponível
+  const pers = state.records.map(r=>r.periodoNum).filter(Boolean).sort();
+  if(pers.length){
+    const min=pers[0], max=pers[pers.length-1];
+    $('#periodo-info').textContent = `· ${MESES_FULL[min%100]}/${Math.floor(min/100)} a ${MESES_FULL[max%100]}/${Math.floor(max/100)} · ${new Set(state.records.map(r=>r.aba)).size} abas`;
+  }
+}
+function fillSelect(sel, items, allLabel){
+  const capped = items.slice(0, 4000);
+  $(sel).innerHTML = `<option value="">${allLabel}</option>` + capped.map(v=>`<option value="${esc(v)}">${esc(v.length>48?v.slice(0,46)+'…':v)}</option>`).join('');
+}
+
+function readFilters(){
+  return {
+    ano: $('#f-ano').value,
+    mesDe: $('#f-mes-de').value ? +$('#f-mes-de').value : null,
+    mesAte: $('#f-mes-ate').value ? +$('#f-mes-ate').value : null,
+    status: $('#f-status').value,
+    gestao: $('#f-gestao').value,
+    triagem: $('#f-triagem').value,
+    clinica: $('#f-clinica').value,
+    resp: $('#f-resp').value,
+    busca: normKey($('#f-busca').value),
+  };
+}
+
+function applyFilters(){
+  const f = readFilters();
+  state.filters = f;
+  let out = state.records.filter(r=>{
+    if(f.ano && String(r.ano)!==f.ano) return false;
+    if(f.mesDe && (!r.mes || r.mes < f.mesDe)) return false;
+    if(f.mesAte && (!r.mes || r.mes > f.mesAte)) return false;
+    if(f.status && r.situacao!==f.status) return false;
+    if(f.gestao && gestaoDe(r)!==f.gestao) return false;
+    if(f.triagem && r.triagem!==f.triagem) return false;
+    if(f.clinica && r.clinica!==f.clinica) return false;
+    if(f.resp && r.responsavel!==f.resp) return false;
+    if(f.busca){
+      const hay = normKey([r.paciente,r.guia,r.clinica,r.info,r.responsavel,r.resposta,notaDe(r)].join(' '));
+      if(!hay.includes(f.busca)) return false;
+    }
+    return true;
+  });
+  state.filtered = out;
+  state.page = 1;
+  renderKPIs();
+  renderCharts();
+  renderTable();
+  const total = state.records.length;
+  $('#filtered-count').textContent = fmtInt(out.length);
+  $('#filtered-pct').textContent = total ? `${(out.length/total*100).toFixed(1)}% do total (${fmtInt(total)})` : '';
+}
+
+/* ---------- KPIs ---------- */
+function renderKPIs(){
+  const d = state.filtered;
+  const total = d.length;
+  const pend = d.filter(r=>r.situacao==='pendente').length;
+  const trat = d.filter(r=>r.situacao==='tratativa').length;
+  const ok = d.filter(r=>r.situacao==='concluido').length;
+  const taxa = total ? (ok/total*100) : 0;
+  const temposArr = d.map(r=>r.tempoDev).filter(v=>v!=null && v>=0 && v<400);
+  const tempoMed = temposArr.length ? (temposArr.reduce((a,b)=>a+b,0)/temposArr.length) : null;
+
+  const cards = [
+    { cls:'', lab:'Total no filtro', val:fmtInt(total), sub:'pendências registradas' },
+    { cls:'t-pend', lab:'Pendentes', val:fmtInt(pend), sub:total?`${(pend/total*100).toFixed(0)}% em aberto`:'' },
+    { cls:'t-trat', lab:'Em tratativa', val:fmtInt(trat), sub:'com retorno parcial' },
+    { cls:'t-ok', lab:'Concluídas', val:fmtInt(ok), sub:'confirmadas p/ clínica' },
+    { cls:'t-taxa', lab:'Taxa de resolução', val:taxa.toFixed(1)+'%', sub:'concluídas / total' },
+    { cls:'t-tempo', lab:'Tempo médio devolutiva', val: tempoMed==null?'—':tempoMed.toFixed(1), sub: tempoMed==null?'sem dados':'dias até devolutiva' },
+  ];
+  $('#kpis').innerHTML = cards.map(c=>`
+    <div class="kpi ${c.cls}"><span class="tag"></span>
+      <div class="lab">${c.lab}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join('');
+}
+
+/* ---------- Charts ---------- */
+function renderCharts(){ renderMensal(); renderDonut(); renderTopBars('#chart-clinicas','clinica', false); renderTopBars('#chart-info','info', true); }
+
+function renderMensal(){
+  const d = state.filtered.filter(r=>r.periodoNum);
+  const byP = {};
+  d.forEach(r=>{ (byP[r.periodoNum] = byP[r.periodoNum] || {pendente:0,tratativa:0,concluido:0})[r.situacao]++; });
+  let periods = Object.keys(byP).map(Number).sort((a,b)=>a-b);
+  if(periods.length>18) periods = periods.slice(-18); // últimos 18 meses
+  const host = $('#chart-mensal');
+  if(!periods.length){ host.innerHTML = '<div class="empty-row">Sem dados no filtro.</div>'; return; }
+  const max = Math.max(1, ...periods.map(p=>byP[p].pendente+byP[p].tratativa+byP[p].concluido));
+  const W=Math.max(periods.length*46, 320), H=230, pad=26, bw=Math.min(30, (W-2*pad)/periods.length*0.62);
+  const x = i => pad + i*((W-2*pad)/periods.length) + ((W-2*pad)/periods.length - bw)/2;
+  const y = v => (H-pad) - v*((H-2*pad)/max);
+  const seg = (p, key, base) => { const v=byP[p][key]; if(!v) return {rect:'',top:base}; const h=v*((H-2*pad)/max); const yTop=(H-pad)-(base+v)*((H-2*pad)/max); return {h, yTop}; };
+  let bars='';
+  periods.forEach((p,i)=>{
+    const xi=x(i); let base=0;
+    [['concluido','var(--ok)'],['tratativa','var(--alerta)'],['pendente','var(--erro)']].forEach(([k,col])=>{
+      const v=byP[p][k]; if(v){ const h=v*((H-2*pad)/max); const yT=(H-pad)-(base+v)*((H-2*pad)/max);
+        bars += `<rect x="${xi.toFixed(1)}" y="${yT.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${col}" rx="2"><title>${MESES_FULL[p%100]}/${Math.floor(p/100)} — ${k}: ${byP[p][k]}</title></rect>`;
+        base+=v; }
+    });
+    const totLab = byP[p].pendente+byP[p].tratativa+byP[p].concluido;
+    bars += `<text x="${(xi+bw/2).toFixed(1)}" y="${(H-pad+14)}" text-anchor="middle" font-size="9.5" fill="var(--texto-suave)">${MESES[p%100]}/${String(Math.floor(p/100)).slice(2)}</text>`;
+    bars += `<text x="${(xi+bw/2).toFixed(1)}" y="${(y(totLab)-4).toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--grafite)">${totLab}</text>`;
+  });
+  // gridlines
+  let grid='';
+  for(let g=0;g<=4;g++){ const val=Math.round(max*g/4); const yy=y(val); grid += `<line x1="${pad}" y1="${yy}" x2="${W-pad+4}" y2="${yy}" stroke="var(--linha)" stroke-dasharray="2 3"/><text x="4" y="${yy+3}" font-size="9" fill="var(--texto-suave)">${val}</text>`; }
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H+6}" width="100%" style="max-width:100%;height:auto" preserveAspectRatio="xMidYMid meet">${grid}${bars}</svg>`;
+}
+
+function renderDonut(){
+  const d = state.filtered;
+  const total = d.length || 1;
+  const parts = [
+    ['Pendente', d.filter(r=>r.situacao==='pendente').length, 'var(--erro)'],
+    ['Em tratativa', d.filter(r=>r.situacao==='tratativa').length, 'var(--alerta)'],
+    ['Concluído', d.filter(r=>r.situacao==='concluido').length, 'var(--ok)'],
+  ];
+  const R=58, C=2*Math.PI*R; let off=0, segs='';
+  parts.forEach(([lab,v,col])=>{ const frac=v/total; const len=frac*C;
+    segs += `<circle cx="80" cy="80" r="${R}" fill="none" stroke="${col}" stroke-width="22" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 80 80)"><title>${lab}: ${v} (${(frac*100).toFixed(1)}%)</title></circle>`;
+    off += len;
+  });
+  const okPct = (parts[2][1]/total*100).toFixed(0);
+  const legend = parts.map(([lab,v,col])=>`<div style="display:flex;align-items:center;gap:8px;font-size:.82rem;margin-bottom:8px"><i style="width:12px;height:12px;border-radius:3px;background:${col};display:inline-block"></i><span style="flex:1"><b>${fmtInt(v)}</b> ${lab}</span><span class="muted">${(v/total*100).toFixed(0)}%</span></div>`).join('');
+  $('#chart-donut').innerHTML = `
+    <svg viewBox="0 0 160 160" width="150" height="150">${segs}
+      <text x="80" y="74" text-anchor="middle" font-size="26" font-weight="800" fill="var(--grafite)">${okPct}%</text>
+      <text x="80" y="94" text-anchor="middle" font-size="10" fill="var(--texto-suave)">concluído</text></svg>
+    <div style="min-width:170px">${legend}</div>`;
+}
+
+function renderTopBars(sel, field, alt){
+  const d = state.filtered;
+  const counts = {};
+  d.forEach(r=>{ let k=r[field]; if(!k) return; if(field==='info') k=k.length>60?k.slice(0,58)+'…':k; counts[k]=(counts[k]||0)+1; });
+  const arr = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const host = $(sel);
+  if(!arr.length){ host.innerHTML='<div class="empty-row">Sem dados no filtro.</div>'; return; }
+  const max = arr[0][1];
+  host.innerHTML = arr.map(([k,v])=>`
+    <div class="hbar ${alt?'alt':''}">
+      <span class="nm" title="${esc(k)}">${esc(k)}</span>
+      <span class="track"><span class="fill" style="width:${(v/max*100).toFixed(1)}%"></span></span>
+      <span class="num">${fmtInt(v)}</span>
+    </div>`).join('');
+}
+
+/* ---------- Tabela ---------- */
+const COLS = [
+  { key:'periodo', lab:'Período', sort:true },
+  { key:'guia', lab:'Guia', sort:true },
+  { key:'paciente', lab:'Paciente', sort:true },
+  { key:'clinica', lab:'Clínica', sort:true },
+  { key:'info', lab:'Informação necessária', sort:false },
+  { key:'responsavel', lab:'Responsável', sort:true },
+  { key:'situacao', lab:'Status planilha', sort:true },
+  { key:'gestao', lab:'Gestão', sort:false },
+  { key:'acoes', lab:'Observação', sort:false },
+];
+function buildTableHead(){
+  $('#thead-row').innerHTML = COLS.map(c=>{
+    const on = state.sort.key===c.key;
+    const arw = c.sort ? `<span class="arw">${on?(state.sort.dir==='asc'?'▲':'▼'):'▼'}</span>` : '';
+    return `<th data-key="${c.key}" class="${c.sort?'':'nosort'} ${on?'on':''}">${c.lab}${arw}</th>`;
+  }).join('');
+  $$('#thead-row th').forEach(th=>{
+    const key = th.dataset.key;
+    if(COLS.find(c=>c.key===key).sort) th.onclick = ()=>{ if(state.sort.key===key) state.sort.dir = state.sort.dir==='asc'?'desc':'asc'; else { state.sort.key=key; state.sort.dir='asc'; } buildTableHead(); renderTable(); };
+  });
+}
+const SIT_LABEL = { pendente:['Pendente','b-pend'], tratativa:['Em tratativa','b-trat'], concluido:['Concluído','b-ok'] };
+const GEST_LABEL = { aberto:'Aberto', andamento:'Em andamento', resolvido:'Resolvido' };
+
+function sortData(arr){
+  const {key,dir} = state.sort; const s = dir==='asc'?1:-1;
+  const val = r => {
+    if(key==='periodo') return r.periodoNum;
+    if(key==='guia') return r.guia;
+    if(key==='situacao') return {pendente:0,tratativa:1,concluido:2}[r.situacao];
+    return normKey(r[key]||'');
+  };
+  return arr.slice().sort((a,b)=>{ const va=val(a), vb=val(b); if(va<vb) return -1*s; if(va>vb) return 1*s; return 0; });
+}
+
+function renderTable(){
+  const data = sortData(state.filtered);
+  const totalPages = Math.max(1, Math.ceil(data.length/state.perPage));
+  if(state.page>totalPages) state.page=totalPages;
+  const start = (state.page-1)*state.perPage;
+  const pageRows = data.slice(start, start+state.perPage);
+  $('#tbl-count').textContent = fmtInt(data.length);
+
+  if(!pageRows.length){ $('#tbody').innerHTML = `<tr><td colspan="${COLS.length}" class="empty-row">Nenhuma pendência encontrada com os filtros atuais.</td></tr>`; }
+  else {
+    $('#tbody').innerHTML = pageRows.map(r=>{
+      const [sl,sc] = SIT_LABEL[r.situacao];
+      const g = gestaoDe(r); const nota = notaDe(r);
+      return `<tr>
+        <td class="nowrap">${MESES[r.mes]||'—'}/${r.ano||'—'}<div class="muted" style="font-size:.72rem">${fmtDate(r.dataPedido)}</div></td>
+        <td class="nowrap">${esc(r.guia)||'—'}</td>
+        <td class="nowrap">${esc(r.paciente)||'—'}</td>
+        <td class="wrap">${esc(r.clinica)||'—'}${r.codClinica?`<div class="muted" style="font-size:.72rem">cód. ${esc(r.codClinica)}</div>`:''}</td>
+        <td class="wrap">${esc(r.info)||'—'}${r.resposta?`<div class="muted" style="font-size:.74rem;margin-top:3px">↳ ${esc(r.resposta)}</div>`:''}</td>
+        <td class="nowrap">${esc(r.responsavel)||'—'}${r.colaborador?`<div class="muted" style="font-size:.72rem">${esc(r.colaborador)}</div>`:''}</td>
+        <td class="nowrap"><span class="badge ${sc}"><span class="d"></span>${sl}</span>${r.dataDev?`<div class="muted" style="font-size:.72rem;margin-top:3px">dev. ${fmtDate(r.dataDev)}</div>`:''}</td>
+        <td class="nowrap">
+          <select class="gsel g-${g}" data-id="${r.id}">
+            <option value="aberto" ${g==='aberto'?'selected':''}>Aberto</option>
+            <option value="andamento" ${g==='andamento'?'selected':''}>Em andamento</option>
+            <option value="resolvido" ${g==='resolvido'?'selected':''}>Resolvido</option>
+          </select>
+        </td>
+        <td class="nowrap">
+          <button class="notebtn ${nota?'has':''}" data-note="${r.id}">${nota?'✎ Ver/editar':'+ Nota'}</button>
+          ${nota?`<div class="notetxt">${esc(nota.length>90?nota.slice(0,88)+'…':nota)}</div>`:''}
+        </td>
+      </tr>`;
+    }).join('');
+
+    // handlers gestão inline
+    $$('#tbody .gsel').forEach(s=>{ s.onchange = () => {
+      const rec = state.records.find(x=>x.id===s.dataset.id); if(!rec) return;
+      setGestao(rec, s.value); s.className='gsel g-'+s.value;
+      if(state.filters.gestao) applyFilters(); else renderKPIs();
+      toast('Situação de gestão atualizada.');
+    }; });
+    $$('#tbody .notebtn').forEach(b=>{ b.onclick = () => openNoteModal(b.dataset.note); });
+  }
+
+  // pager
+  $('#pinfo').textContent = data.length ? `Mostrando ${fmtInt(start+1)}–${fmtInt(Math.min(start+state.perPage, data.length))} de ${fmtInt(data.length)}` : 'Nenhum registro';
+  $('#pg-cur').textContent = `Pág. ${state.page} / ${totalPages}`;
+  $('#pg-first').disabled = $('#pg-prev').disabled = state.page<=1;
+  $('#pg-last').disabled = $('#pg-next').disabled = state.page>=totalPages;
+}
+
+/* ---------- Modal de nota ---------- */
+let modalId = null;
+function openNoteModal(id){
+  const rec = state.records.find(x=>x.id===id); if(!rec) return;
+  modalId = id;
+  $('#modal-info').innerHTML = `<b>${esc(rec.paciente)||'—'}</b> · Guia ${esc(rec.guia)||'—'} · ${esc(rec.clinica)||'—'}<br><span class="muted">${esc(rec.info)||''}</span>`;
+  $('#modal-gestao').value = gestaoDe(rec);
+  $('#modal-nota').value = notaDe(rec);
+  $('#modal').classList.add('on');
+  setTimeout(()=>$('#modal-nota').focus(), 50);
+}
+function closeModal(){ $('#modal').classList.remove('on'); modalId=null; }
+function saveModal(){
+  const rec = state.records.find(x=>x.id===modalId); if(!rec) return;
+  setNota(rec, $('#modal-gestao').value, normStr($('#modal-nota').value));
+  closeModal();
+  if(state.filters.gestao || state.filters.busca) applyFilters(); else renderTable();
+  renderKPIs();
+  toast('Observação salva.');
+}
+
+/* ---------- Export CSV ---------- */
+function exportCSV(){
+  const data = sortData(state.filtered);
+  if(!data.length){ toast('Nada para exportar no filtro atual.'); return; }
+  const head = ['Aba','Ano','Mes','Data pedido','Guia','Paciente','Cod clinica','Clinica','Informacao necessaria','Responsavel','Resposta cliente','Data devolutiva','Confirmacao','Triagem','Colaborador','Status planilha','Gestao','Observacao'];
+  const q = v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const lines = [head.join(';')];
+  data.forEach(r=>{
+    lines.push([r.aba,r.ano,r.mes,fmtDate(r.dataPedido),r.guia,r.paciente,r.codClinica,r.clinica,r.info,r.responsavel,r.resposta,fmtDate(r.dataDev),r.confirmacao,r.triagem,r.colaborador,SIT_LABEL[r.situacao][0],GEST_LABEL[gestaoDe(r)],notaDe(r)].map(q).join(';'));
+  });
+  const blob = new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = el('a'); a.href=url; a.download=`painel-convenio-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  toast(`${fmtInt(data.length)} registros exportados.`);
+}
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'), 2600); }
+
+/* ---------- Eventos ---------- */
+$('#btn-upload').onclick = () => $('#file').click();
+$('#file').onchange = e => handleFile(e.target.files[0]);
+$('#btn-export').onclick = exportCSV;
+
+const drop = $('#drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('hover'); }));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove('hover'); }));
+drop.addEventListener('drop', e=>{ const f=e.dataTransfer.files[0]; if(f) handleFile(f); });
+drop.addEventListener('click', e=>{ if(e.target.tagName!=='A') $('#file').click(); });
+
+['#f-ano','#f-mes-de','#f-mes-ate','#f-status','#f-gestao','#f-triagem','#f-clinica','#f-resp'].forEach(s=>$(s).addEventListener('change', applyFilters));
+let buscaT; $('#f-busca').addEventListener('input', ()=>{ clearTimeout(buscaT); buscaT=setTimeout(applyFilters, 220); });
+$('#btn-clear').onclick = () => { ['#f-ano','#f-mes-de','#f-mes-ate','#f-status','#f-gestao','#f-triagem','#f-clinica','#f-resp'].forEach(s=>$(s).value=''); $('#f-busca').value=''; applyFilters(); };
+
+$('#pg-first').onclick=()=>{ state.page=1; renderTable(); };
+$('#pg-prev').onclick=()=>{ state.page--; renderTable(); };
+$('#pg-next').onclick=()=>{ state.page++; renderTable(); };
+$('#pg-last').onclick=()=>{ state.page=Math.max(1,Math.ceil(sortData(state.filtered).length/state.perPage)); renderTable(); };
+
+$('#modal-cancel').onclick = closeModal;
+$('#modal-save').onclick = saveModal;
+$('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+/* ---------- Boot ---------- */
+(async function boot(){
+  loadOverrides();
+  const cached = await idbGet();
+  if(cached && cached.records && cached.records.length){
+    state.records = cached.records;
+    state.fileName = cached.fileName || 'planilha (cache)';
+    state.importedAt = cached.importedAt;
+    initDashboard();
+  } else {
+    showEmpty();
+  }
+})();
+</script>
+</body>
+</html>
