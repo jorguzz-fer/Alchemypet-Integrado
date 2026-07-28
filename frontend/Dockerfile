@@ -4,6 +4,12 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# libc6-compat: necessario para o binario nativo do SWC (compilador do Next)
+# rodar no Alpine (musl). Sem ele, o "next build" crasha ao compilar.
+RUN apk add --no-cache libc6-compat
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
 # Instala dependencias de forma reproduzivel (usa o package-lock.json).
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -21,9 +27,12 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+RUN apk add --no-cache libc6-compat
+
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Usuario nao-root.
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
