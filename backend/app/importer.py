@@ -56,6 +56,11 @@ def _key(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip().lower()
 
 
+def _fit(s: str, n: int) -> str:
+    """Trunca ao tamanho máximo da coluna (evita StringDataRightTruncation)."""
+    return s[:n] if len(s) > n else s
+
+
 def _period(sheet_name: str):
     n = _key(sheet_name)
     m = re.search(r"([a-z]+)\s*0?(\d{4})", n)
@@ -183,11 +188,18 @@ def importar_xlsx(db: Session, conteudo: bytes) -> dict:
             if clinica and clinica not in clinicas_vistas:
                 clinicas_vistas[clinica] = cod_clinica
 
+            # Trunca aos limites das colunas varchar (o Postgres é rígido).
+            # Necessário porque abas com colunas desalinhadas na origem podem
+            # jogar um comentário longo num campo curto (ex.: confirmação).
             campos = dict(
-                guia=guia, paciente=paciente, cod_clinica=cod_clinica, clinica=clinica,
-                informacao_necessaria=info, resposta_cliente=resposta, responsavel=_norm(get(row, "responsavel")),
-                colaborador=_norm(get(row, "colaborador")), confirmacao=confirmacao, triagem=_norm(get(row, "triagem")),
-                status=status, ano=ano, mes=mes, data_pedido=data_pedido, data_devolutiva=data_dev, aba=sheet_name,
+                guia=_fit(guia, 40), paciente=_fit(paciente, 160),
+                cod_clinica=_fit(cod_clinica, 40), clinica=_fit(clinica, 200),
+                informacao_necessaria=info, resposta_cliente=resposta,
+                responsavel=_fit(_norm(get(row, "responsavel")), 120),
+                colaborador=_fit(_norm(get(row, "colaborador")), 120),
+                confirmacao=_fit(confirmacao, 120), triagem=_fit(_norm(get(row, "triagem")), 120),
+                status=status, ano=ano, mes=mes, data_pedido=data_pedido, data_devolutiva=data_dev,
+                aba=_fit(sheet_name, 60),
             )
 
             existente = staged.get(chave) or db.scalar(select(Pendencia).where(Pendencia.chave == chave))
@@ -208,9 +220,10 @@ def importar_xlsx(db: Session, conteudo: bytes) -> dict:
 
     # Upsert de master data de clínicas
     for nome, codigo in clinicas_vistas.items():
+        nome = _fit(nome, 200)
         existe = db.scalar(select(Clinica).where(Clinica.nome == nome))
         if not existe:
-            db.add(Clinica(nome=nome, codigo=codigo))
+            db.add(Clinica(nome=nome, codigo=_fit(codigo, 40)))
 
     db.commit()
     total = db.scalar(select(func.count()).select_from(Pendencia))
