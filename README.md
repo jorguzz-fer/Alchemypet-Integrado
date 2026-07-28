@@ -19,5 +19,7 @@ um laboratório de análises clínicas veterinárias.
   Importa a planilha de pendências (todas as abas mensais) e monta indicadores, gráficos,
   filtros e uma tabela operacional com gestão por registro. Abra `painel-convenio/index.html`
   no navegador.
+  - [Evolução para módulo do ecossistema](docs/PAINEL-CONVENIO-MODULO.md) — arquitetura AI-First,
+    modelo de dados, integração com LIS/CRM e estimativa de esforço para o orçamento.
 
 > Projeto em fase de **discovery/escopo**. Stack e arquitetura ainda serão definidas — ver documento de escopo.
