@@ -19,5 +19,11 @@ um laboratório de análises clínicas veterinárias.
   Importa a planilha de pendências (todas as abas mensais) e monta indicadores, gráficos,
   filtros e uma tabela operacional com gestão por registro. Abra `painel-convenio/index.html`
   no navegador.
+  - [Evolução para módulo do ecossistema](docs/PAINEL-CONVENIO-MODULO.md) — arquitetura AI-First,
+    modelo de dados, integração com LIS/CRM e estimativa de esforço para o orçamento.
+  - **M1 (núcleo compartilhado)** — versão multiusuário com backend + banco:
+    [`backend/`](backend/README.md) (FastAPI + Postgres, API e importação da planilha) e
+    [`frontend/`](frontend/) (Next.js consumindo a API). Rode local com `docker compose up --build`;
+    deploy no Coolify em [docs/M1-DEPLOY.md](docs/M1-DEPLOY.md).
 
 > Projeto em fase de **discovery/escopo**. Stack e arquitetura ainda serão definidas — ver documento de escopo.

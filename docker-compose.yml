@@ -1,0 +1,46 @@
+# Ambiente de desenvolvimento local do Painel Convênio (M1).
+# Sobe Postgres + Backend (FastAPI) + Frontend (Next.js).
+#   docker compose up --build
+# No Coolify, cada serviço é um Resource separado (ver docs/M1-DEPLOY.md);
+# este arquivo é para rodar tudo junto na sua máquina.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: convenio
+      POSTGRES_PASSWORD: convenio
+      POSTGRES_DB: convenio
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U convenio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      PORT: 8000
+      DATABASE_URL: postgresql+psycopg://convenio:convenio@postgres:5432/convenio
+      CORS_ORIGINS: "*"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:
