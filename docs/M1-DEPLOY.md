@@ -25,6 +25,9 @@ Anote a connection string interna. Crie o banco `convenio` (ou use o default).
   CORS_ORIGINS=https://alchemypet.tudomudou.com.br
   ```
   > `postgres` = nome do resource do banco na rede interna do Coolify.
+  > A URL que o Coolify entrega pode começar com `postgres://` ou `postgresql://` —
+  > o backend normaliza automaticamente para o driver correto (psycopg 3), então
+  > pode colar a connection string do jeito que vier.
 
 ### 3. Frontend (Next.js)
 `+ New Resource` → Application → mesmo repositório.
