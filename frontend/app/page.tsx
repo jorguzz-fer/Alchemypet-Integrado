@@ -160,6 +160,12 @@ export default function DashboardPage() {
               sub="dias até devolutiva"
               tone="tempo"
             />
+            <Kpi
+              label="Antigas"
+              value={formatNumero(dados.antigas)}
+              sub={`em aberto há mais de ${dados.sla_dias} dias`}
+              tone="antigas"
+            />
           </div>
 
           <div className="section-title">

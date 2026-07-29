@@ -231,7 +231,7 @@ header.top {
 /* ===== KPIs ===== */
 .kpis {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 14px;
 }
 .kpi {
@@ -296,6 +296,12 @@ header.top {
 }
 .kpi.t-tempo .tag {
   background: var(--destaque-2);
+}
+.kpi.t-antigas .val {
+  color: var(--erro);
+}
+.kpi.t-antigas .tag {
+  background: var(--erro);
 }
 .kpi.t-total .tag {
   background: var(--marinho-2);
@@ -629,6 +635,20 @@ td.nowrap {
 .row-acoes {
   display: flex;
   gap: 6px;
+}
+/* Indicador de dias em aberto (SLA/aging) */
+.aging {
+  margin-top: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+.aging.aging-medio {
+  color: var(--alerta);
+}
+.aging.aging-alto {
+  color: var(--erro);
 }
 
 /* Pager */
