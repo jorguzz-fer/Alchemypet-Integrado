@@ -12,6 +12,7 @@ import { formatNumero, labelPeriodo } from '@/lib/format';
 import Filtros from '@/components/Filtros';
 import StatusBadge from '@/components/StatusBadge';
 import TratativasModal from '@/components/TratativasModal';
+import PendenciaFormModal from '@/components/PendenciaFormModal';
 
 const PER_PAGE = 25;
 
@@ -51,6 +52,9 @@ export default function PendenciasPage() {
     {},
   );
   const [modal, setModal] = useState<Pendencia | null>(null);
+  // Formulário de CRUD: 'nova' para criação; uma pendência para edição.
+  const [form, setForm] = useState<'nova' | Pendencia | null>(null);
+  const [excluindo, setExcluindo] = useState<Record<string, boolean>>({});
 
   const [importando, setImportando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -183,6 +187,41 @@ export default function PendenciasPage() {
     }
   }
 
+  async function excluir(p: Pendencia) {
+    const ok = window.confirm(
+      `Excluir a pendência da guia ${p.guia || '—'} (${p.paciente || 'sem paciente'})?\n\nEsta ação não pode ser desfeita.`,
+    );
+    if (!ok) return;
+    setExcluindo((s) => ({ ...s, [p.id]: true }));
+    try {
+      await api.deletePendencia(p.id);
+      setAviso('Pendência excluída.');
+      await carregar(filtros);
+    } catch (e) {
+      setAviso(
+        e instanceof ApiError ? e.message : 'Falha ao excluir a pendência.',
+      );
+    } finally {
+      setExcluindo((s) => {
+        const n = { ...s };
+        delete n[p.id];
+        return n;
+      });
+    }
+  }
+
+  async function aposSalvarForm(p: Pendencia) {
+    const criacao = form === 'nova';
+    setForm(null);
+    setAviso(
+      criacao
+        ? `Pendência criada (guia ${p.guia || '—'}).`
+        : `Pendência atualizada (guia ${p.guia || '—'}).`,
+    );
+    if (criacao) setFiltros((f) => ({ ...f, page: 1 }));
+    await carregar(criacao ? { ...filtros, page: 1 } : filtros);
+  }
+
   function exportarCSV() {
     if (items.length === 0) return;
     const cols: { key: keyof Pendencia; label: string }[] = [
@@ -231,11 +270,14 @@ export default function PendenciasPage() {
             Exportar CSV
           </button>
           <button
-            className="btn primary"
+            className="btn ghost"
             onClick={() => fileRef.current?.click()}
             disabled={importando}
           >
             {importando ? 'Importando…' : 'Importar planilha'}
+          </button>
+          <button className="btn primary" onClick={() => setForm('nova')}>
+            + Nova pendência
           </button>
           <input
             ref={fileRef}
@@ -299,19 +341,20 @@ export default function PendenciasPage() {
                 <th>Status planilha</th>
                 <th>Gestão</th>
                 <th>Tratativas</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="empty-row" colSpan={9}>
+                  <td className="empty-row" colSpan={10}>
                     <div className="spinner" />
                     Carregando pendências…
                   </td>
                 </tr>
               ) : erro ? (
                 <tr>
-                  <td className="empty-row" colSpan={9}>
+                  <td className="empty-row" colSpan={10}>
                     <div style={{ color: 'var(--erro)', fontWeight: 700 }}>
                       {erro}
                     </div>
@@ -326,7 +369,7 @@ export default function PendenciasPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td className="empty-row" colSpan={9}>
+                  <td className="empty-row" colSpan={10}>
                     Nenhuma pendência para os filtros selecionados.
                   </td>
                 </tr>
@@ -363,6 +406,23 @@ export default function PendenciasPage() {
                       >
                         Tratativas
                       </button>
+                    </td>
+                    <td className="nowrap">
+                      <div className="row-acoes">
+                        <button
+                          className="notebtn"
+                          onClick={() => setForm(p)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="notebtn danger"
+                          onClick={() => excluir(p)}
+                          disabled={!!excluindo[p.id]}
+                        >
+                          {excluindo[p.id] ? '…' : 'Excluir'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -408,6 +468,14 @@ export default function PendenciasPage() {
           pendencia={modal}
           onClose={() => setModal(null)}
           onSaved={() => carregar(filtros)}
+        />
+      ) : null}
+
+      {form ? (
+        <PendenciaFormModal
+          pendencia={form === 'nova' ? null : form}
+          onClose={() => setForm(null)}
+          onSaved={aposSalvarForm}
         />
       ) : null}
     </div>

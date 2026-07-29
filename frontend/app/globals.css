@@ -605,6 +605,18 @@ td.nowrap {
   border-color: var(--destaque);
   color: var(--destaque);
 }
+.notebtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.notebtn.danger:hover {
+  border-color: var(--erro);
+  color: var(--erro);
+}
+.row-acoes {
+  display: flex;
+  gap: 6px;
+}
 
 /* Pager */
 .pager {
@@ -712,11 +724,44 @@ td.nowrap {
   font-family: inherit;
   background: #fff;
 }
+.modal input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--linha);
+  border-radius: 9px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  background: #fff;
+}
 .modal textarea:focus,
-.modal select:focus {
+.modal select:focus,
+.modal input:focus {
   outline: none;
   border-color: var(--destaque);
   box-shadow: 0 0 0 3px rgba(15, 163, 163, 0.12);
+}
+/* Modal mais largo para formulários com grade de campos */
+.modal.wide {
+  max-width: 720px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.form-grid .field {
+  margin-bottom: 0;
+}
+.form-grid .field.col-2 {
+  grid-column: span 2;
+}
+@media (max-width: 620px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-grid .field.col-2 {
+    grid-column: span 1;
+  }
 }
 .modal .m-info {
   background: var(--bg-soft);

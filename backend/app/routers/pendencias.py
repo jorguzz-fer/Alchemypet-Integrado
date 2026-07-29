@@ -1,5 +1,8 @@
 """Endpoints de pendências."""
-from fastapi import APIRouter, Depends, HTTPException, Query
+from datetime import date
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -9,6 +12,17 @@ from ..models import Pendencia
 from ..schemas import PendenciaCreate, PendenciaOut, PendenciaPage, PendenciaUpdate
 
 router = APIRouter(prefix="/pendencias", tags=["pendencias"])
+
+
+def _derivar_status(confirmacao: str, resposta: str, data_dev: date | None) -> str:
+    """Mesma regra da importação: concluído se confirmação = OK; em tratativa
+    se há resposta/devolutiva; senão pendente."""
+    conf = (confirmacao or "").strip().lower()
+    if conf == "ok" or conf.startswith("ok ") or conf == "okk":
+        return "concluido"
+    if (resposta or "").strip() or data_dev:
+        return "tratativa"
+    return "pendente"
 
 
 def _filtros(
@@ -41,10 +55,26 @@ def listar(
 
 @router.post("", response_model=PendenciaOut, status_code=201)
 def criar(dados: PendenciaCreate, db: Session = Depends(get_db)):
-    import hashlib
+    """Lançamento manual de pendência (substitui a digitação na planilha)."""
+    campos = dados.model_dump()
+    gestao = campos.pop("gestao", None)
 
-    chave = hashlib.sha1(f"manual|{dados.guia}|{dados.paciente}|{dados.informacao_necessaria}".encode()).hexdigest()[:32]
-    p = Pendencia(chave=chave, **dados.model_dump())
+    # Período (ano/mês) derivado da data do pedido, quando houver.
+    dp = campos.get("data_pedido")
+    ano = dp.year if dp else None
+    mes = dp.month if dp else None
+
+    status = _derivar_status(campos["confirmacao"], campos["resposta_cliente"], campos["data_devolutiva"])
+
+    p = Pendencia(
+        chave=uuid4().hex,  # lançamento manual: chave única própria
+        aba="Manual",
+        status=status,
+        gestao=gestao or ("resolvido" if status == "concluido" else "aberto"),
+        ano=ano,
+        mes=mes,
+        **campos,
+    )
     db.add(p)
     db.commit()
     db.refresh(p)
@@ -64,8 +94,31 @@ def atualizar(pendencia_id: str, dados: PendenciaUpdate, db: Session = Depends(g
     p = db.get(Pendencia, pendencia_id)
     if not p:
         raise HTTPException(404, "Pendência não encontrada")
-    for k, v in dados.model_dump(exclude_none=True).items():
+
+    enviados = dados.model_dump(exclude_unset=True)
+    for k, v in enviados.items():
         setattr(p, k, v)
+
+    # Recalcula período se a data do pedido mudou.
+    if "data_pedido" in enviados:
+        p.ano = p.data_pedido.year if p.data_pedido else None
+        p.mes = p.data_pedido.month if p.data_pedido else None
+
+    # Recalcula status da planilha quando não foi informado explicitamente,
+    # mas algum campo que o define mudou.
+    if "status" not in enviados and enviados.keys() & {"confirmacao", "resposta_cliente", "data_devolutiva"}:
+        p.status = _derivar_status(p.confirmacao, p.resposta_cliente, p.data_devolutiva)
+
     db.commit()
     db.refresh(p)
     return p
+
+
+@router.delete("/{pendencia_id}", status_code=204)
+def excluir(pendencia_id: str, db: Session = Depends(get_db)):
+    p = db.get(Pendencia, pendencia_id)
+    if not p:
+        raise HTTPException(404, "Pendência não encontrada")
+    db.delete(p)
+    db.commit()
+    return Response(status_code=204)
