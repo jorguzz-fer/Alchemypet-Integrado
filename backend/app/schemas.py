@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 Status = Literal["pendente", "tratativa", "concluido"]
 Gestao = Literal["aberto", "andamento", "resolvido"]
@@ -33,21 +33,38 @@ class PendenciaOut(BaseModel):
 
 
 class PendenciaCreate(BaseModel):
-    guia: str = ""
-    paciente: str = ""
-    cod_clinica: str = ""
-    clinica: str = ""
+    guia: str = Field("", max_length=40)
+    paciente: str = Field("", max_length=160)
+    cod_clinica: str = Field("", max_length=40)
+    clinica: str = Field("", max_length=200)
     informacao_necessaria: str
-    responsavel: str = ""
-    ano: int | None = None
-    mes: int | None = None
+    resposta_cliente: str = ""
+    responsavel: str = Field("", max_length=120)
+    colaborador: str = Field("", max_length=120)
+    confirmacao: str = Field("", max_length=120)
+    triagem: str = Field("", max_length=120)
     data_pedido: date | None = None
+    data_devolutiva: date | None = None
+    gestao: Gestao | None = None
 
 
 class PendenciaUpdate(BaseModel):
+    """Edição parcial: qualquer campo enviado é atualizado."""
+
+    guia: str | None = Field(None, max_length=40)
+    paciente: str | None = Field(None, max_length=160)
+    cod_clinica: str | None = Field(None, max_length=40)
+    clinica: str | None = Field(None, max_length=200)
+    informacao_necessaria: str | None = None
+    resposta_cliente: str | None = None
+    responsavel: str | None = Field(None, max_length=120)
+    colaborador: str | None = Field(None, max_length=120)
+    confirmacao: str | None = Field(None, max_length=120)
+    triagem: str | None = Field(None, max_length=120)
+    data_pedido: date | None = None
+    data_devolutiva: date | None = None
     gestao: Gestao | None = None
     status: Status | None = None
-    responsavel: str | None = None
 
 
 class PendenciaPage(BaseModel):

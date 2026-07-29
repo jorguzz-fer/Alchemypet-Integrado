@@ -127,6 +127,12 @@ export const api = {
     });
   },
 
+  deletePendencia(id: string): Promise<void> {
+    return request<void>(`/pendencias/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  },
+
   listTratativas(id: string, signal?: AbortSignal): Promise<Tratativa[]> {
     return request<Tratativa[]>(
       `/pendencias/${encodeURIComponent(id)}/tratativas`,

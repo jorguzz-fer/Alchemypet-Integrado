@@ -103,19 +103,29 @@ export interface ImportarResponse {
   total: number;
 }
 
-// Body para criacao manual de pendencia (POST /pendencias).
-export type NovaPendencia = Partial<Pendencia> & {
-  guia: string;
-  paciente: string;
-  informacao_necessaria: string;
-};
-
-// Body do PATCH /pendencias/{id}.
-export interface PatchPendencia {
+// Campos editáveis de uma pendência (criação e edição manual).
+export interface PendenciaInput {
+  guia?: string;
+  paciente?: string;
+  cod_clinica?: string;
+  clinica?: string;
+  informacao_necessaria?: string;
+  resposta_cliente?: string;
+  responsavel?: string;
+  colaborador?: string;
+  confirmacao?: string;
+  triagem?: string;
+  data_pedido?: string | null;
+  data_devolutiva?: string | null;
   gestao?: Gestao;
   status?: StatusPlanilha;
-  responsavel?: string;
 }
+
+// Body para criacao manual (POST /pendencias): informacao_necessaria obrigatória.
+export type NovaPendencia = PendenciaInput & { informacao_necessaria: string };
+
+// Body do PATCH /pendencias/{id}: qualquer subconjunto dos campos.
+export type PatchPendencia = PendenciaInput;
 
 // Body do POST /pendencias/{id}/tratativas.
 export interface NovaTratativa {
