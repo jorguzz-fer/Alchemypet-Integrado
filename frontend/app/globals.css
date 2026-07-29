@@ -93,6 +93,18 @@ header.top {
   flex: none;
   background: linear-gradient(135deg, var(--marinho), var(--destaque));
 }
+.brand .brand-logo {
+  height: 30px;
+  width: auto;
+  display: block;
+  flex: none;
+}
+.brand .brand-sep {
+  width: 1px;
+  height: 26px;
+  background: var(--linha);
+  flex: none;
+}
 .brand .name {
   font-weight: 800;
   color: var(--grafite);
@@ -917,5 +929,14 @@ td.nowrap {
   }
   .field-row {
     grid-template-columns: 1fr;
+  }
+  /* Barra de topo compacta: só o logo, sem divisória/nome */
+  .brand .brand-sep,
+  .brand .name,
+  .brand .sub {
+    display: none;
+  }
+  .brand .brand-logo {
+    height: 26px;
   }
 }
