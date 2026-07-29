@@ -36,10 +36,34 @@ export interface Tratativa {
   created_at: string;
 }
 
+export type Perfil = 'atendente' | 'supervisor' | 'admin';
+
 export interface Usuario {
   id: string;
   nome: string;
-  perfil: string;
+  email: string | null;
+  perfil: Perfil;
+  ativo: boolean;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  usuario: Usuario;
+}
+
+export interface NovoUsuario {
+  nome: string;
+  email: string;
+  senha: string;
+  perfil: Perfil;
+}
+
+export interface UsuarioUpdate {
+  nome?: string;
+  perfil?: Perfil;
+  ativo?: boolean;
+  senha?: string;
 }
 
 export interface HealthResponse {
