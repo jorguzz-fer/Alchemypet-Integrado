@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import type { Perfil, Usuario } from '@/lib/types';
+import CampoSenha from '@/components/CampoSenha';
 
 const PERFIS: Perfil[] = ['atendente', 'supervisor', 'admin'];
 
@@ -19,6 +20,12 @@ export default function UsuariosPage() {
   const [senha, setSenha] = useState('');
   const [perfil, setPerfil] = useState<Perfil>('atendente');
   const [salvando, setSalvando] = useState(false);
+
+  // Redefinição de senha (admin)
+  const [reset, setReset] = useState<Usuario | null>(null);
+  const [novaSenha, setNovaSenha] = useState('');
+  const [resetando, setResetando] = useState(false);
+  const [resetErro, setResetErro] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -86,6 +93,34 @@ export default function UsuariosPage() {
     }
   }
 
+  function abrirReset(u: Usuario) {
+    setReset(u);
+    setNovaSenha('');
+    setResetErro(null);
+  }
+
+  async function salvarReset(e: React.FormEvent) {
+    e.preventDefault();
+    if (!reset) return;
+    if (novaSenha.length < 6) {
+      setResetErro('A senha deve ter ao menos 6 caracteres.');
+      return;
+    }
+    setResetando(true);
+    setResetErro(null);
+    try {
+      await api.updateUsuario(reset.id, { senha: novaSenha });
+      setAviso(`Senha de "${reset.nome}" redefinida.`);
+      setReset(null);
+    } catch (err) {
+      setResetErro(
+        err instanceof ApiError ? err.message : 'Não foi possível redefinir a senha.',
+      );
+    } finally {
+      setResetando(false);
+    }
+  }
+
   if (atual && atual.perfil !== 'admin') {
     return (
       <div className="page">
@@ -130,12 +165,12 @@ export default function UsuariosPage() {
             </div>
             <div className="field">
               <label htmlFor="u-senha">Senha (mín. 6)</label>
-              <input
+              <CampoSenha
                 id="u-senha"
-                type="text"
                 minLength={6}
                 value={senha}
-                onChange={(e) => setSenha(e.target.value)}
+                onChange={setSenha}
+                autoComplete="new-password"
                 required
               />
             </div>
@@ -233,13 +268,21 @@ export default function UsuariosPage() {
                       </span>
                     </td>
                     <td className="nowrap">
-                      <button
-                        className="notebtn"
-                        disabled={u.id === atual?.id}
-                        onClick={() => alternarAtivo(u)}
-                      >
-                        {u.ativo ? 'Desativar' : 'Ativar'}
-                      </button>
+                      <div className="row-acoes">
+                        <button
+                          className="notebtn"
+                          onClick={() => abrirReset(u)}
+                        >
+                          Redefinir senha
+                        </button>
+                        <button
+                          className="notebtn"
+                          disabled={u.id === atual?.id}
+                          onClick={() => alternarAtivo(u)}
+                        >
+                          {u.ativo ? 'Desativar' : 'Ativar'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -248,6 +291,61 @@ export default function UsuariosPage() {
           </table>
         </div>
       </div>
+
+      {reset ? (
+        <div
+          className="modal-bg"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setReset(null);
+          }}
+        >
+          <div className="modal" role="dialog" aria-modal="true">
+            <h3>Redefinir senha</h3>
+            <div className="m-sub">
+              Defina uma nova senha para <b>{reset.nome}</b>
+              {reset.email ? ` (${reset.email})` : ''}.
+            </div>
+            <form onSubmit={salvarReset}>
+              <div className="field">
+                <label htmlFor="reset-senha">Nova senha (mín. 6)</label>
+                <CampoSenha
+                  id="reset-senha"
+                  minLength={6}
+                  value={novaSenha}
+                  onChange={setNovaSenha}
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+              {resetErro ? (
+                <div
+                  style={{
+                    color: 'var(--erro)',
+                    fontSize: '.82rem',
+                    fontWeight: 600,
+                    marginBottom: 10,
+                  }}
+                >
+                  {resetErro}
+                </div>
+              ) : null}
+              <div className="m-actions">
+                <button
+                  type="button"
+                  className="btn ghost"
+                  onClick={() => setReset(null)}
+                  disabled={resetando}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn primary" disabled={resetando}>
+                  {resetando ? 'Salvando…' : 'Redefinir senha'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import CampoSenha from '@/components/CampoSenha';
 
 export default function LoginPage() {
   const { entrar, usuario, carregando } = useAuth();
@@ -62,12 +63,11 @@ export default function LoginPage() {
         </div>
         <div className="field">
           <label htmlFor="login-senha">Senha</label>
-          <input
+          <CampoSenha
             id="login-senha"
-            type="password"
             autoComplete="current-password"
             value={senha}
-            onChange={(e) => setSenha(e.target.value)}
+            onChange={setSenha}
             required
           />
         </div>
