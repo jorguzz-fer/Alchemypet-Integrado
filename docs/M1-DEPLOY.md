@@ -23,11 +23,17 @@ Anote a connection string interna. Crie o banco `convenio` (ou use o default).
   PORT=8000
   DATABASE_URL=postgresql+psycopg://usuario:senha@postgres:5432/convenio
   CORS_ORIGINS=https://alchemypet.tudomudou.com.br
+  # Autenticação (obrigatório em produção):
+  SECRET_KEY=<gere com: openssl rand -hex 32>
+  ADMIN_EMAIL=admin@alchemypet.com.br
+  ADMIN_SENHA=<senha forte do admin inicial>
   ```
   > `postgres` = nome do resource do banco na rede interna do Coolify.
   > A URL que o Coolify entrega pode começar com `postgres://` ou `postgresql://` —
-  > o backend normaliza automaticamente para o driver correto (psycopg 3), então
-  > pode colar a connection string do jeito que vier.
+  > o backend normaliza automaticamente.
+  > **SECRET_KEY**: sem ela os tokens ficam inseguros (há um default só para dev).
+  > No **primeiro deploy** é criado um usuário admin com `ADMIN_EMAIL`/`ADMIN_SENHA`;
+  > entre com ele e cadastre a equipe em **Usuários**.
 
 ### 3. Frontend (Next.js)
 `+ New Resource` → Application → mesmo repositório.

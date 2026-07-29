@@ -25,7 +25,10 @@ class Usuario(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     nome: Mapped[str] = mapped_column(String(120), nullable=False)
+    email: Mapped[str | None] = mapped_column(String(160), unique=True, nullable=True)
+    senha_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     perfil: Mapped[str] = mapped_column(String(20), default="atendente")  # atendente|supervisor|admin
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
 

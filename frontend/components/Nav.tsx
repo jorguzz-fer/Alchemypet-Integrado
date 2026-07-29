@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 
 const LINKS = [
   { href: '/', label: 'Visão geral' },
@@ -10,9 +11,16 @@ const LINKS = [
 
 export default function Nav() {
   const pathname = usePathname();
+  const { usuario } = useAuth();
+
+  const links = [...LINKS];
+  if (usuario?.perfil === 'admin') {
+    links.push({ href: '/usuarios', label: 'Usuários' });
+  }
+
   return (
     <nav className="topnav">
-      {LINKS.map((l) => {
+      {links.map((l) => {
         const active =
           l.href === '/' ? pathname === '/' : pathname.startsWith(l.href);
         return (

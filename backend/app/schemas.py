@@ -98,7 +98,34 @@ class UsuarioOut(BaseModel):
 
     id: str
     nome: str
+    email: str | None = None
     perfil: str
+    ativo: bool = True
+
+
+class LoginIn(BaseModel):
+    email: str
+    senha: str
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    usuario: UsuarioOut
+
+
+class UsuarioCreate(BaseModel):
+    nome: str
+    email: str
+    senha: str = Field(min_length=6)
+    perfil: Literal["atendente", "supervisor", "admin"] = "atendente"
+
+
+class UsuarioUpdate(BaseModel):
+    nome: str | None = None
+    perfil: Literal["atendente", "supervisor", "admin"] | None = None
+    ativo: bool | None = None
+    senha: str | None = Field(default=None, min_length=6)
 
 
 class SerieMes(BaseModel):

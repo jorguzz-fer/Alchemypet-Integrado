@@ -4,8 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Pendencia, Tratativa
+from ..models import Pendencia, Tratativa, Usuario
 from ..schemas import TratativaCreate, TratativaOut
+from ..security import usuario_atual
 
 router = APIRouter(prefix="/pendencias/{pendencia_id}/tratativas", tags=["tratativas"])
 
@@ -33,13 +34,18 @@ def listar(pendencia_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=TratativaOut, status_code=201)
-def criar(pendencia_id: str, dados: TratativaCreate, db: Session = Depends(get_db)):
+def criar(
+    pendencia_id: str,
+    dados: TratativaCreate,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(usuario_atual),
+):
     p = db.get(Pendencia, pendencia_id)
     if not p:
         raise HTTPException(404, "Pendência não encontrada")
     t = Tratativa(
         pendencia_id=pendencia_id,
-        usuario_id=dados.usuario_id,
+        usuario_id=usuario.id,  # assina com o usuário logado
         acao=dados.acao,
         gestao=dados.gestao or p.gestao,
         por_agente=False,

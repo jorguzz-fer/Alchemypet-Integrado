@@ -27,6 +27,9 @@ services:
       PORT: 8000
       DATABASE_URL: postgresql+psycopg://convenio:convenio@postgres:5432/convenio
       CORS_ORIGINS: "*"
+      SECRET_KEY: dev-local-troque-em-producao
+      ADMIN_EMAIL: admin@alchemypet.local
+      ADMIN_SENHA: alchemypet
     ports:
       - "8000:8000"
     depends_on:

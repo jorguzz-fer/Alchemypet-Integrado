@@ -105,6 +105,122 @@ header.top {
   background: var(--linha);
   flex: none;
 }
+
+/* Área direita do topo: navegação + usuário */
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  text-align: right;
+}
+.user-nome {
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--grafite);
+}
+.user-perfil {
+  font-size: 0.68rem;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+@media (max-width: 640px) {
+  .user-info {
+    display: none;
+  }
+  .top-right {
+    gap: 10px;
+  }
+}
+
+/* Tela de carregamento (guarda de auth) */
+.tela-carregando {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Login ===== */
+.wrap-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(900px 500px at 80% -10%, rgba(122, 63, 155, 0.1), transparent 60%),
+    radial-gradient(700px 500px at 0% 110%, rgba(201, 162, 75, 0.1), transparent 55%),
+    var(--bg);
+}
+.login-card {
+  background: var(--card);
+  border: 1px solid var(--linha);
+  border-radius: 18px;
+  box-shadow: var(--sombra-forte);
+  padding: 34px 32px;
+  width: 100%;
+  max-width: 400px;
+}
+.login-logo {
+  height: 38px;
+  width: auto;
+  display: block;
+  margin-bottom: 18px;
+}
+.login-card h1 {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+.login-sub {
+  font-size: 0.88rem;
+  color: var(--texto-suave);
+  margin-bottom: 22px;
+}
+.login-card .field {
+  margin-bottom: 14px;
+}
+.login-card label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 6px;
+}
+.login-card input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--linha);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.login-card input:focus {
+  outline: none;
+  border-color: var(--destaque);
+  box-shadow: 0 0 0 3px rgba(15, 163, 163, 0.12);
+}
+.login-erro {
+  background: #fbeae4;
+  color: #a8431f;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
 .brand .name {
   font-weight: 800;
   color: var(--grafite);

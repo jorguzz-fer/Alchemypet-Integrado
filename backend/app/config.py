@@ -13,6 +13,14 @@ class Settings(BaseSettings):
     # CORS: domínios do frontend, separados por vírgula.
     CORS_ORIGINS: str = "*"
 
+    # Autenticação (JWT). DEFINA SECRET_KEY em produção!
+    SECRET_KEY: str = "dev-inseguro-troque-em-producao"
+    JWT_EXPIRE_MIN: int = 60 * 12  # 12h
+    # Admin inicial criado no startup (se ainda não existir).
+    ADMIN_EMAIL: str = "admin@alchemypet.local"
+    ADMIN_SENHA: str = "alchemypet"
+    ADMIN_NOME: str = "Administrador"
+
     # Metadados
     ENV: str = "production"
     APP_NAME: str = "Painel Convênio API"
