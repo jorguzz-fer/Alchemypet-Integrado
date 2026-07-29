@@ -58,9 +58,11 @@ class Pendencia(Base):
     informacao_necessaria: Mapped[str] = mapped_column(Text, default="")
     resposta_cliente: Mapped[str] = mapped_column(Text, default="")
     responsavel: Mapped[str] = mapped_column(String(120), default="", index=True)
-    colaborador: Mapped[str] = mapped_column(String(120), default="")
-    confirmacao: Mapped[str] = mapped_column(String(120), default="")
-    triagem: Mapped[str] = mapped_column(String(120), default="")
+    # TEXT (sem limite): campos que, em abas com colunas desalinhadas na
+    # origem, podem receber comentários longos.
+    colaborador: Mapped[str] = mapped_column(Text, default="")
+    confirmacao: Mapped[str] = mapped_column(Text, default="")
+    triagem: Mapped[str] = mapped_column(Text, default="")
 
     # Status derivado da planilha: pendente|tratativa|concluido
     status: Mapped[str] = mapped_column(String(20), default="pendente", index=True)

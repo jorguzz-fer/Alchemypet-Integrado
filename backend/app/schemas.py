@@ -41,9 +41,9 @@ class PendenciaCreate(BaseModel):
     informacao_necessaria: str
     resposta_cliente: str = ""
     responsavel: str = Field("", max_length=120)
-    colaborador: str = Field("", max_length=120)
-    confirmacao: str = Field("", max_length=120)
-    triagem: str = Field("", max_length=120)
+    colaborador: str = ""
+    confirmacao: str = ""
+    triagem: str = ""
     data_pedido: date | None = None
     data_devolutiva: date | None = None
     gestao: Gestao | None = None
@@ -59,9 +59,9 @@ class PendenciaUpdate(BaseModel):
     informacao_necessaria: str | None = None
     resposta_cliente: str | None = None
     responsavel: str | None = Field(None, max_length=120)
-    colaborador: str | None = Field(None, max_length=120)
-    confirmacao: str | None = Field(None, max_length=120)
-    triagem: str | None = Field(None, max_length=120)
+    colaborador: str | None = None
+    confirmacao: str | None = None
+    triagem: str | None = None
     data_pedido: date | None = None
     data_devolutiva: date | None = None
     gestao: Gestao | None = None
