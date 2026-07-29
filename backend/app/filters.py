@@ -9,6 +9,7 @@ from .models import Pendencia
 
 @dataclass
 class Filtros:
+    modulo: str = "convenio"
     ano: int | None = None
     mes_de: int | None = None
     mes_ate: int | None = None
@@ -20,6 +21,7 @@ class Filtros:
 
 
 def aplicar(stmt: Select, f: Filtros) -> Select:
+    stmt = stmt.where(Pendencia.modulo == f.modulo)
     if f.ano:
         stmt = stmt.where(Pendencia.ano == f.ano)
     if f.mes_de:

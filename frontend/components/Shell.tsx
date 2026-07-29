@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
-import Nav from './Nav';
+import { MODULOS } from '@/lib/modulos';
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const { usuario, carregando, sair } = useAuth();
@@ -12,17 +12,15 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const naLogin = pathname === '/login';
 
-  // Guarda: sem usuário (fora da tela de login) → redireciona.
   useEffect(() => {
     if (!carregando && !usuario && !naLogin) {
       router.replace('/login');
     }
   }, [carregando, usuario, naLogin, router]);
 
-  // A tela de login não usa o layout com topbar.
   if (naLogin) return <main className="wrap-login">{children}</main>;
 
-  if (carregando) {
+  if (carregando || !usuario) {
     return (
       <div className="tela-carregando">
         <div className="spinner" />
@@ -30,49 +28,65 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!usuario) {
-    // Aguardando o redirect do efeito acima.
-    return (
-      <div className="tela-carregando">
-        <div className="spinner" />
-      </div>
-    );
-  }
+  const linkAtivo = (href: string, exato = false) =>
+    exato ? pathname === href : pathname === href || pathname.startsWith(href + '/');
 
   return (
-    <>
-      <header className="top">
-        <div className="top-inner">
-          <Link href="/" className="brand" aria-label="Painel Convênio · Alchemypet">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="brand-logo"
-              src="/logo-horiz.png"
-              alt="Alchemypet"
-              width={154}
-              height={30}
-            />
-            <span className="brand-sep" aria-hidden="true" />
-            <div>
-              <div className="name">Painel Convênio</div>
-              <div className="sub">Gestão de Pendências</div>
-            </div>
-          </Link>
-          <div className="top-right">
-            <Nav />
-            <div className="user-box">
-              <div className="user-info">
-                <span className="user-nome">{usuario.nome}</span>
-                <span className="user-perfil">{usuario.perfil}</span>
+    <div className="app-shell">
+      <aside className="sidebar">
+        <Link href="/" className="side-brand" aria-label="Painel Alchemypet">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-horiz.png" alt="Alchemypet" width={150} height={29} />
+        </Link>
+
+        <nav className="side-nav">
+          {MODULOS.map((m) => (
+            <div className="side-group" key={m.key}>
+              <div className="side-group-title">
+                <span className="side-ic">{m.icone}</span>
+                {m.nome}
               </div>
-              <button className="btn ghost sm" onClick={sair}>
-                Sair
-              </button>
+              <Link
+                href={`/${m.key}`}
+                className={`side-link${linkAtivo(`/${m.key}`, true) ? ' ativo' : ''}`}
+              >
+                Visão geral
+              </Link>
+              <Link
+                href={`/${m.key}/pendencias`}
+                className={`side-link${linkAtivo(`/${m.key}/pendencias`) ? ' ativo' : ''}`}
+              >
+                Pendências
+              </Link>
             </div>
+          ))}
+
+          {usuario.perfil === 'admin' ? (
+            <div className="side-group side-group-admin">
+              <Link
+                href="/usuarios"
+                className={`side-link${linkAtivo('/usuarios') ? ' ativo' : ''}`}
+              >
+                <span className="side-ic">👥</span> Usuários
+              </Link>
+            </div>
+          ) : null}
+        </nav>
+
+        <div className="side-user">
+          <div className="side-user-info">
+            <span className="side-user-nome">{usuario.nome}</span>
+            <span className="side-user-perfil">{usuario.perfil}</span>
           </div>
+          <button className="btn ghost sm" onClick={sair}>
+            Sair
+          </button>
         </div>
-      </header>
-      <main className="wrap">{children}</main>
-    </>
+      </aside>
+
+      <main className="app-main">
+        <div className="wrap">{children}</div>
+      </main>
+    </div>
   );
 }

@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
-import type { Gestao, Pendencia, PendenciaInput } from '@/lib/types';
+import type { Gestao, Modulo, Pendencia, PendenciaInput } from '@/lib/types';
 
 interface Props {
+  // Módulo da pendência (usado na criação).
+  modulo: Modulo;
   // Quando presente, é edição; ausente, é criação.
   pendencia?: Pendencia | null;
   onClose: () => void;
@@ -43,7 +45,12 @@ function estadoInicial(p?: Pendencia | null): FormState {
   };
 }
 
-export default function PendenciaFormModal({ pendencia, onClose, onSaved }: Props) {
+export default function PendenciaFormModal({
+  modulo,
+  pendencia,
+  onClose,
+  onSaved,
+}: Props) {
   const editando = !!pendencia;
   const [form, setForm] = useState<FormState>(estadoInicial(pendencia));
   const [salvando, setSalvando] = useState(false);
@@ -90,6 +97,7 @@ export default function PendenciaFormModal({ pendencia, onClose, onSaved }: Prop
         ? await api.patchPendencia(pendencia!.id, body)
         : await api.createPendencia({
             ...body,
+            modulo,
             informacao_necessaria: form.informacao_necessaria.trim(),
           });
       onSaved(salva);

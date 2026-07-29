@@ -4,20 +4,21 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Clinica, Pendencia
+from ..models import Pendencia
 from ..schemas import ClinicasOut
 
 router = APIRouter(tags=["catalogos"])
 
 
 @router.get("/clinicas", response_model=ClinicasOut)
-def clinicas(db: Session = Depends(get_db)):
-    # Master data quando existir; senão, distintos direto das pendências.
-    nomes = list(db.scalars(select(Clinica.nome).order_by(Clinica.nome)))
-    if not nomes:
-        nomes = [
-            n for n in db.scalars(
-                select(Pendencia.clinica).where(Pendencia.clinica != "").distinct().order_by(Pendencia.clinica)
-            )
-        ]
+def clinicas(modulo: str = "convenio", db: Session = Depends(get_db)):
+    # Distintos direto das pendências do módulo (mantém o filtro coerente).
+    nomes = [
+        n for n in db.scalars(
+            select(Pendencia.clinica)
+            .where(Pendencia.modulo == modulo, Pendencia.clinica != "")
+            .distinct()
+            .order_by(Pendencia.clinica)
+        )
+    ]
     return ClinicasOut(items=nomes)

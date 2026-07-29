@@ -27,6 +27,7 @@ def _derivar_status(confirmacao: str, resposta: str, data_dev: date | None) -> s
 
 
 def _filtros(
+    modulo: str = "convenio",
     ano: int | None = None,
     mes_de: int | None = None,
     mes_ate: int | None = None,
@@ -36,7 +37,9 @@ def _filtros(
     responsavel: str | None = None,
     busca: str | None = None,
 ) -> Filtros:
-    return Filtros(ano, mes_de, mes_ate, status, gestao, clinica, responsavel, busca)
+    if modulo not in ("convenio", "triagem"):
+        raise HTTPException(422, "Módulo inválido")
+    return Filtros(modulo, ano, mes_de, mes_ate, status, gestao, clinica, responsavel, busca)
 
 
 @router.get("", response_model=PendenciaPage)
@@ -69,6 +72,7 @@ def criar(dados: PendenciaCreate, db: Session = Depends(get_db)):
 
     p = Pendencia(
         chave=uuid4().hex,  # lançamento manual: chave única própria
+        modulo=campos.pop("modulo", None) or "convenio",
         aba="Manual",
         status=status,
         gestao=gestao or ("resolvido" if status == "concluido" else "aberto"),

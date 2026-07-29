@@ -12,6 +12,7 @@ class PendenciaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
+    modulo: str
     guia: str
     paciente: str
     cod_clinica: str
@@ -34,6 +35,7 @@ class PendenciaOut(BaseModel):
 
 
 class PendenciaCreate(BaseModel):
+    modulo: Literal["convenio", "triagem"] = "convenio"
     guia: str = Field("", max_length=40)
     paciente: str = Field("", max_length=160)
     cod_clinica: str = Field("", max_length=40)
