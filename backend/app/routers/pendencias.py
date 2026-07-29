@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..filters import Filtros, aplicar
-from ..models import Pendencia
+from ..models import Pendencia, Tratativa
 from ..schemas import PendenciaCreate, PendenciaOut, PendenciaPage, PendenciaUpdate
 
 router = APIRouter(prefix="/pendencias", tags=["pendencias"])
@@ -96,8 +96,19 @@ def atualizar(pendencia_id: str, dados: PendenciaUpdate, db: Session = Depends(g
         raise HTTPException(404, "Pendência não encontrada")
 
     enviados = dados.model_dump(exclude_unset=True)
+    gestao_anterior = p.gestao
     for k, v in enviados.items():
         setattr(p, k, v)
+
+    # Auditoria: registra no histórico quando a gestão muda (inclui o seletor
+    # inline da tabela). O "quem" entra quando houver autenticação.
+    if "gestao" in enviados and p.gestao != gestao_anterior:
+        db.add(Tratativa(
+            pendencia_id=p.id,
+            acao=f"Gestão alterada: {gestao_anterior} → {p.gestao}",
+            gestao=p.gestao,
+            por_agente=False,
+        ))
 
     # Recalcula período se a data do pedido mudou.
     if "data_pedido" in enviados:

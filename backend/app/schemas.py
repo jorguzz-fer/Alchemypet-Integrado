@@ -28,6 +28,7 @@ class PendenciaOut(BaseModel):
     mes: int | None
     data_pedido: date | None
     data_devolutiva: date | None
+    dias_em_aberto: int | None = None
     aba: str
     updated_at: datetime
 
@@ -120,6 +121,8 @@ class DashboardOut(BaseModel):
     concluidas: int
     taxa_resolucao: float
     tempo_medio_devolutiva: float | None
+    antigas: int = 0
+    sla_dias: int = 7
     por_mes: list[SerieMes]
     top_clinicas: list[TopItem]
     top_motivos: list[TopItem]

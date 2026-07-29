@@ -31,6 +31,10 @@ def dashboard(f: Filtros = Depends(_filtros), db: Session = Depends(get_db)):
                 tempos.append(d)
     tempo_medio = round(sum(tempos) / len(tempos), 1) if tempos else None
 
+    # Pendências "antigas": não concluídas há mais de SLA_DIAS dias.
+    sla_dias = 7
+    antigas = sum(1 for r in rows if (d := r.dias_em_aberto) is not None and d > sla_dias)
+
     # Série mensal (últimos 18 meses do conjunto)
     por_mes = defaultdict(lambda: {"pendente": 0, "tratativa": 0, "concluido": 0})
     for r in rows:
@@ -49,6 +53,8 @@ def dashboard(f: Filtros = Depends(_filtros), db: Session = Depends(get_db)):
         concluidas=concluidas,
         taxa_resolucao=taxa,
         tempo_medio_devolutiva=tempo_medio,
+        antigas=antigas,
+        sla_dias=sla_dias,
         por_mes=serie,
         top_clinicas=[TopItem(nome=n, total=t) for n, t in top_clinicas.most_common(8)],
         top_motivos=[TopItem(nome=n, total=t) for n, t in top_motivos.most_common(8)],

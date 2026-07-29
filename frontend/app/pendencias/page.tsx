@@ -384,6 +384,19 @@ export default function PendenciasPage() {
                     <td>{p.responsavel || '—'}</td>
                     <td>
                       <StatusBadge status={p.status} />
+                      {p.dias_em_aberto != null ? (
+                        <div
+                          className={`aging${
+                            p.dias_em_aberto > 7
+                              ? ' aging-alto'
+                              : p.dias_em_aberto > 3
+                                ? ' aging-medio'
+                                : ''
+                          }`}
+                        >
+                          {p.dias_em_aberto}d em aberto
+                        </div>
+                      ) : null}
                     </td>
                     <td>
                       <select

@@ -21,6 +21,7 @@ export interface Pendencia {
   mes: number | null;
   data_pedido: string | null;
   data_devolutiva: string | null;
+  dias_em_aberto: number | null;
   aba: string;
   updated_at: string;
 }
@@ -88,6 +89,8 @@ export interface DashboardResponse {
   concluidas: number;
   taxa_resolucao: number;
   tempo_medio_devolutiva: number | null;
+  antigas: number;
+  sla_dias: number;
   por_mes: PorMes[];
   top_clinicas: TopItem[];
   top_motivos: TopItem[];

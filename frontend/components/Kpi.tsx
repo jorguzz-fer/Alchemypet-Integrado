@@ -1,4 +1,11 @@
-export type KpiTone = 'total' | 'pend' | 'trat' | 'ok' | 'taxa' | 'tempo';
+export type KpiTone =
+  | 'total'
+  | 'pend'
+  | 'trat'
+  | 'ok'
+  | 'taxa'
+  | 'tempo'
+  | 'antigas';
 
 interface KpiProps {
   label: string;

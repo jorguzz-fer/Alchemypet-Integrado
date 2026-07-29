@@ -77,6 +77,14 @@ class Pendencia(Base):
         back_populates="pendencia", cascade="all, delete-orphan", order_by="Tratativa.created_at"
     )
 
+    @property
+    def dias_em_aberto(self) -> int | None:
+        """Dias desde a data do pedido enquanto não concluída (SLA/aging)."""
+        if self.status == "concluido" or not self.data_pedido:
+            return None
+        d = (date.today() - self.data_pedido).days
+        return d if d >= 0 else 0
+
 
 class Tratativa(Base):
     """Histórico de ações sobre uma pendência (humano ou agente)."""
