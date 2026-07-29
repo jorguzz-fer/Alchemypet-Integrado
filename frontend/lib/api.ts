@@ -189,8 +189,11 @@ export const api = {
     });
   },
 
-  clinicas(signal?: AbortSignal): Promise<ClinicasResponse> {
-    return request<ClinicasResponse>('/clinicas', { signal });
+  clinicas(modulo: string, signal?: AbortSignal): Promise<ClinicasResponse> {
+    return request<ClinicasResponse>('/clinicas', {
+      query: { modulo },
+      signal,
+    });
   },
 
   // ===== Auth =====
@@ -221,9 +224,10 @@ export const api = {
     });
   },
 
-  importar(file: File): Promise<ImportarResponse> {
+  importar(file: File, modulo: string): Promise<ImportarResponse> {
     const fd = new FormData();
     fd.append('file', file);
+    fd.append('modulo', modulo);
     return request<ImportarResponse>('/importar', {
       method: 'POST',
       formData: fd,

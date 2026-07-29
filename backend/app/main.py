@@ -48,16 +48,38 @@ def _migracao_leve() -> None:
         "ALTER TABLE pendencia ALTER COLUMN colaborador TYPE TEXT",
         "ALTER TABLE pendencia ALTER COLUMN confirmacao TYPE TEXT",
         "ALTER TABLE pendencia ALTER COLUMN triagem TYPE TEXT",
+        # Multi-módulo: registros existentes são do convênio.
+        "ALTER TABLE pendencia ADD COLUMN IF NOT EXISTS modulo VARCHAR(20) DEFAULT 'convenio'",
+        "CREATE INDEX IF NOT EXISTS ix_pendencia_modulo ON pendencia (modulo)",
     ]
     with engine.begin() as conn:
         for stmt in ddl:
             conn.execute(text(stmt))
 
 
+def _recarimba_chaves(db) -> None:
+    """A chave natural passou a incluir o módulo. Recalcula uma vez as chaves
+    das pendências existentes para a reimportação continuar idempotente."""
+    from .importer import _chave
+    from .models import Pendencia
+
+    amostra = db.scalar(select(Pendencia).limit(1))
+    if not amostra:
+        return
+    esperado = _chave(amostra.modulo, amostra.aba, amostra.guia, amostra.paciente, amostra.informacao_necessaria)
+    if amostra.chave == esperado:
+        return  # já no formato novo
+    for p in db.scalars(select(Pendencia)):
+        p.chave = _chave(p.modulo, p.aba, p.guia, p.paciente, p.informacao_necessaria)
+    db.commit()
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
     _migracao_leve()
+    with SessionLocal() as db:
+        _recarimba_chaves(db)
     # Garante um admin inicial (idempotente) a partir das variáveis de ambiente.
     with SessionLocal() as db:
         email = settings.ADMIN_EMAIL.strip().lower()

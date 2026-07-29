@@ -48,7 +48,9 @@ class Pendencia(Base):
     __tablename__ = "pendencia"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    # Chave natural para importação idempotente (aba|guia|paciente|info).
+    # Módulo/operação: convenio | triagem
+    modulo: Mapped[str] = mapped_column(String(20), default="convenio", index=True)
+    # Chave natural para importação idempotente (modulo|aba|guia|paciente|info).
     chave: Mapped[str] = mapped_column(String(64), unique=True, index=True)
 
     guia: Mapped[str] = mapped_column(String(40), default="", index=True)

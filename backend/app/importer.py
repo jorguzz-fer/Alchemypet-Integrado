@@ -27,7 +27,7 @@ FIELD_SYN = {
     "clinica": ["clinica"],
     "info": ["informacao necessaria", "acao/comentario atendimento", "acao/comentario-atendimento", "acao/comentario"],
     "responsavel": ["responsavel"],
-    "resposta": ["resposta do cliente"],
+    "resposta": ["resposta do cliente", "retorno"],
     "data_dev": ["data da devolutiva", "data da devulativa", "data devolutiva"],
     "colaborador": ["colaborador do atendimento", "colaborador"],
     "confirmacao": ["confirmacao para a clinica", "confitmacao p/ a clinica", "confirmacao p/ a clinica", "confirmacao"],
@@ -124,13 +124,13 @@ def _derive_status(confirmacao: str, resposta: str, data_dev) -> str:
     return "pendente"
 
 
-def _chave(aba, guia, paciente, info) -> str:
-    raw = "|".join([aba, guia, paciente, info])
+def _chave(modulo, aba, guia, paciente, info) -> str:
+    raw = "|".join([modulo, aba, guia, paciente, info])
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:32]
 
 
-def importar_xlsx(db: Session, conteudo: bytes) -> dict:
-    """Lê o .xlsx, normaliza e faz upsert. Retorna {importados, abas, total}."""
+def importar_xlsx(db: Session, conteudo: bytes, modulo: str = "convenio") -> dict:
+    """Lê o .xlsx, normaliza e faz upsert (por módulo). Retorna {importados, abas, total}."""
     from io import BytesIO
 
     wb = openpyxl.load_workbook(BytesIO(conteudo), data_only=True, read_only=True)
@@ -161,6 +161,14 @@ def importar_xlsx(db: Session, conteudo: bytes) -> dict:
         if "guia" not in colmap and "paciente" not in colmap:
             continue
 
+        # Fallback: em algumas abas o cabeçalho "Informação necessária" vem
+        # em branco. Nesse layout a informação fica na coluna imediatamente
+        # antes de "Responsável"; usamos essa coluna se estiver livre.
+        if "info" not in colmap and "responsavel" in colmap:
+            cand = colmap["responsavel"] - 1
+            if cand >= 0 and cand not in colmap.values():
+                colmap["info"] = cand
+
         ano, mes = _period(sheet_name)
 
         def get(row, field):
@@ -183,7 +191,7 @@ def importar_xlsx(db: Session, conteudo: bytes) -> dict:
             clinica = _norm(get(row, "clinica"))
             cod_clinica = _norm(get(row, "cod_clinica"))
             status = _derive_status(confirmacao, resposta, data_dev)
-            chave = _chave(sheet_name, guia, paciente, info)
+            chave = _chave(modulo, sheet_name, guia, paciente, info)
 
             if clinica and clinica not in clinicas_vistas:
                 clinicas_vistas[clinica] = cod_clinica
@@ -212,7 +220,7 @@ def importar_xlsx(db: Session, conteudo: bytes) -> dict:
             else:
                 # Gestão inicial deriva do status (concluído -> resolvido).
                 gestao = "resolvido" if status == "concluido" else "aberto"
-                nova = Pendencia(chave=chave, gestao=gestao, **campos)
+                nova = Pendencia(chave=chave, modulo=modulo, gestao=gestao, **campos)
                 db.add(nova)
                 staged[chave] = nova
                 importados += 1
@@ -227,5 +235,5 @@ def importar_xlsx(db: Session, conteudo: bytes) -> dict:
             db.add(Clinica(nome=nome, codigo=_fit(codigo, 40)))
 
     db.commit()
-    total = db.scalar(select(func.count()).select_from(Pendencia))
+    total = db.scalar(select(func.count()).select_from(Pendencia).where(Pendencia.modulo == modulo))
     return {"importados": importados, "abas": abas, "total": int(total or 0)}

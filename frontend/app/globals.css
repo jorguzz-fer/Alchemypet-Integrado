@@ -63,7 +63,173 @@ button {
   padding: 0 22px;
 }
 
-/* ===== Topbar ===== */
+/* ===== Shell com menu lateral ===== */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+.sidebar {
+  width: 236px;
+  flex: none;
+  background: var(--card);
+  border-right: 1px solid var(--linha);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px;
+  gap: 8px;
+}
+.side-brand {
+  display: block;
+  padding: 6px 6px 14px;
+  border-bottom: 1px solid var(--linha);
+  margin-bottom: 6px;
+}
+.side-brand img {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+.side-nav {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.side-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.side-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--texto-suave);
+  padding: 4px 8px;
+}
+.side-ic {
+  font-size: 0.95rem;
+}
+.side-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 26px;
+  border-radius: 9px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--texto);
+  text-decoration: none;
+}
+.side-group-admin .side-link {
+  padding-left: 10px;
+  font-weight: 700;
+}
+.side-link:hover {
+  background: var(--bg-soft);
+}
+.side-link.ativo {
+  background: #e8f7f7;
+  color: var(--destaque);
+  font-weight: 700;
+}
+.side-group-admin {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--linha);
+}
+.side-user {
+  border-top: 1px solid var(--linha);
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.side-user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+.side-user-nome {
+  font-weight: 700;
+  font-size: 0.84rem;
+  color: var(--grafite);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side-user-perfil {
+  font-size: 0.66rem;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+.app-main .wrap {
+  padding: 0 26px 60px;
+}
+@media (max-width: 820px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    padding: 10px 14px;
+  }
+  .side-brand {
+    border: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .side-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    overflow: visible;
+  }
+  .side-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+  }
+  .side-group-title {
+    padding: 4px;
+  }
+  .side-link {
+    padding: 6px 10px;
+  }
+  .side-group-admin {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .side-user {
+    margin-left: auto;
+    border: 0;
+    padding: 0;
+  }
+}
+
+/* ===== Topbar (legado — não usado com o menu lateral) ===== */
 header.top {
   position: sticky;
   top: 0;

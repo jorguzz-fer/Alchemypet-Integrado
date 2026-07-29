@@ -3,8 +3,11 @@
 export type StatusPlanilha = 'pendente' | 'tratativa' | 'concluido';
 export type Gestao = 'aberto' | 'andamento' | 'resolvido';
 
+export type Modulo = 'convenio' | 'triagem';
+
 export interface Pendencia {
   id: string;
+  modulo: Modulo;
   guia: string;
   paciente: string;
   cod_clinica: string;
@@ -74,6 +77,7 @@ export interface HealthResponse {
 // Definido como type alias (nao interface) para ganhar index signature
 // implicita e poder ser passado como querystring (Record<string, ...>).
 export type FiltrosPendencias = {
+  modulo?: Modulo;
   ano?: number | string;
   mes_de?: number | string;
   mes_ate?: number | string;
@@ -132,6 +136,7 @@ export interface ImportarResponse {
 
 // Campos editáveis de uma pendência (criação e edição manual).
 export interface PendenciaInput {
+  modulo?: Modulo;
   guia?: string;
   paciente?: string;
   cod_clinica?: string;
