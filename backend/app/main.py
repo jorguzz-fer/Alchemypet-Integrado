@@ -43,6 +43,11 @@ def _migracao_leve() -> None:
         "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS senha_hash VARCHAR(255)",
         "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS ativo BOOLEAN DEFAULT TRUE",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_usuario_email ON usuario (email)",
+        # Campos de comentário viram TEXT (fim da truncagem). varchar->text é
+        # barato no Postgres; rodar de novo sobre TEXT é no-op.
+        "ALTER TABLE pendencia ALTER COLUMN colaborador TYPE TEXT",
+        "ALTER TABLE pendencia ALTER COLUMN confirmacao TYPE TEXT",
+        "ALTER TABLE pendencia ALTER COLUMN triagem TYPE TEXT",
     ]
     with engine.begin() as conn:
         for stmt in ddl:

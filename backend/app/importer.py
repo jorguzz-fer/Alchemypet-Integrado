@@ -196,8 +196,9 @@ def importar_xlsx(db: Session, conteudo: bytes) -> dict:
                 cod_clinica=_fit(cod_clinica, 40), clinica=_fit(clinica, 200),
                 informacao_necessaria=info, resposta_cliente=resposta,
                 responsavel=_fit(_norm(get(row, "responsavel")), 120),
-                colaborador=_fit(_norm(get(row, "colaborador")), 120),
-                confirmacao=_fit(confirmacao, 120), triagem=_fit(_norm(get(row, "triagem")), 120),
+                # colaborador/confirmacao/triagem são TEXT: sem truncagem.
+                colaborador=_norm(get(row, "colaborador")),
+                confirmacao=confirmacao, triagem=_norm(get(row, "triagem")),
                 status=status, ano=ano, mes=mes, data_pedido=data_pedido, data_devolutiva=data_dev,
                 aba=_fit(sheet_name, 60),
             )
