@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { MODULOS } from '@/lib/modulos';
+import { IconeUsuarios, iconeModulo } from '@/components/icons';
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const { usuario, carregando, sair } = useAuth();
@@ -43,7 +44,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           {MODULOS.map((m) => (
             <div className="side-group" key={m.key}>
               <div className="side-group-title">
-                <span className="side-ic">{m.icone}</span>
+                {iconeModulo(m.key, 'side-ic')}
                 {m.nome}
               </div>
               <Link
@@ -67,7 +68,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                 href="/usuarios"
                 className={`side-link${linkAtivo('/usuarios') ? ' ativo' : ''}`}
               >
-                <span className="side-ic">👥</span> Usuários
+                <IconeUsuarios className="side-ic" /> Usuários
               </Link>
             </div>
           ) : null}

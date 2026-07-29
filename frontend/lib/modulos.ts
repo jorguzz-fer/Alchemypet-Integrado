@@ -3,7 +3,6 @@ import type { Modulo } from './types';
 export interface InfoModulo {
   key: Modulo;
   nome: string;
-  icone: string;
   descricao: string; // usado em títulos/leads
 }
 
@@ -12,13 +11,11 @@ export const MODULOS: InfoModulo[] = [
   {
     key: 'triagem',
     nome: 'Triagem',
-    icone: '🧪',
     descricao: 'pendências cadastrais (Triagem/SAC)',
   },
   {
     key: 'convenio',
     nome: 'Convênio',
-    icone: '📋',
     descricao: 'pendências de convênio',
   },
 ];
