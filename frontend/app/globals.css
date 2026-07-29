@@ -116,7 +116,9 @@ button {
   padding: 4px 8px;
 }
 .side-ic {
-  font-size: 0.95rem;
+  flex: none;
+  display: inline-flex;
+  vertical-align: middle;
 }
 .side-link {
   display: flex;
