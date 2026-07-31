@@ -86,6 +86,7 @@ export type FiltrosPendencias = {
   clinica?: string;
   responsavel?: string;
   busca?: string;
+  antigas?: boolean;
   page?: number;
   per_page?: number;
 };

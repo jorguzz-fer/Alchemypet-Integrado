@@ -36,10 +36,13 @@ def _filtros(
     clinica: str | None = None,
     responsavel: str | None = None,
     busca: str | None = None,
+    antigas: bool = False,
 ) -> Filtros:
     if modulo not in ("convenio", "triagem"):
         raise HTTPException(422, "Módulo inválido")
-    return Filtros(modulo, ano, mes_de, mes_ate, status, gestao, clinica, responsavel, busca)
+    return Filtros(
+        modulo, ano, mes_de, mes_ate, status, gestao, clinica, responsavel, busca, antigas
+    )
 
 
 @router.get("", response_model=PendenciaPage)
