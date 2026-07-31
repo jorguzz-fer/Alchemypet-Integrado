@@ -1,10 +1,13 @@
 """Filtros compartilhados entre /pendencias e /dashboard."""
 from dataclasses import dataclass
+from datetime import date, timedelta
 
 from sqlalchemy import Select
 from sqlalchemy import func as safunc
 
 from .models import Pendencia
+
+SLA_DIAS = 7
 
 
 @dataclass
@@ -18,6 +21,7 @@ class Filtros:
     clinica: str | None = None
     responsavel: str | None = None
     busca: str | None = None
+    antigas: bool = False
 
 
 def aplicar(stmt: Select, f: Filtros) -> Select:
@@ -30,6 +34,14 @@ def aplicar(stmt: Select, f: Filtros) -> Select:
         stmt = stmt.where(Pendencia.mes <= f.mes_ate)
     if f.status:
         stmt = stmt.where(Pendencia.status == f.status)
+    if f.antigas:
+        # Não concluídas em aberto há mais de SLA_DIAS dias.
+        limite = date.today() - timedelta(days=SLA_DIAS)
+        stmt = stmt.where(
+            Pendencia.status != "concluido",
+            Pendencia.data_pedido.is_not(None),
+            Pendencia.data_pedido < limite,
+        )
     if f.gestao:
         stmt = stmt.where(Pendencia.gestao == f.gestao)
     if f.clinica:
