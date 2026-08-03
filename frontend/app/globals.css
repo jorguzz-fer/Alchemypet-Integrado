@@ -120,6 +120,26 @@ button {
   display: inline-flex;
   vertical-align: middle;
 }
+.side-ic-sm {
+  flex: none;
+  display: inline-flex;
+  vertical-align: middle;
+  opacity: 0.75;
+}
+/* Título de grupo que também é link (Dashboard / Convênios). */
+.side-group-title.link {
+  text-decoration: none;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.side-group-title.link:hover {
+  background: var(--bg-soft);
+  color: var(--texto);
+}
+.side-group-title.link.ativo {
+  background: #e8f7f7;
+  color: var(--destaque);
+}
 .side-link {
   display: flex;
   align-items: center;
@@ -987,9 +1007,18 @@ td.nowrap {
   border-color: var(--erro);
   color: var(--erro);
 }
+.notebtn.ok {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.notebtn.ok:hover {
+  background: var(--ok);
+  color: #fff;
+}
 .row-acoes {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 /* Indicador de dias em aberto (SLA/aging) */
 .aging {

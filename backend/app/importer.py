@@ -25,7 +25,10 @@ FIELD_SYN = {
     "paciente": ["paciente", "pacinte"],
     "cod_clinica": ["codigo da clinica", "cod da clinica", "cod. clinica", "cod clinica"],
     "clinica": ["clinica"],
-    "info": ["informacao necessaria", "acao/comentario atendimento", "acao/comentario-atendimento", "acao/comentario"],
+    "info": ["informacao necessaria"],
+    # Coluna "Ação/Comentário" usada como informação apenas quando não há
+    # coluna dedicada (layouts legados / Convênio). Resolvida por último.
+    "info_acao": ["acao/comentario atendimento", "acao/comentario-atendimento", "acao/comentario"],
     "responsavel": ["responsavel"],
     "resposta": ["resposta do cliente", "retorno"],
     "data_dev": ["data da devolutiva", "data da devulativa", "data devolutiva"],
@@ -115,6 +118,56 @@ def _build_colmap(header_row):
     return colmap
 
 
+def _celula_vazia(cell) -> bool:
+    """Cabeçalho em branco (célula None ou só espaços)."""
+    return cell is None or _key(cell) == ""
+
+
+def _resolver_colunas(colmap: dict, header) -> None:
+    """Infere 'clinica' e 'info' por POSIÇÃO em layouts antigos (2021/2022),
+    onde essas colunas perderam o cabeçalho. Não altera colunas já mapeadas
+    por nome. Muta `colmap` in-place.
+
+    Layout canônico da planilha: ... | Cód. Clínica | Clínica | Informação
+    necessária | Data do pedido da inf | ... — âncoras usadas na inferência.
+    """
+    n = len(header)
+    usados = set(colmap.values())
+
+    # Clínica sem cabeçalho: coluna em branco logo após "Código da clínica".
+    if "clinica" not in colmap and "cod_clinica" in colmap:
+        cand = colmap["cod_clinica"] + 1
+        if cand < n and cand not in usados and _celula_vazia(header[cand]):
+            colmap["clinica"] = cand
+            usados.add(cand)
+
+    if "info" in colmap:
+        return
+
+    # (a) Informação com cabeçalho em branco entre "Clínica" e "Data do
+    #     pedido da inf" (layouts antigos).
+    alvo = colmap.get("data_pedido")
+    if "clinica" in colmap and alvo is not None and alvo - colmap["clinica"] >= 2:
+        for cand in range(colmap["clinica"] + 1, alvo):
+            if cand not in usados and _celula_vazia(header[cand]):
+                colmap["info"] = cand
+                usados.add(cand)
+                break
+
+    # (b) Coluna imediatamente antes de "Responsável" (layout moderno com o
+    #     cabeçalho de info em branco).
+    if "info" not in colmap and "responsavel" in colmap:
+        cand = colmap["responsavel"] - 1
+        if cand >= 0 and cand not in usados and _celula_vazia(header[cand]):
+            colmap["info"] = cand
+            usados.add(cand)
+
+    # (c) Legado: usa "Ação/Comentário" como informação quando não há coluna
+    #     dedicada (preserva o comportamento do módulo Convênio).
+    if "info" not in colmap and "info_acao" in colmap:
+        colmap["info"] = colmap["info_acao"]
+
+
 def _derive_status(confirmacao: str, resposta: str, data_dev) -> str:
     conf = _key(confirmacao)
     if conf == "ok" or conf.startswith("ok ") or conf == "okk":
@@ -161,13 +214,9 @@ def importar_xlsx(db: Session, conteudo: bytes, modulo: str = "convenio") -> dic
         if "guia" not in colmap and "paciente" not in colmap:
             continue
 
-        # Fallback: em algumas abas o cabeçalho "Informação necessária" vem
-        # em branco. Nesse layout a informação fica na coluna imediatamente
-        # antes de "Responsável"; usamos essa coluna se estiver livre.
-        if "info" not in colmap and "responsavel" in colmap:
-            cand = colmap["responsavel"] - 1
-            if cand >= 0 and cand not in colmap.values():
-                colmap["info"] = cand
+        # Infere Clínica/Informação por posição em layouts antigos onde essas
+        # colunas ficaram sem cabeçalho (planilhas de 2021/2022).
+        _resolver_colunas(colmap, rows[h_idx])
 
         ano, mes = _period(sheet_name)
 

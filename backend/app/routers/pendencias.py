@@ -37,25 +37,37 @@ def _filtros(
     responsavel: str | None = None,
     busca: str | None = None,
     antigas: bool = False,
+    abertas: bool = False,
 ) -> Filtros:
     if modulo not in ("convenio", "triagem"):
         raise HTTPException(422, "Módulo inválido")
     return Filtros(
-        modulo, ano, mes_de, mes_ate, status, gestao, clinica, responsavel, busca, antigas
+        modulo, ano, mes_de, mes_ate, status, gestao, clinica, responsavel,
+        busca, antigas, abertas,
     )
 
 
 @router.get("", response_model=PendenciaPage)
 def listar(
     f: Filtros = Depends(_filtros),
+    ordem: str | None = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
     base = aplicar(select(Pendencia), f)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    stmt = base.order_by(Pendencia.ano.desc(), Pendencia.mes.desc(), Pendencia.data_pedido.desc()) \
-        .offset((page - 1) * per_page).limit(per_page)
+    if ordem == "prioridade":
+        # Fila de triagem: mais antigas primeiro (nulos por último).
+        stmt = base.order_by(
+            Pendencia.data_pedido.is_(None),
+            Pendencia.data_pedido.asc(),
+        )
+    else:
+        stmt = base.order_by(
+            Pendencia.ano.desc(), Pendencia.mes.desc(), Pendencia.data_pedido.desc()
+        )
+    stmt = stmt.offset((page - 1) * per_page).limit(per_page)
     items = list(db.scalars(stmt))
     return PendenciaPage(total=total, page=page, per_page=per_page, items=items)
 

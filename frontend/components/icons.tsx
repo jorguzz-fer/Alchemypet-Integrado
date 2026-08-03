@@ -54,6 +54,31 @@ export function IconeUsuarios({ className, size = 18 }: IconeProps) {
   );
 }
 
+// Dashboard — painel com blocos/indicadores
+export function IconeDashboard({ className, size = 18 }: IconeProps) {
+  return (
+    <svg className={className} {...base(size)}>
+      <rect x="3" y="3" width="7" height="9" rx="1" />
+      <rect x="14" y="3" width="7" height="5" rx="1" />
+      <rect x="14" y="12" width="7" height="9" rx="1" />
+      <rect x="3" y="16" width="7" height="5" rx="1" />
+    </svg>
+  );
+}
+
+// Fazer triagem — fila/lista com seta de ação
+export function IconeFila({ className, size = 18 }: IconeProps) {
+  return (
+    <svg className={className} {...base(size)}>
+      <line x1="3" y1="6" x2="14" y2="6" />
+      <line x1="3" y1="12" x2="12" y2="12" />
+      <line x1="3" y1="18" x2="10" y2="18" />
+      <path d="m16 10 4 4-4 4" />
+      <line x1="20" y1="14" x2="13" y2="14" />
+    </svg>
+  );
+}
+
 export function iconeModulo(key: string, className?: string) {
   if (key === 'triagem') return <IconeTriagem className={className} />;
   return <IconeConvenio className={className} />;
