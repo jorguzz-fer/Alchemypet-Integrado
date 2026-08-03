@@ -87,6 +87,8 @@ export type FiltrosPendencias = {
   responsavel?: string;
   busca?: string;
   antigas?: boolean;
+  abertas?: boolean;
+  ordem?: 'prioridade';
   page?: number;
   per_page?: number;
 };

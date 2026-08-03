@@ -22,6 +22,7 @@ class Filtros:
     responsavel: str | None = None
     busca: str | None = None
     antigas: bool = False
+    abertas: bool = False
 
 
 def aplicar(stmt: Select, f: Filtros) -> Select:
@@ -34,6 +35,9 @@ def aplicar(stmt: Select, f: Filtros) -> Select:
         stmt = stmt.where(Pendencia.mes <= f.mes_ate)
     if f.status:
         stmt = stmt.where(Pendencia.status == f.status)
+    if f.abertas:
+        # Fila de trabalho: tudo que ainda não foi concluído.
+        stmt = stmt.where(Pendencia.status != "concluido")
     if f.antigas:
         # Não concluídas em aberto há mais de SLA_DIAS dias.
         limite = date.today() - timedelta(days=SLA_DIAS)

@@ -4,8 +4,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
-import { MODULOS } from '@/lib/modulos';
-import { IconeUsuarios, iconeModulo } from '@/components/icons';
+import {
+  IconeConvenio,
+  IconeDashboard,
+  IconeFila,
+  IconeTriagem,
+  IconeUsuarios,
+} from '@/components/icons';
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const { usuario, carregando, sair } = useAuth();
@@ -41,26 +46,53 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav className="side-nav">
-          {MODULOS.map((m) => (
-            <div className="side-group" key={m.key}>
-              <div className="side-group-title">
-                {iconeModulo(m.key, 'side-ic')}
-                {m.nome}
-              </div>
-              <Link
-                href={`/${m.key}`}
-                className={`side-link${linkAtivo(`/${m.key}`, true) ? ' ativo' : ''}`}
-              >
-                Visão geral
-              </Link>
-              <Link
-                href={`/${m.key}/pendencias`}
-                className={`side-link${linkAtivo(`/${m.key}/pendencias`) ? ' ativo' : ''}`}
-              >
-                Pendências
-              </Link>
+          {/* Dashboard — visão geral e pendências (dados de triagem). */}
+          <div className="side-group">
+            <Link
+              href="/triagem"
+              className={`side-group-title link${linkAtivo('/triagem', true) ? ' ativo' : ''}`}
+            >
+              <IconeDashboard className="side-ic" />
+              Dashboard
+            </Link>
+            <Link
+              href="/triagem/pendencias"
+              className={`side-link${linkAtivo('/triagem/pendencias') ? ' ativo' : ''}`}
+            >
+              Pendências
+            </Link>
+          </div>
+
+          {/* Triagem — fila operacional de triagens a resolver. */}
+          <div className="side-group">
+            <div className="side-group-title">
+              <IconeTriagem className="side-ic" />
+              Triagem
             </div>
-          ))}
+            <Link
+              href="/triagem/fila"
+              className={`side-link${linkAtivo('/triagem/fila') ? ' ativo' : ''}`}
+            >
+              <IconeFila className="side-ic-sm" /> Fazer triagem
+            </Link>
+          </div>
+
+          {/* Convênios — pendências de convênio. */}
+          <div className="side-group">
+            <Link
+              href="/convenio"
+              className={`side-group-title link${linkAtivo('/convenio', true) ? ' ativo' : ''}`}
+            >
+              <IconeConvenio className="side-ic" />
+              Convênios
+            </Link>
+            <Link
+              href="/convenio/pendencias"
+              className={`side-link${linkAtivo('/convenio/pendencias') ? ' ativo' : ''}`}
+            >
+              Pendências
+            </Link>
+          </div>
 
           {usuario.perfil === 'admin' ? (
             <div className="side-group side-group-admin">
