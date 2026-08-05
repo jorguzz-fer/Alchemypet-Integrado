@@ -8,6 +8,7 @@ import {
   IconeConvenio,
   IconeDashboard,
   IconeFila,
+  IconePop,
   IconeTriagem,
   IconeUsuarios,
 } from '@/components/icons';
@@ -91,6 +92,23 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               className={`side-link${linkAtivo('/convenio/pendencias') ? ' ativo' : ''}`}
             >
               Pendências
+            </Link>
+          </div>
+
+          {/* POP — controle de POPs elaborados e atualizados. */}
+          <div className="side-group">
+            <Link
+              href="/pop"
+              className={`side-group-title link${linkAtivo('/pop', true) ? ' ativo' : ''}`}
+            >
+              <IconePop className="side-ic" />
+              POP
+            </Link>
+            <Link
+              href="/pop/lista"
+              className={`side-link${linkAtivo('/pop/lista') ? ' ativo' : ''}`}
+            >
+              Lista de POPs
             </Link>
           </div>
 

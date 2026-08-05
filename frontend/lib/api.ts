@@ -14,6 +14,12 @@ import type {
   PatchPendencia,
   Pendencia,
   PendenciasResponse,
+  Pop,
+  PopDashboardResponse,
+  PopImportResponse,
+  PopInput,
+  PopsResponse,
+  FiltrosPop,
   Tratativa,
   Usuario,
   UsuarioUpdate,
@@ -229,6 +235,43 @@ export const api = {
     fd.append('file', file);
     fd.append('modulo', modulo);
     return request<ImportarResponse>('/importar', {
+      method: 'POST',
+      formData: fd,
+    });
+  },
+
+  // ===== POPs (Controle de POPs) =====
+  listPops(filtros: FiltrosPop = {}, signal?: AbortSignal): Promise<PopsResponse> {
+    return request<PopsResponse>('/pops', { query: filtros, signal });
+  },
+
+  popsDashboard(signal?: AbortSignal): Promise<PopDashboardResponse> {
+    return request<PopDashboardResponse>('/pops/dashboard', { signal });
+  },
+
+  popsAreas(signal?: AbortSignal): Promise<string[]> {
+    return request<string[]>('/pops/areas', { signal });
+  },
+
+  createPop(body: PopInput): Promise<Pop> {
+    return request<Pop>('/pops', { method: 'POST', body });
+  },
+
+  patchPop(id: string, body: PopInput): Promise<Pop> {
+    return request<Pop>(`/pops/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body,
+    });
+  },
+
+  deletePop(id: string): Promise<void> {
+    return request<void>(`/pops/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  },
+
+  importarPops(file: File): Promise<PopImportResponse> {
+    const fd = new FormData();
+    fd.append('file', file);
+    return request<PopImportResponse>('/pops/importar', {
       method: 'POST',
       formData: fd,
     });

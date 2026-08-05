@@ -6,7 +6,7 @@ from sqlalchemy import func, select, text
 from .config import settings
 from .database import Base, SessionLocal, engine
 from .models import Usuario
-from .routers import auth, catalogos, dashboard, importacao, pendencias, tratativas, usuarios
+from .routers import auth, catalogos, dashboard, importacao, pendencias, pop, tratativas, usuarios
 from .security import hash_senha, usuario_atual
 
 app = FastAPI(title=settings.APP_NAME, version="2.0.0")
@@ -29,6 +29,7 @@ app.include_router(tratativas.router, dependencies=protegido)
 app.include_router(dashboard.router, dependencies=protegido)
 app.include_router(catalogos.router, dependencies=protegido)
 app.include_router(importacao.router, dependencies=protegido)
+app.include_router(pop.router, dependencies=protegido)
 app.include_router(usuarios.router)  # protege internamente (usuario_atual/exige_admin)
 
 

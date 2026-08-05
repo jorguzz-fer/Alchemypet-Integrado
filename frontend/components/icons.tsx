@@ -79,6 +79,17 @@ export function IconeFila({ className, size = 18 }: IconeProps) {
   );
 }
 
+// POP — documento com selo/estrela (procedimento padrão)
+export function IconePop({ className, size = 18 }: IconeProps) {
+  return (
+    <svg className={className} {...base(size)}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="m10.5 12 1 2 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2L7.5 14.3l2-.3z" />
+    </svg>
+  );
+}
+
 export function iconeModulo(key: string, className?: string) {
   if (key === 'triagem') return <IconeTriagem className={className} />;
   return <IconeConvenio className={className} />;
