@@ -93,6 +93,28 @@ class Pendencia(Base):
         return d if d >= 0 else 0
 
 
+class Pop(Base):
+    """Controle de POPs (Procedimentos Operacionais Padrão) elaborados e
+    atualizados. Cada registro é um POP trabalhado num dado ano, novo ou
+    atualizado. Os resumos (por ano, por área, KPIs) derivam desta lista."""
+
+    __tablename__ = "pop"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    # Chave natural para importação idempotente (numero|tipo|ano).
+    chave: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+
+    numero: Mapped[str] = mapped_column(String(20), default="", index=True)
+    nome: Mapped[str] = mapped_column(Text, default="")
+    ano: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    # novo | atualizado
+    tipo: Mapped[str] = mapped_column(String(20), default="novo", index=True)
+    area: Mapped[str] = mapped_column(String(120), default="", index=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
+
+
 class Tratativa(Base):
     """Histórico de ações sobre uma pendência (humano ou agente)."""
 

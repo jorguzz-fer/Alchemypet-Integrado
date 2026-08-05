@@ -165,3 +165,64 @@ class ImportResult(BaseModel):
     importados: int
     abas: int
     total: int
+
+
+# ===== POPs (Controle de POPs elaborados e atualizados) =====
+
+TipoPop = Literal["novo", "atualizado"]
+
+
+class PopOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    numero: str
+    nome: str
+    ano: int | None
+    tipo: TipoPop
+    area: str
+    updated_at: datetime
+
+
+class PopCreate(BaseModel):
+    numero: str = Field("", max_length=20)
+    nome: str
+    ano: int | None = None
+    tipo: TipoPop = "novo"
+    area: str = Field("", max_length=120)
+
+
+class PopUpdate(BaseModel):
+    numero: str | None = Field(None, max_length=20)
+    nome: str | None = None
+    ano: int | None = None
+    tipo: TipoPop | None = None
+    area: str | None = Field(None, max_length=120)
+
+
+class PopPage(BaseModel):
+    total: int
+    page: int
+    per_page: int
+    items: list[PopOut]
+
+
+class PopAno(BaseModel):
+    ano: int | None
+    novos: int
+    atualizados: int
+    total: int
+
+
+class PopDashboardOut(BaseModel):
+    total: int
+    novos: int
+    atualizados: int
+    periodo: str
+    por_ano: list[PopAno]
+    por_area: list[TopItem]
+
+
+class PopImportResult(BaseModel):
+    importados: int
+    total: int

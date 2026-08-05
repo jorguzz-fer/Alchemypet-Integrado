@@ -168,3 +168,62 @@ export interface NovaTratativa {
   gestao?: string;
   usuario_id?: string;
 }
+
+// ===== POPs (Controle de POPs) =====
+
+export type TipoPop = 'novo' | 'atualizado';
+
+export interface Pop {
+  id: string;
+  numero: string;
+  nome: string;
+  ano: number | null;
+  tipo: TipoPop;
+  area: string;
+  updated_at: string;
+}
+
+export interface PopInput {
+  numero?: string;
+  nome: string;
+  ano?: number | null;
+  tipo?: TipoPop;
+  area?: string;
+}
+
+export type FiltrosPop = {
+  ano?: number | string;
+  tipo?: TipoPop | '';
+  area?: string;
+  busca?: string;
+  page?: number;
+  per_page?: number;
+};
+
+export interface PopsResponse {
+  total: number;
+  page: number;
+  per_page: number;
+  items: Pop[];
+}
+
+export interface PopAno {
+  ano: number | null;
+  novos: number;
+  atualizados: number;
+  total: number;
+}
+
+export interface PopDashboardResponse {
+  total: number;
+  novos: number;
+  atualizados: number;
+  periodo: string;
+  por_ano: PopAno[];
+  por_area: TopItem[];
+}
+
+export interface PopImportResponse {
+  importados: number;
+  total: number;
+}
