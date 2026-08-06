@@ -541,6 +541,16 @@ header.top {
 .kpis.kpis-4 {
   grid-template-columns: repeat(4, 1fr);
 }
+/* Faixa de KPIs compacta no topo de uma lista. */
+.kpis.kpis-compact {
+  margin-bottom: 16px;
+}
+.kpis-compact .kpi {
+  padding: 12px 14px;
+}
+.kpis-compact .kpi .val {
+  font-size: 1.42rem;
+}
 .kpi {
   background: var(--card);
   border: 1px solid var(--linha);

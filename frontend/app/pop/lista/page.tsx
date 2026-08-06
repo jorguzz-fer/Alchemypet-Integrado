@@ -2,8 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
-import type { FiltrosPop, Pop, PopsResponse } from '@/lib/types';
+import type {
+  FiltrosPop,
+  Pop,
+  PopDashboardResponse,
+  PopsResponse,
+} from '@/lib/types';
 import { formatNumero } from '@/lib/format';
+import Kpi from '@/components/Kpi';
 import PopFormModal from '@/components/PopFormModal';
 
 const PER_PAGE = 25;
@@ -25,6 +31,7 @@ export default function PopListaPage() {
   const [erro, setErro] = useState<string | null>(null);
 
   const [areas, setAreas] = useState<string[]>([]);
+  const [dash, setDash] = useState<PopDashboardResponse | null>(null);
   const [form, setForm] = useState<'novo' | Pop | null>(null);
   const [excluindo, setExcluindo] = useState<Record<string, boolean>>({});
   const [importando, setImportando] = useState(false);
@@ -41,6 +48,22 @@ export default function PopListaPage() {
       });
     return () => ctrl.abort();
   }, [resp]);
+
+  // KPIs globais (não dependem dos filtros da lista).
+  const carregarDash = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const d = await api.popsDashboard(signal);
+      setDash(d);
+    } catch {
+      /* KPIs indisponíveis: mantém o último valor */
+    }
+  }, []);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    carregarDash(ctrl.signal);
+    return () => ctrl.abort();
+  }, [carregarDash]);
 
   const carregar = useCallback(async (f: FiltrosPop, signal?: AbortSignal) => {
     setLoading(true);
@@ -88,6 +111,7 @@ export default function PopListaPage() {
       );
       setFiltros((f) => ({ ...f, page: 1 }));
       await carregar({ ...filtros, page: 1 });
+      await carregarDash();
     } catch (e) {
       setAviso(
         e instanceof ApiError ? e.message : 'Não foi possível importar a planilha.',
@@ -108,6 +132,7 @@ export default function PopListaPage() {
       await api.deletePop(p.id);
       setAviso('POP excluído.');
       await carregar(filtros);
+      await carregarDash();
     } catch (e) {
       setAviso(e instanceof ApiError ? e.message : 'Falha ao excluir o POP.');
     } finally {
@@ -125,6 +150,7 @@ export default function PopListaPage() {
     setAviso(criacao ? `POP criado (${p.nome}).` : `POP atualizado (${p.nome}).`);
     if (criacao) setFiltros((f) => ({ ...f, page: 1 }));
     await carregar(criacao ? { ...filtros, page: 1 } : filtros);
+    await carregarDash();
   }
 
   return (
@@ -157,6 +183,20 @@ export default function PopListaPage() {
           />
         </div>
       </div>
+
+      {dash ? (
+        <div className="kpis kpis-4 kpis-compact">
+          <Kpi label="Total de POPs" value={formatNumero(dash.total)} tone="total" />
+          <Kpi label="Novos" value={formatNumero(dash.novos)} tone="ok" />
+          <Kpi label="Atualizados" value={formatNumero(dash.atualizados)} tone="taxa" />
+          <Kpi
+            label="Período"
+            value={dash.periodo || '—'}
+            sub="anos com POPs"
+            tone="tempo"
+          />
+        </div>
+      ) : null}
 
       <form
         className="filters"
