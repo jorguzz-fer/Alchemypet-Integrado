@@ -43,6 +43,36 @@ function BarrasComplexidade({ itens }: { itens: TopItem[] }) {
   );
 }
 
+function ListaMotivos({ itens }: { itens: TopItem[] }) {
+  const dados = (itens ?? []).filter((i) => i.total > 0);
+  if (dados.length === 0) return <div className="trat-empty">Sem dados.</div>;
+  const max = Math.max(1, ...dados.map((i) => i.total));
+  const soma = dados.reduce((a, i) => a + i.total, 0);
+  return (
+    <div className="hbars">
+      {dados.map((i) => {
+        const pct = soma ? ((i.total / soma) * 100).toFixed(1) : '0';
+        return (
+          <div className="hbar alt" key={i.nome}>
+            <span className="nm" title={i.nome}>
+              {i.nome}
+            </span>
+            <span className="track">
+              <span
+                className="fill"
+                style={{ width: `${Math.max(3, (i.total / max) * 100)}%` }}
+              />
+            </span>
+            <span className="num">
+              {formatNumero(i.total)} <em className="pz-pct">({pct}%)</em>
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ChamadosDashboardPage() {
   const [dados, setDados] = useState<ChamadoDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,22 +144,33 @@ export default function ChamadosDashboardPage() {
 
           <div className="section-title">
             <span className="bar" />
-            <h3>Distribuição</h3>
+            <h3>Distribuição das solicitações por motivo</h3>
           </div>
-          <div className="grid-charts-2">
-            <div className="card">
-              <h4>Solicitações por motivo</h4>
-              <div className="csub">Participação de cada motivo no total de chamados.</div>
-              <PizzaMotivos
-                itens={dados.por_motivo}
-                centro={formatNumero(dados.total)}
-                centroSub="chamados"
-              />
+          <div className="card">
+            <h4>Distribuição das solicitações por motivo</h4>
+            <div className="csub">
+              Participação de cada motivo nas {formatNumero(dados.total)} solicitações
+              registradas.
             </div>
+            <PizzaMotivos
+              itens={dados.por_motivo}
+              maxFatias={6}
+              legenda="baixo"
+              centro={formatNumero(dados.total)}
+              centroSub="chamados"
+            />
+          </div>
+
+          <div className="grid-charts-2">
             <div className="card">
               <h4>Por complexidade</h4>
               <div className="csub">Volume de chamados por nível de complexidade.</div>
               <BarrasComplexidade itens={dados.por_complexidade} />
+            </div>
+            <div className="card">
+              <h4>Chamados por motivo</h4>
+              <div className="csub">Detalhamento completo (todos os motivos).</div>
+              <ListaMotivos itens={dados.por_motivo} />
             </div>
           </div>
         </>
