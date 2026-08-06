@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Pop
 from ..pop_importer import classificar_area, importar_pops_xlsx
+from ..reports import pops_pdf, pops_xlsx
 from ..schemas import (
     PopAno,
     PopCreate,
@@ -90,6 +91,26 @@ def dashboard(db: Session = Depends(get_db)):
     return PopDashboardOut(
         total=total, novos=novos, atualizados=atualizados,
         periodo=periodo, por_ano=por_ano, por_area=por_area,
+    )
+
+
+@router.get("/export.xlsx")
+def exportar_xlsx(db: Session = Depends(get_db)):
+    conteudo = pops_xlsx(db)
+    return Response(
+        content=conteudo,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="controle-de-pops.xlsx"'},
+    )
+
+
+@router.get("/export.pdf")
+def exportar_pdf(db: Session = Depends(get_db)):
+    conteudo = pops_pdf(db)
+    return Response(
+        content=conteudo,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="controle-de-pops.pdf"'},
     )
 
 

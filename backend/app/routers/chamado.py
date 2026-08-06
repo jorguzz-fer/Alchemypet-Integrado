@@ -9,6 +9,7 @@ from ..chamado_classifier import classificar, normalizar_complexidade, normaliza
 from ..chamado_importer import importar_chamados_xlsx
 from ..database import get_db
 from ..models import Chamado
+from ..reports import chamados_pdf, chamados_xlsx
 from ..schemas import (
     ChamadoCreate,
     ChamadoDashboardOut,
@@ -89,6 +90,26 @@ def dashboard(db: Session = Depends(get_db)):
     return ChamadoDashboardOut(
         total=total, abertos=abertos, resolvidos=resolvidos,
         taxa_resolucao=taxa, por_motivo=por_motivo, por_complexidade=por_complexidade,
+    )
+
+
+@router.get("/export.xlsx")
+def exportar_xlsx(db: Session = Depends(get_db)):
+    conteudo = chamados_xlsx(db)
+    return Response(
+        content=conteudo,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="chamados-por-email.xlsx"'},
+    )
+
+
+@router.get("/export.pdf")
+def exportar_pdf(db: Session = Depends(get_db)):
+    conteudo = chamados_pdf(db)
+    return Response(
+        content=conteudo,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="chamados-por-email.pdf"'},
     )
 
 
