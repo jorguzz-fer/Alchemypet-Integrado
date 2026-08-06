@@ -16,6 +16,8 @@ import Filtros from '@/components/Filtros';
 import StatusBadge from '@/components/StatusBadge';
 import TratativasModal from '@/components/TratativasModal';
 import PendenciaFormModal from '@/components/PendenciaFormModal';
+import OrdenarSelect from '@/components/OrdenarSelect';
+import type { Ordem } from '@/lib/types';
 
 const PER_PAGE = 25;
 
@@ -56,6 +58,7 @@ export default function PendenciasPage() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
+  const [ordem, setOrdem] = useState<Ordem>('recentes');
   const [clinicas, setClinicas] = useState<string[]>([]);
   const [salvandoGestao, setSalvandoGestao] = useState<Record<string, boolean>>(
     {},
@@ -92,7 +95,7 @@ export default function PendenciasPage() {
       setErro(null);
       try {
         const r = await api.listPendencias(
-          { ...f, modulo, per_page: f.per_page ?? PER_PAGE },
+          { ...f, modulo, ordem, per_page: f.per_page ?? PER_PAGE },
           signal,
         );
         setResp(r);
@@ -106,7 +109,7 @@ export default function PendenciasPage() {
         setLoading(false);
       }
     },
-    [modulo],
+    [modulo, ordem],
   );
 
   useEffect(() => {
@@ -326,8 +329,17 @@ export default function PendenciasPage() {
             Registros
             <span className="count">{formatNumero(total)}</span>
           </div>
-          <div className="muted">
-            Página {page} de {totalPaginas}
+          <div className="t-right">
+            <OrdenarSelect
+              value={ordem}
+              onChange={(v) => {
+                setOrdem(v as Ordem);
+                setFiltros((f) => ({ ...f, page: 1 }));
+              }}
+            />
+            <span className="muted">
+              Página {page} de {totalPaginas}
+            </span>
           </div>
         </div>
 

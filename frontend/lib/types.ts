@@ -88,10 +88,12 @@ export type FiltrosPendencias = {
   busca?: string;
   antigas?: boolean;
   abertas?: boolean;
-  ordem?: 'prioridade';
+  ordem?: 'prioridade' | 'recentes' | 'antigos';
   page?: number;
   per_page?: number;
 };
+
+export type Ordem = 'recentes' | 'antigos';
 
 export interface PendenciasResponse {
   total: number;
@@ -196,6 +198,7 @@ export type FiltrosPop = {
   tipo?: TipoPop | '';
   area?: string;
   busca?: string;
+  ordem?: 'recentes' | 'antigos';
   page?: number;
   per_page?: number;
 };
@@ -264,6 +267,7 @@ export type FiltrosChamado = {
   motivo?: string;
   status?: StatusChamado | '';
   busca?: string;
+  ordem?: 'recentes' | 'antigos';
   page?: number;
   per_page?: number;
 };

@@ -50,17 +50,18 @@ def listar(
     motivo: str | None = None,
     status: str | None = None,
     busca: str | None = None,
+    ordem: str | None = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
     base = _filtrar(select(Chamado), complexidade, motivo, status, busca)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    stmt = (
-        base.order_by(Chamado.data.desc().nullslast(), Chamado.created_at.desc())
-        .offset((page - 1) * per_page)
-        .limit(per_page)
-    )
+    if ordem == "antigos":
+        base = base.order_by(Chamado.data.asc().nullsfirst(), Chamado.created_at.asc())
+    else:  # "recentes" (padrão)
+        base = base.order_by(Chamado.data.desc().nullslast(), Chamado.created_at.desc())
+    stmt = base.offset((page - 1) * per_page).limit(per_page)
     items = list(db.scalars(stmt))
     return ChamadoPage(total=total, page=page, per_page=per_page, items=items)
 

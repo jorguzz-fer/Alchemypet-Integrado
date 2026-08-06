@@ -1607,3 +1607,33 @@ td.nowrap {
   color: var(--erro);
   font-weight: 600;
 }
+
+/* ===== Seletor de ordenação (tabelas) ===== */
+.sortbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+.sortbar .sort-ic {
+  display: inline-flex;
+  color: var(--texto-suave);
+}
+.sortbar select {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--texto);
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  padding: 5px 8px;
+  background: #fff;
+  cursor: pointer;
+}
+.tabletools .t-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
