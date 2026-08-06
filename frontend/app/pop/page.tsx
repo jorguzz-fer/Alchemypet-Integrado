@@ -5,6 +5,7 @@ import { api, ApiError } from '@/lib/api';
 import type { PopDashboardResponse, TopItem } from '@/lib/types';
 import { formatNumero } from '@/lib/format';
 import Kpi from '@/components/Kpi';
+import ExportButtons from '@/components/ExportButtons';
 
 function ListaBarras({ itens, alt }: { itens: TopItem[]; alt?: boolean }) {
   if (!itens || itens.length === 0) {
@@ -106,6 +107,7 @@ export default function PopDashboardPage() {
             POPs elaborados e atualizados — visão gerencial por ano e por área.
           </div>
         </div>
+        <ExportButtons onExport={(f) => api.exportarPops(f)} />
       </div>
 
       {loading ? (

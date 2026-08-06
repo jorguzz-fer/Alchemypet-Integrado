@@ -1594,3 +1594,16 @@ td.nowrap {
   background: #e6f7ee;
   color: #0f7a44;
 }
+
+/* ===== Botões de exportação ===== */
+.export-acoes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.export-erro {
+  font-size: 0.75rem;
+  color: var(--erro);
+  font-weight: 600;
+}

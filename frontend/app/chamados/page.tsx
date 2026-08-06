@@ -6,6 +6,7 @@ import type { ChamadoDashboardResponse, TopItem } from '@/lib/types';
 import { formatDecimal, formatNumero } from '@/lib/format';
 import Kpi from '@/components/Kpi';
 import PizzaMotivos from '@/components/PizzaMotivos';
+import ExportButtons from '@/components/ExportButtons';
 
 const COMPLEX_TONE: Record<string, string> = {
   Alta: 'pend',
@@ -108,6 +109,7 @@ export default function ChamadosDashboardPage() {
             Distribuição e resolução dos chamados recebidos por e-mail.
           </div>
         </div>
+        <ExportButtons onExport={(f) => api.exportarChamados(f)} />
       </div>
 
       {loading ? (

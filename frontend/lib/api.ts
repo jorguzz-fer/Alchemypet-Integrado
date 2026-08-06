@@ -139,6 +139,42 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return (await res.json()) as T;
 }
 
+// Baixa um arquivo protegido (envia o token) e dispara o download no browser.
+async function baixarArquivo(path: string, nomePadrao: string): Promise<void> {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, { headers });
+  } catch {
+    throw new ApiError('Não foi possível conectar à API.', 0);
+  }
+  if (res.status === 401) {
+    clearToken();
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+    throw new ApiError('Sessão expirada. Faça login novamente.', 401);
+  }
+  if (!res.ok) throw new ApiError(`Falha ao gerar o arquivo (${res.status}).`, res.status);
+
+  const blob = await res.blob();
+  const cd = res.headers.get('Content-Disposition') || '';
+  const m = /filename="?([^"]+)"?/.exec(cd);
+  const nome = m ? m[1] : nomePadrao;
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 // ===== Endpoints =====
 
 export const api = {
@@ -283,6 +319,10 @@ export const api = {
     });
   },
 
+  exportarPops(formato: 'xlsx' | 'pdf'): Promise<void> {
+    return baixarArquivo(`/pops/export.${formato}`, `controle-de-pops.${formato}`);
+  },
+
   // ===== Chamados =====
   listChamados(
     filtros: FiltrosChamado = {},
@@ -323,5 +363,9 @@ export const api = {
       method: 'POST',
       formData: fd,
     });
+  },
+
+  exportarChamados(formato: 'xlsx' | 'pdf'): Promise<void> {
+    return baixarArquivo(`/chamados/export.${formato}`, `chamados-por-email.${formato}`);
   },
 };
