@@ -227,3 +227,64 @@ export interface PopImportResponse {
   importados: number;
   total: number;
 }
+
+// ===== Chamados (recebidos por e-mail) =====
+
+export type Complexidade = 'baixa' | 'media' | 'alta';
+export type StatusChamado = 'aberto' | 'resolvido';
+
+export interface Chamado {
+  id: string;
+  assunto: string;
+  remetente: string;
+  link_gmail: string;
+  texto: string;
+  complexidade: string;
+  motivo: string;
+  status: StatusChamado;
+  resposta: string;
+  data: string | null;
+  updated_at: string;
+}
+
+export interface ChamadoInput {
+  assunto?: string;
+  remetente?: string;
+  link_gmail?: string;
+  texto?: string;
+  complexidade?: string;
+  motivo?: string;
+  status?: StatusChamado;
+  resposta?: string;
+  data?: string | null;
+}
+
+export type FiltrosChamado = {
+  complexidade?: Complexidade | '';
+  motivo?: string;
+  status?: StatusChamado | '';
+  busca?: string;
+  page?: number;
+  per_page?: number;
+};
+
+export interface ChamadosResponse {
+  total: number;
+  page: number;
+  per_page: number;
+  items: Chamado[];
+}
+
+export interface ChamadoDashboardResponse {
+  total: number;
+  abertos: number;
+  resolvidos: number;
+  taxa_resolucao: number;
+  por_motivo: TopItem[];
+  por_complexidade: TopItem[];
+}
+
+export interface ChamadoImportResponse {
+  importados: number;
+  total: number;
+}

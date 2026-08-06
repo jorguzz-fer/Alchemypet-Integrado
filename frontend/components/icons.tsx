@@ -90,6 +90,16 @@ export function IconePop({ className, size = 18 }: IconeProps) {
   );
 }
 
+// Chamados — envelope (e-mails/atendimento)
+export function IconeChamados({ className, size = 18 }: IconeProps) {
+  return (
+    <svg className={className} {...base(size)}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
+
 export function iconeModulo(key: string, className?: string) {
   if (key === 'triagem') return <IconeTriagem className={className} />;
   return <IconeConvenio className={className} />;

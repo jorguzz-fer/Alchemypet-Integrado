@@ -1459,3 +1459,113 @@ td.nowrap {
   background: #fdf3e0;
   color: #a9600c;
 }
+
+/* ===== Chamados ===== */
+.pizza {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.pizza-svg {
+  width: 190px;
+  height: 190px;
+  flex: none;
+}
+.pizza-centro {
+  font-size: 1.2rem;
+  font-weight: 800;
+  fill: var(--grafite);
+}
+.pizza-centro-sub {
+  font-size: 0.5rem;
+  font-weight: 600;
+  fill: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.pizza-leg {
+  list-style: none;
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pizza-leg li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+.pz-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex: none;
+}
+.pz-nome {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--texto);
+}
+.pz-val {
+  font-weight: 700;
+  color: var(--grafite);
+  white-space: nowrap;
+}
+.pz-val em,
+.pz-pct {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+/* Barras por complexidade */
+.hbar.cx-pend .fill {
+  background: var(--erro);
+}
+.hbar.cx-trat .fill {
+  background: var(--alerta);
+}
+.hbar.cx-ok .fill {
+  background: var(--ok);
+}
+/* Tag de complexidade */
+.cxtag {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.cxtag.alta {
+  background: #fbe6de;
+  color: #b3421f;
+}
+.cxtag.media {
+  background: #fdf3e0;
+  color: #a9600c;
+}
+.cxtag.baixa {
+  background: #e6f7ee;
+  color: #0f7a44;
+}
+/* Tag de status do chamado */
+.stag {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.stag.aberto {
+  background: #eef2f6;
+  color: #5a6b7a;
+}
+.stag.resolvido {
+  background: #e6f7ee;
+  color: #0f7a44;
+}
