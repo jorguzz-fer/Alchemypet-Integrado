@@ -63,7 +63,11 @@ def listar(
             Pendencia.data_pedido.is_(None),
             Pendencia.data_pedido.asc(),
         )
-    else:
+    elif ordem == "antigos":
+        stmt = base.order_by(
+            Pendencia.ano.asc(), Pendencia.mes.asc(), Pendencia.data_pedido.asc()
+        )
+    else:  # "recentes" (padrão)
         stmt = base.order_by(
             Pendencia.ano.desc(), Pendencia.mes.desc(), Pendencia.data_pedido.desc()
         )

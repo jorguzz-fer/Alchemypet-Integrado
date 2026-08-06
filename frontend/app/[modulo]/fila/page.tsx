@@ -16,8 +16,15 @@ import Filtros from '@/components/Filtros';
 import StatusBadge from '@/components/StatusBadge';
 import TratativasModal from '@/components/TratativasModal';
 import PendenciaFormModal from '@/components/PendenciaFormModal';
+import OrdenarSelect from '@/components/OrdenarSelect';
 
 const PER_PAGE = 25;
+
+type OrdemFila = 'prioridade' | 'recentes';
+const OPCOES_FILA = [
+  { value: 'prioridade', label: 'Mais antigas primeiro' },
+  { value: 'recentes', label: 'Mais recentes primeiro' },
+];
 
 // Fila = só o que ainda não foi concluído, mais antigas primeiro.
 const FILTROS_INICIAIS: FiltrosPendencias = {
@@ -51,6 +58,7 @@ export default function FilaTriagemPage() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
+  const [ordem, setOrdem] = useState<OrdemFila>('prioridade');
   const [clinicas, setClinicas] = useState<string[]>([]);
   const [ocupado, setOcupado] = useState<Record<string, boolean>>({});
   const [modal, setModal] = useState<Pendencia | null>(null);
@@ -59,6 +67,7 @@ export default function FilaTriagemPage() {
 
   useEffect(() => {
     setFiltros(FILTROS_INICIAIS);
+    setOrdem('prioridade');
     setAviso(null);
   }, [modulo]);
 
@@ -83,7 +92,7 @@ export default function FilaTriagemPage() {
             ...f,
             modulo,
             abertas: true,
-            ordem: 'prioridade',
+            ordem,
             per_page: f.per_page ?? PER_PAGE,
           },
           signal,
@@ -99,7 +108,7 @@ export default function FilaTriagemPage() {
         setLoading(false);
       }
     },
-    [modulo],
+    [modulo, ordem],
   );
 
   useEffect(() => {
@@ -242,8 +251,18 @@ export default function FilaTriagemPage() {
             Na fila
             <span className="count">{formatNumero(total)}</span>
           </div>
-          <div className="muted">
-            Página {page} de {totalPaginas}
+          <div className="t-right">
+            <OrdenarSelect
+              value={ordem}
+              opcoes={OPCOES_FILA}
+              onChange={(v) => {
+                setOrdem(v as OrdemFila);
+                setFiltros((f) => ({ ...f, page: 1 }));
+              }}
+            />
+            <span className="muted">
+              Página {page} de {totalPaginas}
+            </span>
           </div>
         </div>
 

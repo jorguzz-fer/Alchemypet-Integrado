@@ -9,6 +9,7 @@ import type {
 } from '@/lib/types';
 import { formatNumero } from '@/lib/format';
 import ChamadoFormModal from '@/components/ChamadoFormModal';
+import OrdenarSelect from '@/components/OrdenarSelect';
 
 const PER_PAGE = 25;
 
@@ -17,6 +18,7 @@ const FILTROS_INICIAIS: FiltrosChamado = {
   motivo: '',
   status: '',
   busca: '',
+  ordem: 'recentes',
   page: 1,
   per_page: PER_PAGE,
 };
@@ -286,8 +288,14 @@ export default function ChamadosListaPage() {
             Chamados
             <span className="count">{formatNumero(total)}</span>
           </div>
-          <div className="muted">
-            Página {page} de {totalPaginas}
+          <div className="t-right">
+            <OrdenarSelect
+              value={filtros.ordem ?? 'recentes'}
+              onChange={(v) => aplicar({ ordem: v as FiltrosChamado['ordem'] })}
+            />
+            <span className="muted">
+              Página {page} de {totalPaginas}
+            </span>
           </div>
         </div>
 

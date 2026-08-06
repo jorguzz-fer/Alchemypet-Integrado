@@ -11,6 +11,7 @@ import type {
 import { formatNumero } from '@/lib/format';
 import Kpi from '@/components/Kpi';
 import PopFormModal from '@/components/PopFormModal';
+import OrdenarSelect from '@/components/OrdenarSelect';
 
 const PER_PAGE = 25;
 
@@ -19,6 +20,7 @@ const FILTROS_INICIAIS: FiltrosPop = {
   tipo: '',
   area: '',
   busca: '',
+  ordem: 'recentes',
   page: 1,
   per_page: PER_PAGE,
 };
@@ -292,8 +294,14 @@ export default function PopListaPage() {
             POPs
             <span className="count">{formatNumero(total)}</span>
           </div>
-          <div className="muted">
-            Página {page} de {totalPaginas}
+          <div className="t-right">
+            <OrdenarSelect
+              value={filtros.ordem ?? 'recentes'}
+              onChange={(v) => aplicar({ ordem: v as FiltrosPop['ordem'] })}
+            />
+            <span className="muted">
+              Página {page} de {totalPaginas}
+            </span>
           </div>
         </div>
 
