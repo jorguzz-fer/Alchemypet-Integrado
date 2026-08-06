@@ -20,6 +20,12 @@ import type {
   PopInput,
   PopsResponse,
   FiltrosPop,
+  Chamado,
+  ChamadoDashboardResponse,
+  ChamadoImportResponse,
+  ChamadoInput,
+  ChamadosResponse,
+  FiltrosChamado,
   Tratativa,
   Usuario,
   UsuarioUpdate,
@@ -272,6 +278,48 @@ export const api = {
     const fd = new FormData();
     fd.append('file', file);
     return request<PopImportResponse>('/pops/importar', {
+      method: 'POST',
+      formData: fd,
+    });
+  },
+
+  // ===== Chamados =====
+  listChamados(
+    filtros: FiltrosChamado = {},
+    signal?: AbortSignal,
+  ): Promise<ChamadosResponse> {
+    return request<ChamadosResponse>('/chamados', { query: filtros, signal });
+  },
+
+  chamadosDashboard(signal?: AbortSignal): Promise<ChamadoDashboardResponse> {
+    return request<ChamadoDashboardResponse>('/chamados/dashboard', { signal });
+  },
+
+  chamadosMotivos(signal?: AbortSignal): Promise<string[]> {
+    return request<string[]>('/chamados/motivos', { signal });
+  },
+
+  createChamado(body: ChamadoInput): Promise<Chamado> {
+    return request<Chamado>('/chamados', { method: 'POST', body });
+  },
+
+  patchChamado(id: string, body: ChamadoInput): Promise<Chamado> {
+    return request<Chamado>(`/chamados/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body,
+    });
+  },
+
+  deleteChamado(id: string): Promise<void> {
+    return request<void>(`/chamados/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  importarChamados(file: File): Promise<ChamadoImportResponse> {
+    const fd = new FormData();
+    fd.append('file', file);
+    return request<ChamadoImportResponse>('/chamados/importar', {
       method: 'POST',
       formData: fd,
     });

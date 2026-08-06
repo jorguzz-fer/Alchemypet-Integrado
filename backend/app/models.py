@@ -115,6 +115,38 @@ class Pop(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
 
 
+class Chamado(Base):
+    """Chamado recebido por e-mail (caixa de atendimento). Classificado por
+    complexidade e motivo. Alimentado por importação da planilha e, adiante,
+    pela automação de leitura da caixa do Gmail (Workspace)."""
+
+    __tablename__ = "chamado"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    # Chave natural para ingestão idempotente (id da mensagem do Gmail, ou
+    # hash do link/assunto quando importado da planilha).
+    chave: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+
+    assunto: Mapped[str] = mapped_column(Text, default="")
+    remetente: Mapped[str] = mapped_column(String(200), default="", index=True)
+    link_gmail: Mapped[str] = mapped_column(Text, default="")
+    texto: Mapped[str] = mapped_column(Text, default="")
+
+    # baixa | media | alta
+    complexidade: Mapped[str] = mapped_column(String(20), default="", index=True)
+    motivo: Mapped[str] = mapped_column(String(120), default="", index=True)
+    # Como a classificação foi feita: planilha | regra | ia | manual
+    origem_classe: Mapped[str] = mapped_column(String(20), default="planilha")
+
+    # aberto | resolvido
+    status: Mapped[str] = mapped_column(String(20), default="aberto", index=True)
+    resposta: Mapped[str] = mapped_column(Text, default="")
+
+    data: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
+
+
 class Tratativa(Base):
     """Histórico de ações sobre uma pendência (humano ou agente)."""
 

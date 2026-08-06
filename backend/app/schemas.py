@@ -226,3 +226,68 @@ class PopDashboardOut(BaseModel):
 class PopImportResult(BaseModel):
     importados: int
     total: int
+
+
+# ===== Chamados (recebidos por e-mail) =====
+
+Complexidade = Literal["baixa", "media", "alta"]
+StatusChamado = Literal["aberto", "resolvido"]
+
+
+class ChamadoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    assunto: str
+    remetente: str
+    link_gmail: str
+    texto: str
+    complexidade: str
+    motivo: str
+    status: StatusChamado
+    resposta: str
+    data: date | None
+    updated_at: datetime
+
+
+class ChamadoCreate(BaseModel):
+    assunto: str
+    remetente: str = ""
+    link_gmail: str = ""
+    texto: str = ""
+    complexidade: str = ""
+    motivo: str = ""
+    data: date | None = None
+
+
+class ChamadoUpdate(BaseModel):
+    assunto: str | None = None
+    remetente: str | None = None
+    link_gmail: str | None = None
+    texto: str | None = None
+    complexidade: str | None = None
+    motivo: str | None = None
+    status: StatusChamado | None = None
+    resposta: str | None = None
+    data: date | None = None
+
+
+class ChamadoPage(BaseModel):
+    total: int
+    page: int
+    per_page: int
+    items: list[ChamadoOut]
+
+
+class ChamadoDashboardOut(BaseModel):
+    total: int
+    abertos: int
+    resolvidos: int
+    taxa_resolucao: float
+    por_motivo: list[TopItem]
+    por_complexidade: list[TopItem]
+
+
+class ChamadoImportResult(BaseModel):
+    importados: int
+    total: int

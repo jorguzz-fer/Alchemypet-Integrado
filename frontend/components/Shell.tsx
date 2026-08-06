@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import {
+  IconeChamados,
   IconeConvenio,
   IconeDashboard,
   IconeFila,
@@ -109,6 +110,23 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               className={`side-link${linkAtivo('/pop/lista') ? ' ativo' : ''}`}
             >
               Lista de POPs
+            </Link>
+          </div>
+
+          {/* Chamados — atendimento por e-mail. */}
+          <div className="side-group">
+            <Link
+              href="/chamados"
+              className={`side-group-title link${linkAtivo('/chamados', true) ? ' ativo' : ''}`}
+            >
+              <IconeChamados className="side-ic" />
+              Chamados
+            </Link>
+            <Link
+              href="/chamados/lista"
+              className={`side-link${linkAtivo('/chamados/lista') ? ' ativo' : ''}`}
+            >
+              Caixa de chamados
             </Link>
           </div>
 
