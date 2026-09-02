@@ -7,7 +7,9 @@
 > foi fechado na reunião anterior e não está nesta transcrição (pré-requisito em §4, E2).
 > Revisão 3 acrescenta ao mesmo orçamento: **interfaceamento com equipamentos** (AU480 e
 > Ac·T 10), **CRM**, **Rastreio e Logística** e **Agente de atendimento com Chatwoot** (§3.11–§3.14).
-> Data: 2026-09-02 (revisão 3)
+> Revisão 4 traz o **LIS completo** para dentro do orçamento (E21: controle de qualidade, lotes
+> de reagente e laudo com imagem), em vez de deixá-lo na sustentação.
+> Data: 2026-09-02 (revisão 4)
 
 ---
 
@@ -222,9 +224,9 @@ Acrescentado ao orçamento. Cobre a ligação dos analisadores do laboratório a
 | **Beckman Coulter Ac·T 10** | Analisador hematológico (hemograma) | Saída **serial RS-232**, transmissão de resultados | **Unidirecional** (equipamento → sistema); a amostra é identificada pelo ID informado no aparelho |
 
 Para o resultado de um equipamento ter onde cair, é preciso existir o **pedido de exame** e a
-**amostra** no sistema. Esse núcleo mínimo (E16) é pré-requisito do interfaceamento (E17). O
-escopo geral já previa um LIS completo na Fase 1 do ecossistema; **se o LIS for orçado em
-separado, E16 sai deste orçamento** para não contar duas vezes.
+**amostra** no sistema (E16), pré-requisito do interfaceamento (E17). Por decisão de
+2026-09-02, o **LIS completo** também entra no orçamento como E21 — controle de qualidade,
+lotes de reagente e laudo com imagem —, fechando o laboratório de ponta a ponta.
 
 | Funcionalidade | Decisão | Como fica |
 |---|---|---|
@@ -236,6 +238,9 @@ separado, E16 sai deste orçamento** para não contar duas vezes.
 | Gateway de interfaceamento | ✨ | Serviço on-premise (mini-PC junto aos aparelhos, conversor serial) que fala ASTM/serial com os equipamentos e entrega ao backend por API/fila; monitor de conexão e reprocessamento |
 | Driver AU480 | ✨ | Lista de trabalho por código de barras + recepção de resultados; mapeamento de códigos de analito → exames do catálogo |
 | Driver Ac·T 10 | ✨ | Recepção dos parâmetros do hemograma; vínculo à amostra pelo ID; tela de "resultados sem vínculo" para resolver divergências |
+| **Controle de qualidade** | ✨ | CQ interno por analito, nível e lote; carta de Levey-Jennings e regras de Westgard; liberação bloqueada com o CQ fora de controle |
+| **Lotes de reagente** | ✨ | Cadastro com validade, rastreio do lote usado em cada resultado e consumo por exame |
+| **Laudo com imagem** | ✨ | Imagem anexada ao laudo com legenda (citologia, microscopia, diagnóstico por imagem), no PDF e no portal |
 
 ### 3.12 CRM
 
@@ -304,11 +309,12 @@ Chatwoot, esta linha cobre a **evolução** dele e as integrações com os módu
 | E13 | **Google Agenda** | Sincronização da agenda de cada profissional com o Google Calendar (Google Workspace) | Credenciais do Workspace |
 | E14 | **Faturamento** | Faturar (vendas, altas, ações de internação), faturas (consulta, PDF, baixa), lote de faturas por clínica/convênio | E5, E9 |
 | E15 | **Painel de TV + tablet por baia** (opcional) | Visão consolidada da internação em TV e visão por paciente em tablet | E9 |
-| E16 | **Exames & Resultados** (núcleo mínimo) | Pedido de exame, amostra/etiqueta, mapa de trabalho, entrada de resultado, referência por espécie, validação/liberação, laudo PDF | E2, E3 — sai se o LIS for orçado à parte |
+| E16 | **Exames & Resultados** | Pedido de exame, amostra/etiqueta, mapa de trabalho, entrada de resultado, referência por espécie, validação/liberação, laudo PDF | E2, E3 |
 | E17 | **Interfaceamento com equipamentos** | Gateway on-premise, driver ASTM do AU480 (bidirecional), driver serial do Ac·T 10, mapeamento de analitos, resultados sem vínculo, monitoramento | E16; acesso físico/rede aos aparelhos |
 | E18 | **CRM** | Contas (clínicas e tutores), ciclo de vida, histórico unificado, tarefas/follow-up, segmentação e campanhas, indicadores | E2, E20 |
 | E19 | **Rastreio & Logística** | Cadeia de custódia da amostra, alertas, rotas de coleta, tela do coletor (PWA), entregas, pedido de suprimentos, painel | E16 |
 | E20 | **Agente de atendimento (Chatwoot)** | Chatwoot self-hosted com canais, agente IA como bot com ferramentas (exames, agenda, lembretes, chamados, convênio, suprimentos), transbordo humano, migração dos chamados por e-mail, métricas | Canais (WhatsApp API); E4, E16 |
+| E21 | **LIS completo** | Controle de qualidade (Levey-Jennings, Westgard), lotes de reagente com validade e rastreio, laudo com imagem, auditoria de liberação | E16 |
 
 ### 4.1 Proposta de navegação (menu)
 
@@ -344,8 +350,6 @@ Proposta derivada das reclamações de organização e dos prints; a validar com
   produtividade e classificação de itens.
 - Módulos ainda **não percorridos** na reunião: **Estoque** e **Relatórios** (aparecem no menu)
   e configurações restantes — entram no mapeamento na próxima reunião.
-- **LIS completo** (controle de qualidade, lotes de reagentes, bancada por setor, laudos com
-  imagem): aqui entra só o núcleo mínimo (E16) que o interfaceamento exige.
 - **Outros equipamentos** além do AU480 e do Ac·T 10: cada aparelho novo é um driver à parte.
 
 ---
@@ -536,19 +540,20 @@ do repositório. Faixas incluem a incerteza que os prints e a próxima reunião 
 | E13 | Google Agenda | 2–3 |
 | E14 | Faturamento (*) | 3–5 |
 | | **Bloco A — Gestão (E1–E14)** | **42–64** |
-| E16 | Exames & Resultados, núcleo mínimo (**) | 4–6 |
+| E16 | Exames & Resultados | 4–6 |
 | E17 | Interfaceamento AU480 + Ac·T 10 (***) | 6–10 |
 | E18 | CRM (****) | 4–7 |
 | E19 | Rastreio & Logística | 5–8 |
 | E20 | Agente de atendimento (Chatwoot) | 6–10 |
-| | **Bloco B — Laboratório, CRM, Logística e Atendimento (E16–E20)** | **25–41** |
-| | **Subtotal Fase 1 (A + B)** | **67–105** |
+| E21 | LIS completo: CQ, lotes de reagente, laudo com imagem (**) | 5–8 |
+| | **Bloco B — Laboratório, CRM, Logística e Atendimento (E16–E21)** | **30–49** |
+| | **Subtotal Fase 1 (A + B)** | **72–113** |
 | E15 | Painel de TV + tablet por baia (opcional) | 2–3 |
-| | **Total com o opcional** | **69–108** |
+| | **Total com o opcional** | **74–116** |
 
 (*) Financeiro e Faturamento foram mapeados pelos menus, não tela a tela; as faixas assumem o
 conjunto listado em §3.9 e §3.10 e devem ser revistas após o walkthrough desses módulos.
-(**) Sai do orçamento se o LIS do escopo geral for orçado à parte (evita contar duas vezes).
+(**) Substitui o LIS que o escopo geral previa à parte; não há dupla contagem com E16.
 (***) Dentro da faixa: gateway on-premise 2–3, driver AU480 3–5, driver Ac·T 10 1–2. Assume
 protocolo ASTM no AU480 e saída serial no Ac·T 10; confirmar nos manuais e na instalação.
 Hardware do gateway (mini-PC e conversor serial) não incluído.
@@ -587,9 +592,9 @@ O orçamento será apresentado como **contrato de 24 meses**. Proposta de distri
 |---|---|---|---|---|
 | Meses 1–3 | **1 — Base e agenda** | E1, E2, E3, E4, E13 | 14–21 | Cadastros, catálogos e agenda (com Google Agenda) no ar; recepção já opera no novo sistema |
 | Meses 3–6 | **2 — Operação e dinheiro** | E5, E6, E7, E10, E11, E14, E12 | 20–31 | Vendas, orçamento, comissões, financeiro, faturamento e migração: **desliga o software atual** |
-| Meses 6–9 | **3 — Clínica e laboratório** | E9, E8, E16, E17 | 18–28 | Prontuário e internação, lembretes, exames com resultados direto do AU480 e do Ac·T 10 |
-| Meses 9–12 | **4 — Relacionamento e logística** | E20, E18, E19, E15 | 17–28 | Chatwoot com agente de IA, CRM, rastreio de amostras e rotas, painel de TV da internação |
-| Meses 13–24 | **Sustentação e evolução** | Estoque, Relatórios, LIS completo (CQ, reagentes), hotel, novos equipamentos, empacotamento white-label | banco de horas | Ajustes de uso, evoluções priorizadas com a diretoria, operação assistida |
+| Meses 6–9 | **3 — Clínica e laboratório** | E9, E16, E17, E21 | 21–33 | Prontuário e internação e o laboratório completo: resultados direto do AU480 e do Ac·T 10, CQ, lotes de reagente e laudo com imagem |
+| Meses 9–12 | **4 — Relacionamento e logística** | E20, E18, E19, E8, E15 | 17–28 | Chatwoot com agente de IA, CRM, rastreio de amostras e rotas, lembretes por WhatsApp e painel de TV da internação |
+| Meses 13–24 | **Sustentação e evolução** | Estoque, Relatórios, hotel, novos equipamentos, empacotamento white-label | banco de horas | Ajustes de uso, evoluções priorizadas com a diretoria, operação assistida |
 
 No limite superior das faixas, a onda 4 pode avançar para os meses 13–14; a sustentação absorve.
 
@@ -643,7 +648,6 @@ Respostas dadas em 2026-09-02 às perguntas em aberto da primeira versão deste 
 7. **Equipamentos**: confirmar nos manuais/instalação o protocolo e a porta de cada aparelho
    (AU480: ASTM serial ou TCP/IP; Ac·T 10: serial), se já estão ligados a algum software hoje e
    onde ficará o gateway. Um exemplo de transmissão real de cada um acelera o driver.
-8. **LIS**: o núcleo de exames (E16) fica neste orçamento ou o LIS completo é orçado à parte?
 9. **CRM**: construir o módulo (premissa atual) ou integrar o CRM já em produção?
 10. **Agente atual**: em que plataforma roda hoje e o que migra para o Chatwoot; canais a ativar
     (WhatsApp já homologado?, Instagram, e-mail).
