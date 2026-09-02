@@ -13,6 +13,10 @@ um laboratório de análises clínicas veterinárias.
   módulos, faseamento e itens em aberto para fechar o orçamento.
 - [Apresentação de Orçamento (Diretoria)](apresentacao-orcamento/index.html) — apresentação visual,
   em linguagem executiva, para decisão de investimento. Abra o arquivo no navegador.
+- [Orçamento — Contrato de 24 meses](apresentacao-orcamento/orcamento-24-meses.html) — página única
+  com o orçamento do novo sistema de gestão: módulos por bloco, ondas de entrega, investimento por
+  onda, mensalidade equivalente e tabela módulo a módulo. Os valores são calculados a partir dos
+  parâmetros no topo do script (taxa por dev-wk, sustentação, operação). Abra no navegador.
 - [Gestão de Clínica — Mapeamento para Orçamento (Fase 1)](docs/GESTAO-CLINICA-MAPEAMENTO.md) —
   recriação simplificada e AI-First do software de gestão em uso hoje na Alchemypet: decisões
   módulo a módulo (Home → Internação, mais Financeiro e Faturamento), interfaceamento com os
