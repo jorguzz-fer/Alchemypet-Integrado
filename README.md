@@ -15,8 +15,10 @@ um laboratório de análises clínicas veterinárias.
   em linguagem executiva, para decisão de investimento. Abra o arquivo no navegador.
 - [Gestão de Clínica — Mapeamento para Orçamento (Fase 1)](docs/GESTAO-CLINICA-MAPEAMENTO.md) —
   recriação simplificada e AI-First do software de gestão em uso hoje na Alchemypet: decisões
-  módulo a módulo (Home → Internação, mais Financeiro e Faturamento), escopo da Fase 1, modelo de
-  dados, estimativa de esforço, premissas fechadas e pendências.
+  módulo a módulo (Home → Internação, mais Financeiro e Faturamento), interfaceamento com os
+  analisadores (AU480 e Ac·T 10), CRM, rastreio/logística e agente de atendimento com Chatwoot;
+  escopo da Fase 1, modelo de dados, estimativa de esforço, faseamento em contrato de 24 meses,
+  premissas fechadas e pendências.
 
 ## Módulos
 - [Painel Convênio](painel-convenio/README.md) — tela de gestão das pendências de convênio.

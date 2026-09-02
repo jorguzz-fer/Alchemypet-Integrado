@@ -5,7 +5,9 @@
 > Alchemypet, percorrido de **Home até Internação**, mais os prints dos menus **Financeiro** e
 > **Faturamento** e as respostas às perguntas em aberto (§9). O **cadastro de clientes/pacientes**
 > foi fechado na reunião anterior e não está nesta transcrição (pré-requisito em §4, E2).
-> Data: 2026-09-02 (revisão 2)
+> Revisão 3 acrescenta ao mesmo orçamento: **interfaceamento com equipamentos** (AU480 e
+> Ac·T 10), **CRM**, **Rastreio e Logística** e **Agente de atendimento com Chatwoot** (§3.11–§3.14).
+> Data: 2026-09-02 (revisão 3)
 
 ---
 
@@ -22,6 +24,11 @@ Por ser white-label, o mesmo produto poderá ser revendido a clínicas e hospita
 (Home → Internação) mais **Financeiro e Faturamento**, incluídos a partir dos prints dos menus
 (§3.9 e §3.10). Estoque e Relatórios aparecem no menu, mas ainda não foram percorridos e ficam
 para a próxima reunião (§10).
+
+Ao mesmo orçamento foram acrescentados quatro blocos que **não estão no software atual** e vêm
+do escopo geral do ecossistema: interfaceamento com os analisadores do laboratório, CRM,
+rastreio/logística e o agente de atendimento sobre Chatwoot (§3.11–§3.14). Eles são orçados em
+separado (bloco B em §8) para a diretoria poder decidir por bloco.
 
 > Nota: o escopo geral previa *integrar* um ERP/financeiro existente. Como o financeiro faz
 > parte do software que está sendo substituído, na Fase 1 ele é **construído** (E11 e E14).
@@ -205,6 +212,77 @@ ser por **clínica/convênio e por período** (guias e exames agrupados em lote)
 | Faturas | ✅ | Lista/consulta por cliente, clínica, período e status; emissão em PDF; baixa → contas a receber | |
 | Lote de faturas | ✅ | Fechamento periódico por clínica/convênio (várias guias numa fatura) | Encaixe com as pendências de convênio já em produção neste repositório |
 
+### 3.11 Exames, resultados e interfaceamento com equipamentos
+
+Acrescentado ao orçamento. Cobre a ligação dos analisadores do laboratório ao sistema:
+
+| Equipamento | Tipo | Comunicação (a confirmar no manual/instalação) | Sentido |
+|---|---|---|---|
+| **Beckman Coulter AU480** | Analisador bioquímico | Protocolo **ASTM** (E1381/E1394), via serial RS-232 ou Ethernet TCP/IP | **Bidirecional**: recebe a lista de trabalho (consulta por código de barras da amostra) e envia resultados |
+| **Beckman Coulter Ac·T 10** | Analisador hematológico (hemograma) | Saída **serial RS-232**, transmissão de resultados | **Unidirecional** (equipamento → sistema); a amostra é identificada pelo ID informado no aparelho |
+
+Para o resultado de um equipamento ter onde cair, é preciso existir o **pedido de exame** e a
+**amostra** no sistema. Esse núcleo mínimo (E16) é pré-requisito do interfaceamento (E17). O
+escopo geral já previa um LIS completo na Fase 1 do ecossistema; **se o LIS for orçado em
+separado, E16 sai deste orçamento** para não contar duas vezes.
+
+| Funcionalidade | Decisão | Como fica |
+|---|---|---|
+| Pedido de exame (guia) | ✨ | Vinculado a paciente, clínica solicitante e itens do catálogo (exames lab); nasce do atendimento, do portal/agente ou do lote da clínica |
+| Amostra e etiqueta | ✨ | Código de barras por amostra; mapa de trabalho do dia por setor (bioquímica, hematologia) |
+| Entrada de resultado | ✨ | Manual e **automática via interface**; valores de referência **por espécie**; sinalização de fora de faixa e de repetição |
+| Validação e liberação | ✨ | Conferência técnica antes de liberar (**human-in-the-loop**); auditoria de quem liberou |
+| Laudo | ✨ | PDF com identidade Alchemypet; disponibilizado no portal, por e-mail e pelo agente (§3.14) |
+| Gateway de interfaceamento | ✨ | Serviço on-premise (mini-PC junto aos aparelhos, conversor serial) que fala ASTM/serial com os equipamentos e entrega ao backend por API/fila; monitor de conexão e reprocessamento |
+| Driver AU480 | ✨ | Lista de trabalho por código de barras + recepção de resultados; mapeamento de códigos de analito → exames do catálogo |
+| Driver Ac·T 10 | ✨ | Recepção dos parâmetros do hemograma; vínculo à amostra pelo ID; tela de "resultados sem vínculo" para resolver divergências |
+
+### 3.12 CRM
+
+Acrescentado ao orçamento. O escopo geral previa *integrar* um CRM já em produção; como o
+pedido é um **módulo CRM** no produto, a premissa passa a ser **construir** (se for só integrar,
+o esforço cai para 2–3 dev-wk).
+
+| Funcionalidade | Decisão | Como fica |
+|---|---|---|
+| Contas e contatos | ✨ | **Clínicas parceiras** (B2B) e **tutores** (B2C) com contatos, endereços, responsáveis, origem (Google, indicação, fachada…) |
+| Ciclo de vida da clínica | ✨ | Funil: prospecção → ativa → inativa/churn; motivo; responsável comercial |
+| Histórico unificado | ✨ | Linha do tempo por conta: conversas (Chatwoot), chamados por e-mail (módulo existente), pendências de convênio/triagem (módulo existente), pedidos, faturas |
+| Tarefas e follow-up | ✨ | Tarefas com prazo e responsável; lembretes de retorno; fila do comercial |
+| Segmentação e campanhas | ✨ | Listas por critério (espécie, região, inatividade, aniversário); disparo pelo agente (§3.14) com opt-out |
+| Indicadores | ✨ | Clínicas ativas, novas, em risco; frequência de pedidos; origem dos clientes (relatório pedido na reunião) |
+
+### 3.13 Rastreio e Logística
+
+Acrescentado ao orçamento (o escopo geral já marcava Logística como "construir do zero").
+
+| Funcionalidade | Decisão | Como fica |
+|---|---|---|
+| Rastreio da amostra | ✨ | Cadeia de custódia por código de barras: coletada na clínica → retirada → em trânsito → recebida no lab → triagem → em análise → liberada; hora e responsável em cada etapa |
+| Alertas | ✨ | Tempo máximo por etapa e por tipo de amostra; atraso ou amostra inadequada viram ocorrência e aviso à clínica pelo agente |
+| Rotas de coleta | ✨ | Agenda de coletas por clínica/região, coletores (motoboys), roteiro do dia, ocorrências |
+| Tela do coletor (celular) | ✨ | PWA: roteiro, check-in por QR na clínica, leitura das etiquetas, registro de ocorrência |
+| Entregas e envios | ✨ | Rastreio de itens enviados (laudos impressos, kits, materiais) |
+| Pedido de suprimentos | ✨ | Clínica pede kits/tubos pelo portal ou pelo agente; separação, envio e rastreio |
+| Painel de logística | ✨ | Coletas do dia, amostras por etapa, atrasos, ocorrências |
+
+### 3.14 Agente de atendimento com Chatwoot
+
+Acrescentado ao orçamento. O **Chatwoot** (open source, self-hosted) vira a caixa de entrada
+omnichannel oficial; o agente de IA entra como *bot* dele. Se o agente já existente rodar sobre
+Chatwoot, esta linha cobre a **evolução** dele e as integrações com os módulos deste documento.
+
+| Funcionalidade | Decisão | Como fica |
+|---|---|---|
+| Canais | ✨ | WhatsApp (API oficial), Instagram/Facebook, e-mail, chat no portal — tudo numa inbox |
+| Agente de IA (Claude) | ✨ | Conectado ao Chatwoot como *agent bot* (webhooks/API); base de conhecimento (RAG) de exames, preparo, coleta e prazos |
+| Ferramentas do agente | ✨ | Status do exame e envio do laudo (E16), agendar/remarcar (E4/E13), lembretes (E8), abrir chamado, consultar pendência de convênio (módulo existente), pedido de suprimentos (E19) |
+| Transbordo humano | ✨ | Handoff com contexto para a equipe certa (atendimento, comercial, técnico); horários; filas |
+| Chamados por e-mail | ↪️ | A caixa de chamados hoje lida via Gmail passa a entrar pela inbox de e-mail do Chatwoot, mantendo a classificação já feita neste repositório |
+| CRM | ↪️ | Toda conversa fica na linha do tempo da conta (§3.12) |
+| Métricas | ✨ | Tempo de resposta, taxa de resolução pela IA, transbordos, satisfação |
+| Ações sensíveis | ✨ | Confirmação humana para liberar laudo, alterar faturamento ou cancelar pedido |
+
 ---
 
 ## 4. Escopo consolidado da Fase 1 (épicos)
@@ -218,14 +296,19 @@ ser por **clínica/convênio e por período** (guias e exames agrupados em lote)
 | E5 | **Vendas & Orçamento** | Registro de atendimento/venda (produto + serviço), orçamento a partir do cliente por código/pacote, tabela de preço, regras (caixa diário, unificar por dia), rank de clientes | E2, E3 |
 | E6 | **Comissionamento** | Regras por profissional × item (percentual e fixo), confirmação de atendimento realizado, cálculo automático, visão individual, consolidado a pagar, marcar pago, extrato por período | E5, E11 |
 | E7 | **Painel gerencial** | Produtividade por colaborador e por setor (internação, farmácia, especialistas, hotel), vendas consolidadas (grupos, mais vendidos, turno, clientes que mais compram) | E5, E6 |
-| E8 | **Lembretes** | Vacinas vencidas/próximas, aniversários; envio WhatsApp manual e automático pelo agente existente; registro | E13 |
+| E8 | **Lembretes** | Vacinas vencidas/próximas, aniversários; envio WhatsApp manual e automático pelo agente; registro | E20 |
 | E9 | **Prontuário & Internação** | Timeline, admissão, evolução, prescrição, procedimentos, parâmetros clínicos, alta/óbito, histórico, mapa de execução, faturamento por ação | E2, E3, E14 |
 | E10 | **Modelos & Documentos** | Modelos de receita, prescrição e documentos/contratos; geração em PDF | E3 |
 | E11 | **Financeiro** | Contas a pagar (+ lote), tabela de custos, DRE, fluxo de caixa, contas a receber / conta do cliente / saldo devedor, recebimentos | E3, E14 |
 | E12 | **Migração** | Importador da base atual (clientes, pacientes, catálogo, histórico, modelos), idempotente; os dados já estão disponíveis | Acesso à base atual |
-| E13 | **Integrações** | Google Agenda por profissional (Google Workspace) e integração com o **agente de atendimento já implementado** (agendar, remarcar, lembretes) | Credenciais do Workspace; API do agente |
+| E13 | **Google Agenda** | Sincronização da agenda de cada profissional com o Google Calendar (Google Workspace) | Credenciais do Workspace |
 | E14 | **Faturamento** | Faturar (vendas, altas, ações de internação), faturas (consulta, PDF, baixa), lote de faturas por clínica/convênio | E5, E9 |
 | E15 | **Painel de TV + tablet por baia** (opcional) | Visão consolidada da internação em TV e visão por paciente em tablet | E9 |
+| E16 | **Exames & Resultados** (núcleo mínimo) | Pedido de exame, amostra/etiqueta, mapa de trabalho, entrada de resultado, referência por espécie, validação/liberação, laudo PDF | E2, E3 — sai se o LIS for orçado à parte |
+| E17 | **Interfaceamento com equipamentos** | Gateway on-premise, driver ASTM do AU480 (bidirecional), driver serial do Ac·T 10, mapeamento de analitos, resultados sem vínculo, monitoramento | E16; acesso físico/rede aos aparelhos |
+| E18 | **CRM** | Contas (clínicas e tutores), ciclo de vida, histórico unificado, tarefas/follow-up, segmentação e campanhas, indicadores | E2, E20 |
+| E19 | **Rastreio & Logística** | Cadeia de custódia da amostra, alertas, rotas de coleta, tela do coletor (PWA), entregas, pedido de suprimentos, painel | E16 |
+| E20 | **Agente de atendimento (Chatwoot)** | Chatwoot self-hosted com canais, agente IA como bot com ferramentas (exames, agenda, lembretes, chamados, convênio, suprimentos), transbordo humano, migração dos chamados por e-mail, métricas | Canais (WhatsApp API); E4, E16 |
 
 ### 4.1 Proposta de navegação (menu)
 
@@ -235,6 +318,10 @@ Proposta derivada das reclamações de organização e dos prints; a validar com
 - **Agenda** — dia / semana / minha agenda
 - **Clientes & Pacientes** — cadastro, busca, ficha do paciente, prontuário
 - **Internação** — internados, mapa de execução, painel de TV
+- **Exames** — pedidos, amostras e mapa de trabalho, resultados (manual e dos equipamentos), liberação, laudos
+- **Logística** — coletas do dia, rotas, rastreio de amostras, envios, pedidos de suprimentos
+- **Atendimento** — inbox Chatwoot (WhatsApp, Instagram, e-mail, chat), transbordos, métricas do agente
+- **CRM** — clínicas e tutores, funil, histórico, tarefas, campanhas
 - **Vendas** — orçamentos, vendas, pacotes, tabela de preço
 - **Faturamento** — faturar, faturas, lotes
 - **Financeiro** — contas a pagar (+ lotes), contas a receber / conta do cliente, tabela de custos, fluxo de caixa, DRE, comissões (individual + consolidado)
@@ -255,8 +342,11 @@ Proposta derivada das reclamações de organização e dos prints; a validar com
 - Comissão de pet shop / venda online.
 - **Hotel como módulo** (reservas, diárias): na Fase 1 o hotel entra apenas como **setor** para
   produtividade e classificação de itens.
-- Módulos ainda **não percorridos** na reunião: **Estoque** e **Relatórios** (aparecem no menu),
-  exames e laudos, configurações restantes — entram no mapeamento na próxima reunião.
+- Módulos ainda **não percorridos** na reunião: **Estoque** e **Relatórios** (aparecem no menu)
+  e configurações restantes — entram no mapeamento na próxima reunião.
+- **LIS completo** (controle de qualidade, lotes de reagentes, bancada por setor, laudos com
+  imagem): aqui entra só o núcleo mínimo (E16) que o interfaceamento exige.
+- **Outros equipamentos** além do AU480 e do Ac·T 10: cada aparelho novo é um driver à parte.
 
 ---
 
@@ -301,6 +391,20 @@ erDiagram
   FATURA ||--o{ RECEBIMENTO : baixa
   FORNECEDOR ||--o{ CONTA_PAGAR : emite
   MODELO ||--o{ REGISTRO_PRONTUARIO : "receita / documento / prescricao"
+  CLINICA ||--o{ PEDIDO_EXAME : solicita
+  PACIENTE ||--o{ PEDIDO_EXAME : tem
+  PEDIDO_EXAME ||--o{ AMOSTRA : gera
+  AMOSTRA ||--o{ EVENTO_CUSTODIA : "rastreio"
+  AMOSTRA ||--o{ RESULTADO : produz
+  EQUIPAMENTO ||--o{ RESULTADO : envia
+  ITEM_CATALOGO ||--o{ RESULTADO : "exame / analito"
+  PEDIDO_EXAME ||--o| LAUDO : libera
+  ROTA_COLETA ||--o{ PARADA_COLETA : "roteiro do dia"
+  CLINICA ||--o{ PARADA_COLETA : visitada
+  CLINICA ||--o{ PEDIDO_SUPRIMENTO : pede
+  CLINICA ||--o{ CONVERSA : "chatwoot"
+  CLIENTE ||--o{ CONVERSA : "chatwoot"
+  CLINICA ||--o{ TAREFA_CRM : "follow-up"
 
   ITEM_CATALOGO {
     int codigo
@@ -350,6 +454,33 @@ erDiagram
     string telefone
     string origem "google|indicacao|fachada|outro"
   }
+  CLINICA {
+    string nome
+    string estagio "prospeccao|ativa|inativa"
+    string responsavel_comercial
+  }
+  AMOSTRA {
+    string codigo_barras
+    string tipo
+    string etapa "coletada|retirada|transito|recebida|triagem|analise|liberada"
+  }
+  EQUIPAMENTO {
+    string modelo "AU480|AcT10"
+    string protocolo "ASTM|serial"
+    string sentido "bidirecional|unidirecional"
+  }
+  RESULTADO {
+    decimal valor
+    string unidade
+    string flag "normal|baixo|alto|repetir"
+    string origem "manual|interface"
+    datetime validado_em
+  }
+  CONVERSA {
+    string canal "whatsapp|instagram|email|chat"
+    string status "bot|humano|resolvida"
+    string chatwoot_id
+  }
 ```
 
 ---
@@ -373,6 +504,13 @@ O que **não existe** hoje e justifica a recriação (além da UI limpa):
 9. **Catálogos pré-carregados** — raças da base atual, patologias levantadas com IA, vacinas e
    medicamentos em base própria.
 10. **Migração** da base atual, que já está disponível.
+11. **Resultados direto dos analisadores** (AU480 e Ac·T 10) — sem digitação, com validação humana
+    antes de liberar.
+12. **CRM com histórico unificado** — conversa, chamado, pendência, pedido e fatura na mesma linha
+    do tempo da clínica.
+13. **Amostra rastreada de ponta a ponta**, com rota de coleta e tela do coletor.
+14. **Atendimento omnichannel com IA** sobre Chatwoot, com transbordo humano e ferramentas ligadas
+    aos módulos.
 
 ---
 
@@ -395,16 +533,26 @@ do repositório. Faixas incluem a incerteza que os prints e a próxima reunião 
 | E10 | Modelos & Documentos | 2–3 |
 | E11 | Financeiro (*) | 5–8 |
 | E12 | Migração | 2–3 |
-| E13 | Integrações: Google Agenda + agente de atendimento (**) | 4–6 |
+| E13 | Google Agenda | 2–3 |
 | E14 | Faturamento (*) | 3–5 |
-| | **Subtotal Fase 1** | **44–67** |
+| | **Bloco A — Gestão (E1–E14)** | **42–64** |
+| E16 | Exames & Resultados, núcleo mínimo (**) | 4–6 |
+| E17 | Interfaceamento AU480 + Ac·T 10 (***) | 6–10 |
+| E18 | CRM (****) | 4–7 |
+| E19 | Rastreio & Logística | 5–8 |
+| E20 | Agente de atendimento (Chatwoot) | 6–10 |
+| | **Bloco B — Laboratório, CRM, Logística e Atendimento (E16–E20)** | **25–41** |
+| | **Subtotal Fase 1 (A + B)** | **67–105** |
 | E15 | Painel de TV + tablet por baia (opcional) | 2–3 |
-| | **Total com o opcional** | **46–70** |
+| | **Total com o opcional** | **69–108** |
 
 (*) Financeiro e Faturamento foram mapeados pelos menus, não tela a tela; as faixas assumem o
 conjunto listado em §3.9 e §3.10 e devem ser revistas após o walkthrough desses módulos.
-(**) Integração com um agente **já implementado**: não inclui construir agente nem contratar
-canal de WhatsApp.
+(**) Sai do orçamento se o LIS do escopo geral for orçado à parte (evita contar duas vezes).
+(***) Dentro da faixa: gateway on-premise 2–3, driver AU480 3–5, driver Ac·T 10 1–2. Assume
+protocolo ASTM no AU480 e saída serial no Ac·T 10; confirmar nos manuais e na instalação.
+Hardware do gateway (mini-PC e conversor serial) não incluído.
+(****) Se a decisão voltar a ser **integrar** o CRM existente em vez de construir, cai para 2–3.
 
 ### 8.1 Premissas da estimativa
 
@@ -412,8 +560,10 @@ canal de WhatsApp.
   autenticação/perfis existentes; nenhuma tecnologia nova.
 - A empresa inteira usa **Google Workspace**: a integração de agenda usa autorização no domínio,
   sem fluxo individual por profissional.
-- O **agente de atendimento já existe** e expõe uma forma de integração; lembretes e agendamento
-  automático apenas o acionam.
+- O agente de atendimento passa a rodar sobre **Chatwoot self-hosted** (E20); se o agente já
+  existente estiver nessa base, E20 cobre sua evolução e as ferramentas ligadas aos módulos.
+- Os analisadores ficam acessíveis por serial ou rede a partir de um **gateway on-premise** no
+  laboratório; a saída por equipamento será validada com amostras reais antes da liberação.
 - **Os dados atuais estão disponíveis** para a migração; o importador é próprio.
 - Inclui implementação da UI, mas não um trabalho de design visual separado — os wireframes
   das telas principais serão apresentados na próxima reunião.
@@ -422,9 +572,45 @@ canal de WhatsApp.
 
 ### 8.2 Custos recorrentes a considerar no orçamento
 
-Hospedagem por instância (app + Postgres + storage), tokens de IA (lembretes, agendamento,
-carga de patologias) e APIs Google (Calendar, sem custo adicional no Workspace). O canal de
-WhatsApp já é custo do agente de atendimento existente.
+Hospedagem por instância (app + Postgres + storage), hospedagem do **Chatwoot** (self-hosted,
+sem licença), conversas da **API oficial do WhatsApp** (cobrança por conversa), tokens de IA
+(agente, lembretes, agendamento, carga de patologias), APIs Google (Calendar, sem custo
+adicional no Workspace) e o **hardware do gateway** de interfaceamento (mini-PC + conversores
+serial, custo único).
+
+### 8.3 Faseamento em contrato de 24 meses
+
+O orçamento será apresentado como **contrato de 24 meses**. Proposta de distribuição do escopo
+(sem valores; esforço em dev-wk, capacidade de referência: 1 dev ≈ 4,3 dev-wk/mês):
+
+| Período | Onda | Épicos | Esforço | Resultado para a Alchemypet |
+|---|---|---|---|---|
+| Meses 1–3 | **1 — Base e agenda** | E1, E2, E3, E4, E13 | 14–21 | Cadastros, catálogos e agenda (com Google Agenda) no ar; recepção já opera no novo sistema |
+| Meses 3–6 | **2 — Operação e dinheiro** | E5, E6, E7, E10, E11, E14, E12 | 20–31 | Vendas, orçamento, comissões, financeiro, faturamento e migração: **desliga o software atual** |
+| Meses 6–9 | **3 — Clínica e laboratório** | E9, E8, E16, E17 | 18–28 | Prontuário e internação, lembretes, exames com resultados direto do AU480 e do Ac·T 10 |
+| Meses 9–12 | **4 — Relacionamento e logística** | E20, E18, E19, E15 | 17–28 | Chatwoot com agente de IA, CRM, rastreio de amostras e rotas, painel de TV da internação |
+| Meses 13–24 | **Sustentação e evolução** | Estoque, Relatórios, LIS completo (CQ, reagentes), hotel, novos equipamentos, empacotamento white-label | banco de horas | Ajustes de uso, evoluções priorizadas com a diretoria, operação assistida |
+
+No limite superior das faixas, a onda 4 pode avançar para os meses 13–14; a sustentação absorve.
+
+**Dois modelos de alocação para o mesmo contrato:**
+
+| Modelo | Alocação | Efeito |
+|---|---|---|
+| A — linear | 1 dev em tempo integral por 24 meses (≈ 100 dev-wk) | Cobre o escopo, mas as ondas 3 e 4 só ficam prontas perto do fim do contrato |
+| **B — concentrado (recomendado)** | 2 devs nos meses 1–12 (≈ 100 dev-wk) + 0,5 a 1 dev nos meses 13–24 | Software atual desligado em ~6 meses; laboratório, CRM e logística no primeiro ano; segundo ano para estabilizar e evoluir |
+
+**Composição sugerida do contrato (24 meses):**
+
+1. **Desenvolvimento da Fase 1** (ondas 1–4): esforço de §8, com aceite por onda.
+2. **Sustentação e evolução** (meses 13–24): alocação parcial ou banco de horas mensal, com
+   backlog priorizado pela diretoria.
+3. **Operação recorrente** durante os 24 meses: itens de §8.2 (hospedagem, Chatwoot, WhatsApp,
+   tokens de IA), repassados ou embutidos na mensalidade.
+4. **Custo único**: hardware do gateway de interfaceamento.
+5. **Condições a definir no contrato**: parcela mensal fixa × marcos por onda, propriedade do
+   código e da base white-label, SLA de suporte, garantia pós-onda, revisão de escopo a cada
+   onda com as pendências de §9.1.
 
 ---
 
@@ -454,6 +640,14 @@ Respostas dadas em 2026-09-02 às perguntas em aberto da primeira versão deste 
 5. **Faturamento por convênio/clínica**: confirmar o fluxo de lote e o encaixe com as pendências
    de convênio já em produção neste repositório.
 6. Ícone "wi-fi" no tipo de atendimento (Ana Terra).
+7. **Equipamentos**: confirmar nos manuais/instalação o protocolo e a porta de cada aparelho
+   (AU480: ASTM serial ou TCP/IP; Ac·T 10: serial), se já estão ligados a algum software hoje e
+   onde ficará o gateway. Um exemplo de transmissão real de cada um acelera o driver.
+8. **LIS**: o núcleo de exames (E16) fica neste orçamento ou o LIS completo é orçado à parte?
+9. **CRM**: construir o módulo (premissa atual) ou integrar o CRM já em produção?
+10. **Agente atual**: em que plataforma roda hoje e o que migra para o Chatwoot; canais a ativar
+    (WhatsApp já homologado?, Instagram, e-mail).
+11. **Logística**: quantidade de clínicas, coletas por dia e coletores, para dimensionar rotas.
 
 ---
 
@@ -490,3 +684,6 @@ Telas do software atual que valem como referência para o orçamento e para o de
 - **Faturamento**: faturar; lista de faturas e uma fatura aberta/PDF; lote de faturas.
 - **Estoque e Relatórios**: menus e telas principais (para a próxima reunião).
 - **Exportação**: qualquer tela de exportação/relatório em CSV/XLSX (para dimensionar a migração).
+- **Equipamentos**: tela de configuração de comunicação (host/LIS) do AU480 e do Ac·T 10, foto da
+  conexão atual (cabo serial/rede) e, se houver, um exemplo de resultado transmitido.
+- **CRM e atendimento atuais**: telas do CRM em produção e do agente/inbox de hoje.
