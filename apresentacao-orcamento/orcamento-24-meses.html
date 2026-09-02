@@ -610,7 +610,7 @@
 
 <section class="impact" style="padding: 0;">
   <div class="impact-grid">
-    <div class="impact-cell"><div class="impact-num"><em id="k-modulos">20</em></div><div class="impact-label">Módulos Entregues</div></div>
+    <div class="impact-cell"><div class="impact-num"><em id="k-modulos">20</em></div><div class="impact-label">Módulos no Contrato</div></div>
     <div class="impact-cell"><div class="impact-num"><em>6</em></div><div class="impact-label">Meses até Desligar o Atual</div></div>
     <div class="impact-cell"><div class="impact-num"><em>2</em></div><div class="impact-label">Analisadores Integrados</div></div>
     <div class="impact-cell"><div class="impact-num"><em>24</em></div><div class="impact-label">Meses de Contrato</div></div>
@@ -693,8 +693,8 @@
   <div class="container">
     <div class="reveal">
       <div class="section-label">03 · Escopo</div>
-      <h2 class="section-title">Vinte e um módulos. <em>Dois blocos</em> que podem ser decididos separadamente.</h2>
-      <p class="section-intro">O bloco A recria o software que a equipe usa hoje, sem o que não serve. O bloco B entrega o que ele nunca teve: laboratório interfaceado, relacionamento, logística e atendimento com IA.</p>
+      <h2 class="section-title">Vinte módulos. <em>Dois blocos</em> que podem ser decididos separadamente.</h2>
+      <p class="section-intro">O bloco A recria o software que a equipe usa hoje, sem o que não serve. O bloco B entrega o que ele nunca teve: laboratório interfaceado, relacionamento, logística e atendimento com IA. Um vigésimo primeiro módulo, o painel de TV da internação, fica como opcional cotado à parte.</p>
     </div>
 
     <div class="block-head reveal">
@@ -779,7 +779,7 @@
         <div class="sec-num">02</div>
         <h4>Equipamentos</h4>
         <ul>
-          <li>Gateway on-premise isolado, junto aos analisadores</li>
+          <li>Gateway isolado, no equipamento que o laboratório já tem, junto aos analisadores</li>
           <li>Resultado vinculado à amostra por código de barras</li>
           <li>Tela de resultados sem vínculo para resolver divergências</li>
           <li>Nenhum resultado é liberado sem conferência técnica</li>
@@ -813,15 +813,15 @@
   <div class="container">
     <div class="reveal">
       <div class="section-label">07 · Investimento</div>
-      <h2 class="section-title">Construção no primeiro ano. <em>Contrato de 24 meses</em>.</h2>
-      <p class="section-intro">O primeiro ano entrega os vinte e um módulos em quatro ondas, com aceite a cada uma. O segundo ano mantém tudo rodando e evoluindo: Estoque, Relatórios, hotel e o empacotamento white-label, priorizados com a diretoria.</p>
+      <h2 class="section-title">Preço fechado. <em>Contrato de 24 meses</em>.</h2>
+      <p class="section-intro">Um valor só para todo o trabalho, em parcelas fixas: os vinte módulos entregues em quatro ondas no primeiro ano, e a sustentação, a evolução e a consultoria ao longo dos vinte e quatro meses. Sem cobrança por hora e sem custo de implantação à parte. Serviços de terceiros — nuvem, canais de mensagem e tokens de IA — são contratados diretamente pela Alchemypet.</p>
     </div>
 
     <div class="payment-grid reveal">
       <div class="payment-card">
         <div class="payment-header">
-          <div class="payment-tag">Construção · Meses 1 a 12</div>
-          <div class="payment-name">Implementação</div>
+          <div class="payment-tag">Escopo · Rateio por onda</div>
+          <div class="payment-name">Entregas</div>
         </div>
         <div class="payment-body" id="pay-ondas"></div>
       </div>
@@ -833,9 +833,9 @@
           <div class="payment-name">Parcela do Contrato</div>
         </div>
         <div class="payment-body">
-          <div class="payment-row"><span class="payment-label">Sustentação · meses 13 a 24</span><span class="payment-value" id="v-sust">—</span></div>
-          <div class="payment-row"><span class="payment-label">Operação em nuvem</span><span class="payment-value" id="v-op">—</span></div>
-          <div class="payment-row"><span class="payment-label">Gateway · custo único</span><span class="payment-value" id="v-hw">—</span></div>
+          <div class="payment-row"><span class="payment-label">Sustentação · meses 13 a 24</span><span class="payment-value ok" id="v-sust">—</span></div>
+          <div class="payment-row"><span class="payment-label">Evolução · backlog priorizado</span><span class="payment-value ok" id="v-op">—</span></div>
+          <div class="payment-row"><span class="payment-label">Treinamento e homologação por onda</span><span class="payment-value ok" id="v-hw">—</span></div>
           <div class="payment-row"><span class="payment-label">Consultoria estratégica</span><span class="payment-value ok">incluso</span></div>
           <div class="payment-divider"></div>
           <div class="payment-total">
@@ -844,17 +844,17 @@
           </div>
           <div class="payment-note">
             <b>Contrato total · 24 meses</b>
-            <span id="v-total">—</span> · o valor integral diluído em 24 parcelas fixas, com marcos de aceite a cada onda.
+            <span id="v-total">—</span> · preço fechado, diluído em 24 parcelas fixas, com marcos de aceite a cada onda.
           </div>
         </div>
       </div>
     </div>
 
     <div class="compose-grid reveal">
-      <div class="compose-cell"><div class="c-label">Construção · meses 1–12</div><div class="c-value" id="c-dev">—</div><div class="c-desc" id="c-dev-d">—</div></div>
-      <div class="compose-cell"><div class="c-label">Sustentação · meses 13–24</div><div class="c-value" id="c-sust">—</div><div class="c-desc" id="c-sust-d">—</div></div>
-      <div class="compose-cell"><div class="c-label">Operação em nuvem · 24 meses</div><div class="c-value" id="c-op">—</div><div class="c-desc" id="c-op-d">—</div></div>
-      <div class="compose-cell"><div class="c-label">Hardware · custo único</div><div class="c-value" id="c-hw">—</div><div class="c-desc">Mini-PC e conversores serial junto aos analisadores</div></div>
+      <div class="compose-cell"><div class="c-label">Contrato fechado · 24 meses</div><div class="c-value" id="c-dev">—</div><div class="c-desc" id="c-dev-d">—</div></div>
+      <div class="compose-cell"><div class="c-label">Parcelas</div><div class="c-value" id="c-sust">—</div><div class="c-desc" id="c-sust-d">—</div></div>
+      <div class="compose-cell"><div class="c-label">Sustentação · meses 13–24</div><div class="c-value" id="c-op">—</div><div class="c-desc" id="c-op-d">—</div></div>
+      <div class="compose-cell"><div class="c-label">Serviços de terceiros</div><div class="c-value" id="c-hw">—</div><div class="c-desc">Nuvem, canais de mensagem e tokens de IA, contratados pela Alchemypet</div></div>
     </div>
 
     <div class="consultoria-banner reveal">
@@ -874,7 +874,7 @@
       <table id="tabela">
         <thead>
           <tr>
-            <th>Módulo</th><th>O que entra</th><th>Onda</th><th class="num">Esforço</th><th class="num">Valor estimado</th>
+            <th>Módulo</th><th>O que entra</th><th>Onda</th><th class="num">Esforço</th><th class="num">Valor no contrato</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -888,8 +888,8 @@
         </div>
         <div class="scope-title">Incluso no contrato</div>
         <ul class="scope-list">
-          <li><strong>Os 21 módulos</strong> dos blocos A e B, entregues em quatro ondas</li>
-          <li>Drivers do <strong>AU480</strong> e do <strong>Ac·T 10</strong> e o gateway de interfaceamento</li>
+          <li><strong>Os 20 módulos</strong> dos blocos A e B, entregues em quatro ondas</li>
+          <li>Drivers do <strong>AU480</strong> e do <strong>Ac·T 10</strong> e o serviço de gateway, no equipamento e nos cabos que o laboratório já tem</li>
           <li><strong>LIS completo</strong>: controle de qualidade, lotes de reagente e laudo com imagem</li>
           <li>Migração da base atual: clientes, pacientes, catálogo, histórico e modelos</li>
           <li>Catálogos pré-carregados, incluindo patologias levantadas com IA</li>
@@ -910,14 +910,15 @@
           <li><strong>Estoque e Relatórios</strong> — ainda não percorridos; entram na próxima reunião</li>
           <li>Módulo de hotel com reservas e diárias — aqui hotel é apenas setor</li>
           <li>Outros equipamentos além do AU480 e do Ac·T 10: cada aparelho é um driver</li>
-          <li>Conversas da API oficial do WhatsApp e licenças de terceiros</li>
+          <li><strong>Serviços de terceiros</strong>: nuvem e armazenamento, conversas da API oficial do WhatsApp, tokens de IA, licenças e taxas — contratados e pagos pela Alchemypet</li>
+          <li>Painel de TV e tablet por baia (E15) — opcional, cotado à parte</li>
         </ul>
       </div>
     </div>
 
     <div class="invest-note reveal">
       <strong>Como o valor foi calculado</strong>
-      Esforço por módulo em semanas-desenvolvedor × <span id="d-taxa">—</span> por semana. Sustentação com meio a um desenvolvedor dedicado nos meses 13 a 24. Operação inclui hospedagem, Chatwoot, conversas do WhatsApp e tokens de IA. As faixas fecham após confirmar os protocolos dos equipamentos, o detalhamento de Financeiro e Faturamento.
+      Preço fechado para todo o trabalho, sem cobrança por hora: os 20 módulos nas quatro ondas, a sustentação e a evolução dos meses 13 a 24, o treinamento por onda e a consultoria estratégica. Não inclui serviços de terceiros — nuvem, canais de mensagem e tokens de IA ficam por conta da Alchemypet, contratados em nome dela. O esforço em semanas-desenvolvedor fica declarado como medida de escopo, e o valor por módulo na tabela é o rateio do contrato por esse esforço — serve para dimensionar, não para faturar.
     </div>
   </div>
 </section>
@@ -942,8 +943,8 @@
         </div>
 
         <div class="pix-amounts">
-          <div class="pix-amount-row"><span class="pix-amount-label">Construção · ondas 1 a 4</span><span class="pix-amount-value" id="p-dev">—</span></div>
-          <div class="pix-amount-row"><span class="pix-amount-label">Gateway de interfaceamento · único</span><span class="pix-amount-value" id="p-hw">—</span></div>
+          <div class="pix-amount-row"><span class="pix-amount-label">Contrato total · 24 meses</span><span class="pix-amount-value" id="p-dev">—</span></div>
+          <div class="pix-amount-row"><span class="pix-amount-label">Forma de pagamento</span><span class="pix-amount-value" id="p-hw">—</span></div>
           <div class="pix-amount-row highlight"><span class="pix-amount-label">Parcela mensal · 24 meses</span><span class="pix-amount-value" id="p-mes">—</span></div>
         </div>
 
@@ -1092,10 +1093,8 @@
 // PARÂMETROS DO ORÇAMENTO — ajuste aqui e a página recalcula tudo
 // =============================================================
 const CFG = {
-  taxaDevWk: 7500,                 // R$ por semana-desenvolvedor
-  sustentacaoMes: [16000, 32000],  // R$/mês nos meses 13-24 (meio a um dev)
-  operacaoMes: [3000, 7000],       // R$/mês: hospedagem, Chatwoot, WhatsApp, IA
-  hardware: [3000, 5000],          // R$ único: gateway de interfaceamento
+  contratoTotal: 220000,  // R$ · preço fechado do contrato, tudo incluso
+  parcela: 9166,          // R$ · valor de cada uma das 24 parcelas fixas
   mesesContrato: 24,
   mesesSustentacao: 12
 };
@@ -1134,17 +1133,35 @@ const ONDAS = [
 
 // ---------- cálculo ----------
 const somaWk = l => l.reduce((a,e)=>[a[0]+e.wk[0], a[1]+e.wk[1]], [0,0]);
-const reais  = wk => wk.map(w => w * CFG.taxaDevWk);
 const base   = EPICOS.filter(e => !e.opcional);
 const opc    = EPICOS.filter(e => e.opcional);
 const wkBase = somaWk(base);
-const dev    = reais(wkBase);
-const sust   = CFG.sustentacaoMes.map(v => v * CFG.mesesSustentacao);
-const op     = CFG.operacaoMes.map(v => v * CFG.mesesContrato);
-const hw     = CFG.hardware;
-const total  = [dev[0]+sust[0]+op[0]+hw[0], dev[1]+sust[1]+op[1]+hw[1]];
-const mes    = total.map(v => v / CFG.mesesContrato);
 const ondaWk = n => somaWk(base.filter(e => e.onda === n));
+
+// O contrato é preço fechado. O esforço em semanas-desenvolvedor continua
+// declarado como medida de escopo, e serve só para ratear o valor entre os
+// módulos — a Alchemypet não paga por hora.
+const midWk   = e => (e.wk[0] + e.wk[1]) / 2;
+const somaMid = l => l.reduce((a,e) => a + midWk(e), 0);
+const midBase = somaMid(base);
+const porWk   = CFG.contratoTotal / midBase;
+
+// Rateio por maior resto: os valores inteiros somam exatamente o contrato.
+const rateio = (() => {
+  const bruto = base.map(e => midWk(e) * porWk);
+  const piso  = bruto.map(Math.floor);
+  const resto = CFG.contratoTotal - piso.reduce((a,b) => a + b, 0);
+  bruto.map((v,i) => [v - piso[i], i])
+       .sort((a,b) => b[0] - a[0])
+       .slice(0, resto)
+       .forEach(([, i]) => piso[i]++);
+  const m = new Map(base.map((e,i) => [e.id, piso[i]]));
+  // O opcional fica fora do contrato, cotado ao mesmo valor por semana.
+  opc.forEach(e => m.set(e.id, Math.round(midWk(e) * porWk)));
+  return m;
+})();
+const valorDe    = e => rateio.get(e.id);
+const valorLista = l => l.reduce((a,e) => a + rateio.get(e.id), 0);
 
 // ---------- formatação ----------
 const brl = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0});
@@ -1153,30 +1170,30 @@ const mil = v => v >= 1e6
   : 'R$ ' + Math.round(v/1000).toLocaleString('pt-BR') + ' mil';
 const faixa   = (a, f=mil) => f(a[0]) + ' a ' + f(a[1]);
 const faixaWk = a => a[0] + '–' + a[1] + ' sem';
+const INCLUSO = 'incluso';
 const el = id => document.getElementById(id);
 
 // ---------- números ----------
-el('k-modulos').textContent = EPICOS.length;
-el('v-sust').textContent  = faixa(CFG.sustentacaoMes, brl.format) + '/mês';
-el('v-op').textContent    = faixa(CFG.operacaoMes, brl.format) + '/mês';
-el('v-hw').textContent    = faixa(hw, brl.format);
-el('v-mes').textContent   = faixa(mes);
-el('v-total').textContent = faixa(total);
-el('c-dev').textContent   = faixa(dev);
-el('c-dev-d').textContent = wkBase[0] + ' a ' + wkBase[1] + ' semanas-desenvolvedor nas quatro ondas';
-el('c-sust').textContent  = faixa(sust);
-el('c-sust-d').textContent= faixa(CFG.sustentacaoMes, brl.format) + ' por mês, meio a um dev dedicado';
-el('c-op').textContent    = faixa(op);
-el('c-op-d').textContent  = faixa(CFG.operacaoMes, brl.format) + ' por mês';
-el('c-hw').textContent    = faixa(hw, brl.format);
-el('d-taxa').textContent  = brl.format(CFG.taxaDevWk);
-el('p-dev').textContent   = faixa(dev);
-el('p-hw').textContent    = faixa(hw, brl.format);
-el('p-mes').textContent   = faixa(mes);
+el('k-modulos').textContent = base.length;
+el('v-sust').textContent  = INCLUSO;
+el('v-op').textContent    = INCLUSO;
+el('v-hw').textContent    = INCLUSO;
+el('v-mes').textContent   = brl.format(CFG.parcela);
+el('v-total').textContent = brl.format(CFG.contratoTotal);
+el('c-dev').textContent   = brl.format(CFG.contratoTotal);
+el('c-dev-d').textContent = EPICOS.length - opc.length + ' módulos em quatro ondas · ' + wkBase[0] + ' a ' + wkBase[1] + ' semanas-desenvolvedor';
+el('c-sust').textContent  = CFG.mesesContrato + '× ' + brl.format(CFG.parcela);
+el('c-sust-d').textContent= 'Parcela fixa, com marco de aceite ao fim de cada onda';
+el('c-op').textContent    = 'Incluso';
+el('c-op-d').textContent  = 'Sustentação e evolução nos meses 13 a 24, com backlog priorizado';
+el('c-hw').textContent    = 'À parte';
+el('p-dev').textContent   = brl.format(CFG.contratoTotal);
+el('p-hw').textContent    = CFG.mesesContrato + ' parcelas fixas';
+el('p-mes').textContent   = brl.format(CFG.parcela);
 
 const wkA = somaWk(base.filter(e=>e.bloco==='A')), wkB = somaWk(base.filter(e=>e.bloco==='B'));
-el('meta-a').textContent = base.filter(e=>e.bloco==='A').length + ' módulos · ' + faixa(reais(wkA));
-el('meta-b').textContent = base.filter(e=>e.bloco==='B').length + ' módulos · ' + faixa(reais(wkB));
+el('meta-a').textContent = base.filter(e=>e.bloco==='A').length + ' módulos · ' + brl.format(valorLista(base.filter(e=>e.bloco==='A')));
+el('meta-b').textContent = base.filter(e=>e.bloco==='B').length + ' módulos · ' + brl.format(valorLista(base.filter(e=>e.bloco==='B')));
 
 // ---------- módulos ----------
 const cardModulo = e => `
@@ -1214,12 +1231,12 @@ el('timeline-track').innerHTML = ONDAS.map(o => `
 el('pay-ondas').innerHTML = ONDAS.map(o => `
   <div class="payment-row">
     <span class="payment-label">Onda 0${o.n} · ${o.nome}</span>
-    <span class="payment-value">${faixa(reais(ondaWk(o.n)))}</span>
+    <span class="payment-value">${brl.format(valorLista(base.filter(e=>e.onda===o.n)))}</span>
   </div>`).join('') + `
   <div class="payment-divider"></div>
   <div class="payment-total">
-    <span class="payment-total-label">Construção</span>
-    <span class="payment-total-value">${faixa(dev)}</span>
+    <span class="payment-total-label">Contrato</span>
+    <span class="payment-total-value">${brl.format(CFG.contratoTotal)}</span>
   </div>
   <div class="payment-note">
     <b>Condição</b>
@@ -1233,11 +1250,11 @@ const linha = e => `
     <td>${e.esc}</td>
     <td><span class="wave">Onda ${e.onda}</span></td>
     <td class="num">${faixaWk(e.wk)}</td>
-    <td class="num">${faixa(reais(e.wk))}</td>
+    <td class="num">${brl.format(valorDe(e))}</td>
   </tr>`;
 const subLinha = (rot, lista) => {
   const wk = somaWk(lista);
-  return `<tr class="sub-row"><td colspan="3">${rot}</td><td class="num">${faixaWk(wk)}</td><td class="num">${faixa(reais(wk))}</td></tr>`;
+  return `<tr class="sub-row"><td colspan="3">${rot}</td><td class="num">${faixaWk(wk)}</td><td class="num">${brl.format(valorLista(lista))}</td></tr>`;
 };
 const A = base.filter(e=>e.bloco==='A'), B = base.filter(e=>e.bloco==='B');
 document.querySelector('#tabela tbody').innerHTML =
@@ -1245,7 +1262,7 @@ document.querySelector('#tabela tbody').innerHTML =
   A.map(linha).join('') + subLinha('Subtotal do bloco A', A) +
   `<tr class="block-row"><td colspan="5">Bloco B · Laboratório, CRM, Logística e Atendimento</td></tr>` +
   B.map(linha).join('') + subLinha('Subtotal do bloco B', B) +
-  `<tr class="total-row"><td colspan="3">Construção · ondas 1 a 4</td><td class="num">${faixaWk(wkBase)}</td><td class="num">${faixa(dev)}</td></tr>` +
+  `<tr class="total-row"><td colspan="3">Contrato de 24 meses · ${base.length} módulos</td><td class="num">${faixaWk(wkBase)}</td><td class="num">${brl.format(CFG.contratoTotal)}</td></tr>` +
   `<tr class="block-row"><td colspan="5">Opcional</td></tr>` + opc.map(linha).join('');
 
 // =============================================================
@@ -1521,7 +1538,7 @@ class PDFBuilder {
     descLines.forEach(line => { d.text(line, PDF.marginX + 58, cy); cy += 4.2; });
 
     d.setFont('courier', 'bold'); d.setFontSize(9); d.setTextColor(...PDF.c.accent);
-    d.text(faixa(reais(e.wk)), PDF.pageW - PDF.marginX - 3, startY + 8, { align: 'right' });
+    d.text(brl.format(valorDe(e)), PDF.pageW - PDF.marginX - 3, startY + 8, { align: 'right' });
 
     this.y += h + 2;
   }
@@ -1596,9 +1613,9 @@ class PDFBuilder {
     d.rect(xL, startY, colW, cardH);
 
     d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(...PDF.c.accent);
-    d.text('CONSTRUÇÃO · MESES 1 A 12', xL + 6, startY + 7);
+    d.text('ESCOPO · RATEIO POR ONDA', xL + 6, startY + 7);
     d.setFont('times', 'bold'); d.setFontSize(17); d.setTextColor(...PDF.c.text);
-    d.text('Implementação', xL + 6, startY + 17);
+    d.text('Entregas', xL + 6, startY + 17);
     d.setDrawColor(...PDF.c.line);
     d.line(xL + 6, startY + 21, xL + colW - 6, startY + 21);
 
@@ -1607,16 +1624,16 @@ class PDFBuilder {
       d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(...PDF.c.textMuted);
       d.text('Onda 0' + o.n + ' · ' + o.nome, xL + 6, cy);
       d.setFont('courier', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.text);
-      d.text(faixa(reais(ondaWk(o.n))), xL + colW - 6, cy, { align: 'right' });
+      d.text(brl.format(valorLista(base.filter(e=>e.onda===o.n))), xL + colW - 6, cy, { align: 'right' });
       cy += 6;
     });
 
     d.setDrawColor(...PDF.c.line);
     d.line(xL + 6, cy, xL + colW - 6, cy);
     d.setFont('times', 'bolditalic'); d.setFontSize(11); d.setTextColor(...PDF.c.text);
-    d.text('Construção', xL + 6, cy + 8);
+    d.text('Contrato', xL + 6, cy + 8);
     d.setFont('times', 'bold'); d.setFontSize(15); d.setTextColor(...PDF.c.accent);
-    d.text(faixa(dev), xL + colW - 6, cy + 8, { align: 'right' });
+    d.text(brl.format(CFG.contratoTotal), xL + colW - 6, cy + 8, { align: 'right' });
 
     // Direita: contrato mensal
     const xR = PDF.marginX + colW + 6;
@@ -1641,10 +1658,10 @@ class PDFBuilder {
     d.line(xR + 6, startY + 21, xR + colW - 6, startY + 21);
 
     const rows = [
-      ['Sustentação (meses 13-24)', faixa(CFG.sustentacaoMes, brl.format)],
-      ['Operação em nuvem (24 meses)', faixa(CFG.operacaoMes, brl.format)],
-      ['Gateway (custo único)', faixa(hw, brl.format)],
-      ['Consultoria estratégica', 'incluso']
+      ['Sustentação (meses 13-24)', INCLUSO],
+      ['Evolução (backlog priorizado)', INCLUSO],
+      ['Treinamento e homologação', INCLUSO],
+      ['Consultoria estratégica', INCLUSO]
     ];
     let ry = startY + 29;
     rows.forEach(([k, v]) => {
@@ -1660,7 +1677,7 @@ class PDFBuilder {
     d.setFont('times', 'bolditalic'); d.setFontSize(11); d.setTextColor(...PDF.c.text);
     d.text('Parcela mensal', xR + 6, ry + 8);
     d.setFont('times', 'bold'); d.setFontSize(15); d.setTextColor(...PDF.c.accent);
-    d.text(faixa(mes), xR + colW - 6, ry + 8, { align: 'right' });
+    d.text(brl.format(CFG.parcela), xR + colW - 6, ry + 8, { align: 'right' });
 
     this.y = startY + cardH + 6;
   }
@@ -1673,11 +1690,11 @@ class PDFBuilder {
     d.setFillColor(...PDF.c.accentDeep);
     d.rect(PDF.marginX, this.y, 3, 20, 'F');
     d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(255, 255, 255);
-    d.text('CONTRATO DE 24 MESES · TOTAL ESTIMADO', PDF.marginX + 8, this.y + 7);
+    d.text('CONTRATO DE 24 MESES · PREÇO FECHADO', PDF.marginX + 8, this.y + 7);
     d.setFont('times', 'bolditalic'); d.setFontSize(18); d.setTextColor(255, 255, 255);
-    d.text(faixa(total), PDF.marginX + 8, this.y + 16);
+    d.text(brl.format(CFG.contratoTotal), PDF.marginX + 8, this.y + 16);
     d.setFont('courier', 'bold'); d.setFontSize(11);
-    d.text(faixa(mes) + ' / mês', PDF.pageW - PDF.marginX - 6, this.y + 14, { align: 'right' });
+    d.text(CFG.mesesContrato + '× ' + brl.format(CFG.parcela), PDF.pageW - PDF.marginX - 6, this.y + 14, { align: 'right' });
     this.y += 26;
   }
 
@@ -1848,7 +1865,7 @@ class PDFBuilder {
     this.y += 28;
 
     this.kpiRow([
-      { num: String(EPICOS.length), label: 'Módulos' },
+      { num: String(base.length), label: 'Módulos' },
       { num: '6', label: 'Meses p/ desligar' },
       { num: '2', label: 'Analisadores' },
       { num: '24', label: 'Meses' }
@@ -1881,7 +1898,7 @@ class PDFBuilder {
     // ---- ESCOPO ----
     this.newPage();
     this.sectionLabel('03 · Escopo');
-    this.sectionTitle('Vinte e um módulos em dois blocos.');
+    this.sectionTitle('Vinte módulos em dois blocos.');
     this.intro('O bloco A recria o software que a equipe usa hoje, sem o que não serve. O bloco B entrega o que ele nunca teve: laboratório interfaceado, relacionamento, logística e atendimento com IA.');
 
     d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.accent);
@@ -1914,13 +1931,13 @@ class PDFBuilder {
     this.newPage();
     this.sectionLabel('07 · Investimento');
     this.sectionTitle('Construção no primeiro ano. Contrato de 24 meses.');
-    this.intro('O primeiro ano entrega os vinte e um módulos em quatro ondas, com aceite a cada uma. O segundo ano mantém tudo rodando e evoluindo: Estoque, Relatórios, hotel e o empacotamento white-label.');
+    this.intro('Preço fechado para todo o trabalho: os vinte módulos entregues em quatro ondas no primeiro ano, com aceite a cada uma, e a sustentação, a evolução e a consultoria ao longo dos vinte e quatro meses. Serviços de terceiros ficam por conta da Alchemypet.');
     this.spacer(4);
     this.paymentCards();
     this.totalBox();
     this.scopeSection(
-      ['Os 21 módulos dos blocos A e B, em quatro ondas',
-       'Drivers do AU480 e do Ac·T 10 e o gateway',
+      ['Os 20 módulos dos blocos A e B, em quatro ondas',
+       'Drivers do AU480 e do Ac·T 10 e o serviço de gateway',
        'LIS completo: CQ, lotes de reagente e laudo com imagem',
        'Migração da base atual, de forma idempotente',
        'Catálogos pré-carregados, patologias com IA',
@@ -1932,9 +1949,10 @@ class PDFBuilder {
        'Estoque e Relatórios (próxima reunião)',
        'Módulo de hotel com reservas e diárias',
        'Outros equipamentos além do AU480 e Ac·T 10',
-       'Conversas do WhatsApp e licenças de terceiros']
+       'Serviços de terceiros: nuvem, WhatsApp, tokens de IA e licenças',
+       'Painel de TV e tablet por baia (E15), opcional']
     );
-    this.noticeBox('Como o valor foi calculado', 'Esforço por módulo em semanas-desenvolvedor multiplicado por ' + brl.format(CFG.taxaDevWk) + ' por semana. Sustentação com meio a um desenvolvedor dedicado nos meses 13 a 24. Operação inclui hospedagem, Chatwoot, conversas do WhatsApp e tokens de IA. As faixas fecham após confirmar os protocolos dos equipamentos, o detalhamento de Financeiro e Faturamento.');
+    this.noticeBox('Como o valor está composto', 'Preço fechado de ' + brl.format(CFG.contratoTotal) + ' para todo o escopo, em ' + CFG.mesesContrato + ' parcelas fixas de ' + brl.format(CFG.parcela) + ' — sem cobrança por hora. Inclui a construção dos ' + base.length + ' módulos nas quatro ondas, a sustentação e a evolução dos meses 13 a 24, o treinamento por onda e a consultoria. Não inclui serviços de terceiros: nuvem, canais de mensagem e tokens de IA ficam por conta da Alchemypet. O valor por módulo na tabela é o rateio do contrato pelo esforço de cada um, e serve para dimensionar escopo, não para faturar.');
 
     // ---- PAGAMENTO ----
     this.newPage();
