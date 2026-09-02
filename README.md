@@ -14,9 +14,9 @@ um laboratório de análises clínicas veterinárias.
 - [Apresentação de Orçamento (Diretoria)](apresentacao-orcamento/index.html) — apresentação visual,
   em linguagem executiva, para decisão de investimento. Abra o arquivo no navegador.
 - [Gestão de Clínica — Mapeamento para Orçamento (Fase 1)](docs/GESTAO-CLINICA-MAPEAMENTO.md) —
-  recriação simplificada e AI-First do software de gestão clínica em uso hoje: decisões módulo a
-  módulo (Home → Internação), escopo da Fase 1, modelo de dados, estimativa de esforço e
-  perguntas em aberto.
+  recriação simplificada e AI-First do software de gestão em uso hoje na Alchemypet: decisões
+  módulo a módulo (Home → Internação, mais Financeiro e Faturamento), escopo da Fase 1, modelo de
+  dados, estimativa de esforço, premissas fechadas e pendências.
 
 ## Módulos
 - [Painel Convênio](painel-convenio/README.md) — tela de gestão das pendências de convênio.
