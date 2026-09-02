@@ -1,627 +1,1952 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Alchemypet Integrado · Orçamento — Contrato de 24 meses</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta Comercial · Alchemypet × Tudo Mudou!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-  :root{
-    --grafite:#1f2933;
-    --marinho:#1e3a5f;
-    --marinho-2:#274b78;
-    --bg:#f7f9fb;
-    --bg-soft:#eef2f6;
-    --card:#ffffff;
-    --texto:#2b3640;
-    --texto-suave:#5a6b7a;
-    --linha:#dde5ec;
-    --destaque:#0fa3a3;
-    --destaque-2:#c9a24b;
-    --ok:#2e9e6b;
-    --sombra:0 10px 30px rgba(31,41,51,.08);
-    --sombra-forte:0 18px 50px rgba(31,41,51,.14);
-    --raio:16px;
+  /* ============ TOKENS DARK ============ */
+  [data-theme="dark"] {
+    --bg-deep: #0a0a0b;
+    --bg-elevated: #131316;
+    --bg-card: #1a1a1f;
+    --line: #26262d;
+    --line-bright: #3a3a44;
+    --text-primary: #f4f4f0;
+    --text-muted: #8a8a93;
+    --text-dim: #5a5a63;
+    --accent: #ff6b1a;
+    --accent-bright: #ffa15c;
+    --accent-deep: #c14a00;
+    --success: #6ee7a7;
+    --warn: #ffd166;
+    --grain-opacity: 0.035;
+    --shadow-soft: 0 20px 80px rgba(255,107,26,0.3);
+    --nav-bg: rgba(10,10,11,0.7);
+    --hero-glow: rgba(255,107,26,0.25);
+    --pain-after-bg: linear-gradient(180deg, var(--bg-elevated) 0%, rgba(255,107,26,0.03) 100%);
+    --cta-bg: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,107,26,0.12) 0%, transparent 70%);
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    color:var(--texto);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;
+
+  /* ============ TOKENS LIGHT ============ */
+  [data-theme="light"] {
+    --bg-deep: #faf8f4;
+    --bg-elevated: #ffffff;
+    --bg-card: #f4f1ec;
+    --line: #e6e1d8;
+    --line-bright: #d4cdc0;
+    --text-primary: #15110d;
+    --text-muted: #6b6358;
+    --text-dim: #9a9286;
+    --accent: #d4540a;
+    --accent-bright: #ff7a2e;
+    --accent-deep: #8a3500;
+    --success: #2d8659;
+    --warn: #b8841a;
+    --grain-opacity: 0.025;
+    --shadow-soft: 0 20px 60px rgba(212,84,10,0.18);
+    --nav-bg: rgba(250,248,244,0.85);
+    --hero-glow: rgba(212,84,10,0.18);
+    --pain-after-bg: linear-gradient(180deg, var(--bg-elevated) 0%, rgba(212,84,10,0.04) 100%);
+    --cta-bg: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(212,84,10,0.08) 0%, transparent 70%);
   }
-  h1,h2,h3,h4{color:var(--grafite);line-height:1.2;font-weight:700;letter-spacing:-.01em}
-  p{color:var(--texto-suave)}
-  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
-  section{padding:90px 0;position:relative}
-  .eyebrow{display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--destaque);margin-bottom:14px}
-  .lead{font-size:1.12rem;max-width:760px}
-  .center{text-align:center}
-  .center .lead{margin-left:auto;margin-right:auto}
-  .muted{color:var(--texto-suave);font-size:.88rem}
 
-  #progress{position:fixed;top:0;left:0;height:4px;width:0;z-index:120;background:linear-gradient(90deg,var(--destaque),var(--destaque-2))}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
 
-  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(247,249,251,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--linha);transition:transform .3s}
-  .nav-inner{display:flex;align-items:center;justify-content:space-between;max-width:1120px;margin:0 auto;padding:14px 28px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--grafite);letter-spacing:-.02em}
-  .brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--marinho),var(--destaque));display:inline-block}
-  .nav-links{display:flex;gap:22px}
-  .nav-links a{color:var(--texto-suave);text-decoration:none;font-size:.9rem;font-weight:600}
-  .nav-links a:hover{color:var(--destaque)}
-  @media(max-width:900px){.nav-links{display:none}}
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
 
-  .hero{min-height:100vh;display:flex;align-items:center;color:#eaf1f7;padding-top:80px;
-    background:radial-gradient(900px 500px at 80% -10%, rgba(15,163,163,.28), transparent 60%),
-               radial-gradient(700px 500px at 0% 110%, rgba(201,162,75,.18), transparent 55%),
-               linear-gradient(160deg,#16222e 0%,#1e3a5f 60%,#16222e 100%)}
-  .hero h1{color:#fff;font-size:clamp(2.1rem,5vw,3.5rem);max-width:16ch}
-  .hero .eyebrow{color:var(--destaque-2)}
-  .hero p{color:#c4d3e0;font-size:1.18rem;max-width:640px;margin-top:18px}
-  .badge-prelim{display:inline-flex;align-items:center;gap:8px;margin-top:30px;padding:9px 16px;border:1px solid rgba(255,255,255,.25);border-radius:999px;color:#dbe6f0;font-size:.85rem;font-weight:600}
-  .badge-prelim .pulse{width:9px;height:9px;border-radius:50%;background:var(--destaque-2);animation:pulse 2s infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,162,75,.5)}70%{box-shadow:0 0 0 12px rgba(201,162,75,0)}100%{box-shadow:0 0 0 0 rgba(201,162,75,0)}}
-  .hero-meta{margin-top:46px;display:flex;gap:40px;flex-wrap:wrap}
-  .hero-meta .item{border-left:2px solid rgba(255,255,255,.2);padding-left:16px}
-  .hero-meta .item .k{display:block;color:#fff;font-size:1.5rem;font-weight:800}
-  .hero-meta .item .v{color:#a9bccd;font-size:.85rem}
-  .scroll-cue{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);color:#9fb3c6;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;animation:bob 2.2s infinite}
-  @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 
-  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
-  .reveal.in{opacity:1;transform:none}
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 48px; }
 
-  .alt{background:var(--bg-soft)}
-  .split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
-  @media(max-width:820px){.split{grid-template-columns:1fr;gap:32px}}
-  .pain-list{list-style:none;margin-top:18px}
-  .pain-list li{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px dashed var(--linha);color:var(--texto)}
-  .pain-list li .x{color:#c0563f;font-weight:800;flex:0 0 auto}
-  .vision-card{background:var(--card);border-radius:var(--raio);box-shadow:var(--sombra);padding:34px;border:1px solid var(--linha)}
-  .vision-card h3{margin-bottom:10px}
-  .tag{display:inline-block;background:rgba(15,163,163,.1);color:var(--destaque);font-weight:700;font-size:.78rem;padding:4px 12px;border-radius:999px;margin-bottom:18px}
+  /* ============ NAV ============ */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--line);
+    transition: background 0.4s, border-color 0.4s;
+  }
+  nav .inner {
+    max-width: 1280px; margin: 0 auto; padding: 16px 48px;
+    display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  }
+  .nav-brand { font-family: 'Fraunces', serif; font-weight: 800; font-size: 18px; letter-spacing: -0.02em; }
+  .nav-brand span { color: var(--accent); }
+  .nav-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; flex: 1; text-align: center; }
+  .nav-actions { display: flex; align-items: center; gap: 12px; }
 
-  .bloco-titulo{display:flex;align-items:center;gap:14px;margin-top:54px;margin-bottom:18px}
-  .bloco-titulo .letra{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--marinho),var(--destaque))}
-  .bloco-titulo.b .letra{background:linear-gradient(135deg,#7a6526,var(--destaque-2))}
-  .bloco-titulo h3{font-size:1.25rem}
-  .bloco-titulo .sub{font-size:.9rem;color:var(--texto-suave)}
-  .mods{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  @media(max-width:980px){.mods{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:520px){.mods{grid-template-columns:1fr}}
-  .mod{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:18px 16px;display:flex;flex-direction:column;gap:6px;box-shadow:0 4px 14px rgba(31,41,51,.05)}
-  .mod .id{font-size:.72rem;font-weight:700;letter-spacing:.06em;color:var(--texto-suave)}
-  .mod .nome{font-weight:700;color:var(--grafite);font-size:.98rem}
-  .mod p{font-size:.86rem;line-height:1.45}
-  .mod .st{font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-top:auto;padding-top:8px}
-  .mod .st.sub{color:var(--marinho-2)}
-  .mod .st.novo{color:var(--ok)}
-  .mod .st.opc{color:var(--destaque-2)}
-  .mod.is-opc{border-style:dashed}
-  .legend{display:flex;gap:24px;justify-content:center;margin-top:28px;flex-wrap:wrap;font-size:.85rem;color:var(--texto-suave)}
-  .legend span{display:inline-flex;align-items:center;gap:8px}
-  .legend .sw{width:12px;height:12px;border-radius:3px}
+  .icon-btn {
+    background: transparent; border: 1px solid var(--line-bright);
+    color: var(--text-muted); width: 38px; height: 38px;
+    border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s ease;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .icon-btn .sun { display: none; }
+  .icon-btn .moon { display: block; }
+  [data-theme="light"] .icon-btn .sun { display: block; }
+  [data-theme="light"] .icon-btn .moon { display: none; }
 
-  .ai-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:44px}
-  @media(max-width:820px){.ai-grid{grid-template-columns:1fr}}
-  .ai-item{display:flex;gap:18px;background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);padding:24px;box-shadow:var(--sombra)}
-  .ico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex:0 0 auto;background:linear-gradient(135deg,rgba(30,58,95,.1),rgba(15,163,163,.16))}
-  .ai-item h3{font-size:1.08rem;margin-bottom:4px}
-  .human{margin-top:40px;text-align:center;background:rgba(15,163,163,.07);border:1px solid rgba(15,163,163,.25);border-radius:var(--raio);padding:26px 24px}
-  .human strong{color:var(--grafite)}
+  .nav-btn {
+    padding: 10px 18px; border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+    cursor: pointer; border: none; transition: all 0.25s ease;
+    display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  }
+  .nav-btn svg { width: 14px; height: 14px; }
+  .nav-btn.ghost { background: transparent; color: var(--text-primary); border: 1px solid var(--line-bright); }
+  .nav-btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn.primary { background: var(--accent); color: #ffffff; }
+  [data-theme="dark"] .nav-btn.primary { color: #0a0a0b; }
+  .nav-btn.primary:hover { background: var(--accent-bright); transform: translateY(-1px); }
+  .nav-btn:disabled { opacity: 0.6; cursor: wait; }
 
-  .timeline{margin-top:54px;position:relative}
-  .timeline::before{content:"";position:absolute;left:26px;top:8px;bottom:8px;width:2px;background:var(--linha)}
-  @media(max-width:640px){.timeline::before{left:18px}}
-  .phase{position:relative;padding-left:78px;margin-bottom:30px}
-  @media(max-width:640px){.phase{padding-left:58px}}
-  .phase .num{position:absolute;left:0;top:0;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--marinho),var(--destaque));color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1.05rem;box-shadow:var(--sombra)}
-  .phase.sust .num{background:linear-gradient(135deg,#7a6526,var(--destaque-2))}
-  @media(max-width:640px){.phase .num{width:38px;height:38px;font-size:.85rem}}
-  .phase-card{background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);padding:22px 26px;box-shadow:var(--sombra)}
-  .phase-card .top{display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap}
-  .phase-card h3{font-size:1.12rem}
-  .phase-card .prazo{font-size:.82rem;font-weight:700;color:var(--destaque);background:rgba(15,163,163,.1);padding:4px 12px;border-radius:999px;white-space:nowrap}
-  .phase-card p{margin-top:6px;font-size:.96rem}
-  .phase-card .ep{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
-  .phase-card .ep span{font-size:.74rem;font-weight:700;color:var(--marinho-2);background:rgba(39,75,120,.08);padding:3px 9px;border-radius:999px}
-  .phase-card .resultado{margin-top:12px;font-size:.92rem;color:var(--grafite);font-weight:600}
+  /* ============ HERO ============ */
+  .hero { min-height: 100vh; padding: 140px 0 80px; position: relative; display: flex; align-items: center; overflow: hidden; }
+  .hero-grid-bg {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 80%);
+    opacity: 0.5;
+  }
+  .hero-glow {
+    position: absolute; width: 800px; height: 800px; border-radius: 50%;
+    background: radial-gradient(circle, var(--hero-glow) 0%, transparent 60%);
+    top: -200px; right: -200px; filter: blur(60px); pointer-events: none;
+  }
+  .hero-content { position: relative; z-index: 2; width: 100%; }
+  .hero-meta { display: flex; gap: 32px; margin-bottom: 64px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; }
+  .hero-meta span { display: flex; align-items: center; gap: 8px; }
+  .hero-meta .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 12px var(--accent); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-  .invest{background:var(--bg-soft)}
-  .inv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:46px}
-  @media(max-width:980px){.inv-grid{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:520px){.inv-grid{grid-template-columns:1fr}}
-  .inv{background:var(--card);border:1px solid var(--linha);border-radius:14px;padding:22px 18px;text-align:center;box-shadow:var(--sombra)}
-  .inv .fase{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--texto-suave)}
-  .inv .nome{font-weight:700;color:var(--grafite);margin:6px 0 12px;font-size:.96rem;min-height:42px;display:flex;align-items:center;justify-content:center}
-  .inv .valor{font-size:1.12rem;font-weight:800;color:var(--marinho)}
-  .inv .prazo{font-size:.78rem;color:var(--texto-suave);margin-top:6px}
-  .totais{display:grid;grid-template-columns:2fr 1fr;gap:22px;margin-top:30px}
-  @media(max-width:820px){.totais{grid-template-columns:1fr}}
-  .total-box{border-radius:var(--raio);padding:34px;color:#fff;box-shadow:var(--sombra-forte)}
-  .total-box.main{background:linear-gradient(160deg,#1e3a5f,#16222e)}
-  .total-box.rec{background:linear-gradient(160deg,var(--grafite),#0e1419)}
-  .total-box .rotulo{font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;color:#9fb6cb}
-  .total-box .big{font-size:clamp(1.9rem,5vw,2.7rem);font-weight:800;margin-top:8px;color:#fff}
-  .total-box.rec .big{font-size:clamp(1.5rem,3.4vw,2rem)}
-  .total-box .sub{color:#b9cadb;font-size:.9rem;margin-top:8px}
-  .comp{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
-  @media(max-width:980px){.comp{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:520px){.comp{grid-template-columns:1fr}}
-  .comp .c{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:16px 18px}
-  .comp .c .r{font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--texto-suave)}
-  .comp .c .v{font-weight:800;color:var(--marinho);font-size:1.05rem;margin-top:4px}
-  .comp .c .d{font-size:.82rem;color:var(--texto-suave);margin-top:2px}
-  .disclaimer{margin-top:30px;display:flex;gap:12px;align-items:flex-start;background:rgba(201,162,75,.12);border:1px solid rgba(201,162,75,.4);border-radius:12px;padding:16px 20px}
-  .disclaimer .i{font-size:1.2rem}
-  .disclaimer p{color:#7a6526;font-size:.9rem}
+  .hero h1 { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(52px, 8vw, 118px); line-height: 0.95; letter-spacing: -0.04em; margin-bottom: 40px; }
+  .hero h1 em {
+    font-style: italic; font-weight: 800; color: var(--accent);
+    background: linear-gradient(135deg, var(--accent-bright) 0%, var(--accent) 60%, var(--accent-deep) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero h1 .strike { font-weight: 800; }
 
-  .tabela-wrap{overflow-x:auto;margin-top:40px;border:1px solid var(--linha);border-radius:var(--raio);background:var(--card);box-shadow:var(--sombra)}
-  table{width:100%;border-collapse:collapse;min-width:820px;font-size:.92rem}
-  th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--linha);vertical-align:top}
-  th{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--texto-suave);background:var(--bg-soft);position:sticky;top:0}
-  td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-  td .id{font-size:.72rem;font-weight:700;color:var(--texto-suave);display:block}
-  td .nome{font-weight:700;color:var(--grafite)}
-  td .esc{font-size:.85rem;color:var(--texto-suave)}
-  tr.bloco td{background:rgba(30,58,95,.06);font-weight:800;color:var(--grafite);letter-spacing:.02em}
-  tr.sub td{background:rgba(15,163,163,.07);font-weight:700;color:var(--grafite)}
-  tr.total td{background:linear-gradient(160deg,#1e3a5f,#16222e);color:#fff;font-weight:800}
-  tr.total td .esc{color:#b9cadb;font-weight:400}
-  tr.opc td{color:var(--texto-suave)}
-  tr.opc td .nome{color:var(--texto-suave)}
-  .onda-pill{font-size:.72rem;font-weight:700;color:var(--marinho-2);background:rgba(39,75,120,.08);padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .hero-sub { max-width: 700px; font-size: 21px; line-height: 1.5; color: var(--text-muted); margin-bottom: 56px; }
+  .hero-sub strong { color: var(--text-primary); font-weight: 500; }
 
-  .duas{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px}
-  @media(max-width:820px){.duas{grid-template-columns:1fr}}
-  .box{background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);padding:28px;box-shadow:var(--sombra)}
-  .box h3{font-size:1.08rem;margin-bottom:12px}
-  .box ul{list-style:none}
-  .box li{padding:8px 0;border-bottom:1px dashed var(--linha);font-size:.93rem;color:var(--texto)}
-  .box li:last-child{border-bottom:none}
-  .box li .ok{color:var(--ok);font-weight:800;margin-right:8px}
-  .box li .no{color:#c0563f;font-weight:800;margin-right:8px}
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 12px; }
+  .tag { padding: 8px 16px; border: 1px solid var(--line-bright); border-radius: 100px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; transition: all 0.3s; }
+  .tag:hover { border-color: var(--accent); color: var(--accent); }
 
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:46px}
-  @media(max-width:820px){.steps{grid-template-columns:1fr}}
-  .step{position:relative;background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);padding:28px;box-shadow:var(--sombra)}
-  .step .n{font-size:.85rem;font-weight:800;color:var(--destaque);letter-spacing:.1em}
-  .step h3{margin:8px 0 6px;font-size:1.08rem}
-  .cta{margin-top:54px;text-align:center;background:linear-gradient(160deg,#1e3a5f,#16222e);border-radius:24px;padding:54px 28px;color:#fff}
-  .cta h2{color:#fff;font-size:clamp(1.6rem,4vw,2.2rem)}
-  .cta p{color:#bccfe0;max-width:560px;margin:14px auto 0}
-  .btn{display:inline-block;margin-top:26px;background:linear-gradient(135deg,var(--destaque),#0c8a8a);color:#fff;text-decoration:none;font-weight:700;padding:15px 34px;border-radius:999px;box-shadow:0 10px 26px rgba(15,163,163,.4);transition:transform .25s}
-  .btn:hover{transform:translateY(-3px)}
+  /* ============ NÚMEROS ============ */
+  .impact { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg-elevated); position: relative; z-index: 2; transition: background 0.4s; }
+  .impact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .impact-cell { padding: 60px 32px; border-right: 1px solid var(--line); }
+  .impact-cell:last-child { border-right: none; }
+  .impact-num { font-family: 'Fraunces', serif; font-weight: 300; font-size: 88px; line-height: 1; letter-spacing: -0.04em; color: var(--text-primary); margin-bottom: 12px; }
+  .impact-num em { font-style: italic; font-weight: 800; color: var(--accent); }
+  .impact-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; }
 
-  footer{background:var(--grafite);color:#9fb0bf;padding:40px 0;text-align:center;font-size:.85rem}
-  footer strong{color:#fff}
-  footer .small{margin-top:10px;font-size:.78rem;color:#7c8b99}
+  /* ============ SEÇÕES ============ */
+  section { padding: 140px 0; position: relative; z-index: 2; }
+  .section-alt { background: var(--bg-elevated); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .section-label { display: inline-flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 32px; }
+  .section-label::before { content: ""; width: 32px; height: 1px; background: var(--accent); }
+  .section-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(38px, 5.4vw, 76px); line-height: 1.02; letter-spacing: -0.035em; margin-bottom: 32px; max-width: 980px; }
+  .section-title em { font-style: italic; font-weight: 800; color: var(--accent); }
+  .section-intro { max-width: 740px; font-size: 19px; color: var(--text-muted); line-height: 1.55; margin-bottom: 80px; }
 
-  @media print{
-    nav,#progress,.scroll-cue,.cta .btn{display:none}
-    .reveal{opacity:1;transform:none}
-    section{padding:40px 0}
-    .hero{min-height:auto;padding:60px 0}
+  /* ============ DOR ============ */
+  .pain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
+  .pain-side { padding: 48px; border: 1px solid var(--line); background: var(--bg-elevated); position: relative; }
+  .pain-side.before { border-left: 3px solid var(--text-dim); }
+  .pain-side.after { border-left: 3px solid var(--accent); background: var(--pain-after-bg); }
+  .pain-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 24px; }
+  .pain-side.before .pain-tag { color: var(--text-dim); }
+  .pain-side.after .pain-tag { color: var(--accent); }
+  .pain-headline { font-family: 'Fraunces', serif; font-weight: 400; font-size: 32px; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 32px; }
+  .pain-side.before .pain-headline { color: var(--text-muted); }
+  .pain-list { list-style: none; }
+  .pain-list li { padding: 16px 0; border-top: 1px solid var(--line); font-size: 16px; display: flex; align-items: flex-start; gap: 14px; color: var(--text-muted); }
+  .pain-side.after .pain-list li { color: var(--text-primary); }
+  .pain-list li:last-child { border-bottom: 1px solid var(--line); }
+  .pain-list .icon { flex-shrink: 0; width: 18px; height: 18px; margin-top: 2px; }
+
+  /* ============ MÓDULOS ============ */
+  .modules-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .module { background: var(--bg-elevated); padding: 36px 32px; transition: background 0.4s; display: flex; flex-direction: column; }
+  .module:hover { background: var(--bg-card); }
+  .module:hover .module-num { color: var(--accent); }
+  .module.span-6 { grid-column: span 6; }
+  .module.span-4 { grid-column: span 4; }
+  .module.span-3 { grid-column: span 3; }
+  .module.span-12 { grid-column: span 12; }
+  .module-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.15em; margin-bottom: 24px; transition: color 0.3s; display: flex; justify-content: space-between; gap: 12px; }
+  .module-num .wave { color: var(--accent); }
+  .module h3 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 26px; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .module p { font-size: 15px; color: var(--text-muted); line-height: 1.55; margin-bottom: 20px; }
+  .module-features { list-style: none; margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line); }
+  .module-features li { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 0; }
+  .module-features li::before { content: "→ "; color: var(--accent); }
+  .block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin: 72px 0 20px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .block-head h3 { font-family: 'Fraunces', serif; font-weight: 600; font-style: italic; font-size: 30px; letter-spacing: -0.02em; }
+  .block-head .meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; }
+
+  /* ============ FONTES / ARQUITETURA ============ */
+  .sources-flow { display: grid; grid-template-columns: 1fr auto 1fr; gap: 80px; align-items: center; margin-top: 64px; }
+  .sources-list { display: flex; flex-direction: column; gap: 12px; }
+  .source-item { padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--line); border-left: 3px solid var(--accent); display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; transition: transform 0.3s, border-color 0.3s; }
+  .source-item:hover { transform: translateX(4px); border-left-color: var(--accent-bright); }
+  .source-item .name { color: var(--text-primary); }
+  .source-item .type { color: var(--text-dim); font-size: 11px; text-transform: uppercase; text-align: right; }
+  .flow-arrow { width: 120px; height: 80px; display: flex; align-items: center; justify-content: center; }
+  .central-engine { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%); padding: 48px 32px; text-align: center; box-shadow: var(--shadow-soft); position: relative; overflow: hidden; }
+  .central-engine .ce-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 16px; color: rgba(255,255,255,0.85); position: relative; }
+  .central-engine h4 { font-family: 'Fraunces', serif; font-weight: 800; font-style: italic; font-size: 36px; color: #ffffff; line-height: 1; position: relative; }
+
+  /* ============ CRONOGRAMA ============ */
+  .timeline { position: relative; margin-top: 80px; padding: 60px 0; }
+  .timeline::before { content: ""; position: absolute; top: 96px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent-bright) 0%, var(--accent) 40%, var(--accent-deep) 70%, var(--success) 100%); }
+  .timeline-track { display: grid; grid-template-columns: repeat(var(--phases, 5), 1fr); gap: 24px; position: relative; }
+  .phase { position: relative; }
+  .phase-marker { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-deep); border: 3px solid var(--accent); margin: 0 auto 24px; position: relative; z-index: 2; }
+  .phase:nth-child(1) .phase-marker { border-color: var(--accent-bright); }
+  .phase:nth-child(5) .phase-marker { border-color: var(--success); background: var(--success); box-shadow: 0 0 24px var(--success); }
+  .phase-content { background: var(--bg-elevated); border: 1px solid var(--line); padding: 24px 20px; margin-top: 16px; transition: transform 0.3s, border-color 0.3s; height: 100%; }
+  .phase-content:hover { transform: translateY(-4px); border-color: var(--accent); }
+  .phase-week { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px; }
+  .phase h4 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 20px; line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.01em; }
+  .phase p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .phase .epics { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.8; }
+  .timeline-status { margin-top: 56px; padding: 32px; background: linear-gradient(90deg, rgba(110,231,167,0.08) 0%, transparent 100%); border-left: 3px solid var(--success); display: flex; align-items: center; gap: 24px; }
+  [data-theme="light"] .timeline-status { background: linear-gradient(90deg, rgba(45,134,89,0.06) 0%, transparent 100%); }
+  .timeline-status .check-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--success); color: #ffffff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  [data-theme="dark"] .timeline-status .check-icon { color: var(--bg-deep); }
+  .timeline-status-text strong { font-family: 'Fraunces', serif; font-style: italic; font-size: 22px; display: block; margin-bottom: 4px; }
+  .timeline-status-text span { color: var(--text-muted); font-size: 14px; }
+
+  /* ============ STACK ============ */
+  .stack-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 56px; }
+  .stack-item { padding: 32px 24px; border: 1px solid var(--line); background: var(--bg-elevated); text-align: center; transition: all 0.3s; }
+  .stack-item:hover { border-color: var(--accent); transform: translateY(-4px); }
+  .stack-item .stack-cat { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 16px; }
+  .stack-item .stack-tech { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; color: var(--text-primary); letter-spacing: -0.01em; }
+
+  /* ============ SEGURANÇA ============ */
+  .security-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; }
+  .sec-card { padding: 36px; border: 1px solid var(--line); background: var(--bg-elevated); position: relative; }
+  .sec-card .sec-num { font-family: 'Fraunces', serif; font-weight: 800; font-style: italic; font-size: 64px; color: var(--accent); opacity: 0.2; position: absolute; top: 20px; right: 32px; line-height: 1; }
+  .sec-card h4 { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; margin-bottom: 20px; letter-spacing: -0.01em; }
+  .sec-card ul { list-style: none; }
+  .sec-card li { padding: 10px 0; font-size: 14px; color: var(--text-muted); border-top: 1px solid var(--line); display: flex; align-items: flex-start; gap: 10px; }
+  .sec-card li:first-child { border-top: none; }
+  .sec-card li::before { content: "■"; color: var(--accent); font-size: 8px; margin-top: 6px; }
+
+  /* ============ INVESTIMENTO ============ */
+  .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 64px; }
+  .payment-card { background: var(--bg-elevated); border: 1px solid var(--line); padding: 40px; position: relative; transition: all 0.3s; }
+  .payment-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+  .payment-card.highlight { border: 2px solid var(--accent); background: linear-gradient(180deg, var(--bg-elevated) 0%, rgba(212,84,10,0.03) 100%); }
+  [data-theme="dark"] .payment-card.highlight { background: linear-gradient(180deg, var(--bg-elevated) 0%, rgba(255,107,26,0.04) 100%); }
+  .payment-badge {
+    position: absolute; top: -12px; right: 32px;
+    background: var(--accent); color: #ffffff; padding: 6px 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;
+    border-radius: 100px; box-shadow: 0 4px 12px rgba(212,84,10,0.3);
+  }
+  [data-theme="dark"] .payment-badge { color: #0a0a0b; }
+  .payment-header { padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+  .payment-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px; }
+  .payment-name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.025em; color: var(--text-primary); }
+  .payment-body { display: flex; flex-direction: column; gap: 14px; }
+  .payment-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .payment-label { font-size: 14.5px; color: var(--text-muted); }
+  .payment-value { font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: var(--text-primary); font-weight: 500; white-space: nowrap; }
+  .payment-value.ok { color: var(--success); font-weight: 600; }
+  .payment-divider { height: 1px; background: var(--line); margin: 8px 0; }
+  .payment-total { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-top: 4px; }
+  .payment-total-label { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 18px; color: var(--text-primary); }
+  .payment-total-value { font-family: 'Fraunces', serif; font-weight: 800; font-size: clamp(24px, 3vw, 34px); color: var(--accent); letter-spacing: -0.02em; text-align: right; }
+  .payment-note { margin-top: 14px; padding: 12px 16px; background: var(--bg-card); border-left: 3px solid var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+  .payment-note b { color: var(--accent); font-weight: 700; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* Composição */
+  .compose-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 32px; }
+  .compose-cell { background: var(--bg-elevated); padding: 28px 24px; }
+  .compose-cell .c-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px; }
+  .compose-cell .c-value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1.1; }
+  .compose-cell .c-desc { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.45; }
+
+  /* Tabela de módulos */
+  .table-wrap { margin-top: 64px; border: 1px solid var(--line); background: var(--bg-elevated); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 860px; }
+  thead th {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.15em; color: var(--text-dim); text-align: left;
+    padding: 18px 20px; border-bottom: 1px solid var(--line); background: var(--bg-card); white-space: nowrap;
+  }
+  tbody td { padding: 16px 20px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+  td.num, th.num { text-align: right; white-space: nowrap; font-family: 'JetBrains Mono', monospace; }
+  td .id { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
+  td .nome { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; color: var(--text-primary); letter-spacing: -0.01em; }
+  td .wave { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; }
+  tr.block-row td { background: var(--bg-card); font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-primary); font-weight: 700; padding: 14px 20px; }
+  tr.sub-row td { background: rgba(212,84,10,0.05); font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 16px; color: var(--text-primary); }
+  [data-theme="dark"] tr.sub-row td { background: rgba(255,107,26,0.06); }
+  tr.sub-row td.num { font-family: 'JetBrains Mono', monospace; font-style: normal; font-weight: 700; color: var(--accent); }
+  tr.total-row td { background: var(--accent); color: #ffffff; font-family: 'Fraunces', serif; font-style: italic; font-weight: 800; font-size: 18px; }
+  tr.total-row td.num { font-family: 'JetBrains Mono', monospace; font-style: normal; color: #ffffff; }
+  tr.opt-row td .nome { color: var(--text-muted); }
+
+  /* Escopo */
+  .scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 64px; }
+  .scope-card { padding: 36px; border: 1px solid var(--line); background: var(--bg-elevated); position: relative; }
+  .scope-card.included { border-left: 3px solid var(--success); }
+  .scope-card.excluded { border-left: 3px solid var(--text-dim); }
+  .scope-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+  .scope-icon svg { width: 20px; height: 20px; }
+  .scope-card.included .scope-icon { background: var(--success); color: #ffffff; }
+  [data-theme="dark"] .scope-card.included .scope-icon { color: var(--bg-deep); }
+  .scope-card.excluded .scope-icon { background: var(--bg-card); color: var(--text-dim); border: 1px solid var(--line-bright); }
+  .scope-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 24px; margin-bottom: 24px; letter-spacing: -0.015em; color: var(--text-primary); }
+  .scope-list { list-style: none; }
+  .scope-list li { padding: 12px 0; border-top: 1px solid var(--line); font-size: 14.5px; color: var(--text-muted); line-height: 1.5; position: relative; padding-left: 18px; }
+  .scope-card.included .scope-list li::before { content: "→"; position: absolute; left: 0; color: var(--success); font-weight: 700; }
+  .scope-card.excluded .scope-list li::before { content: "×"; position: absolute; left: 2px; color: var(--text-dim); font-weight: 700; font-size: 16px; line-height: 1.4; }
+  .scope-list li:last-child { border-bottom: 1px solid var(--line); }
+  .scope-list li strong { color: var(--text-primary); font-weight: 600; }
+
+  /* Banner */
+  .consultoria-banner {
+    margin-top: 32px; padding: 36px 48px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+    position: relative; overflow: hidden; display: flex; align-items: center; gap: 28px;
+    box-shadow: var(--shadow-soft);
+  }
+  .consultoria-banner::before {
+    content: ""; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .consultoria-banner > * { position: relative; z-index: 1; }
+  .consultoria-icon {
+    width: 56px; height: 56px; flex-shrink: 0;
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .consultoria-icon svg { width: 26px; height: 26px; color: #fff; }
+  .consultoria-text { flex: 1; }
+  .consultoria-text .c-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.75); margin-bottom: 8px; }
+  .consultoria-text .c-phrase { font-family: 'Fraunces', serif; font-weight: 700; font-style: italic; font-size: clamp(22px, 3vw, 32px); color: #ffffff; line-height: 1.1; letter-spacing: -0.02em; }
+  .consultoria-badge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #fff; white-space: nowrap; flex-shrink: 0; }
+
+  .invest-note { margin-top: 32px; padding: 20px 24px; background: var(--bg-card); border-left: 3px solid var(--warn); font-size: 14px; color: var(--text-muted); }
+  .invest-note strong { color: var(--warn); font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; display: block; margin-bottom: 6px; }
+
+  /* ============ PAGAMENTO ============ */
+  .payment-info-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; margin-top: 64px; align-items: stretch; }
+  .pix-card {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+    padding: 40px; color: #ffffff; position: relative; overflow: hidden;
+    box-shadow: var(--shadow-soft); display: flex; flex-direction: column;
+  }
+  .pix-card::before {
+    content: ""; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .pix-card > * { position: relative; z-index: 1; }
+  .pix-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+  .pix-icon { width: 56px; height: 56px; background: rgba(255,255,255,0.18); border-radius: 12px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); flex-shrink: 0; }
+  .pix-icon svg { width: 28px; height: 28px; color: #ffffff; }
+  .pix-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; opacity: 0.85; margin-bottom: 4px; }
+  .pix-name { font-family: 'Fraunces', serif; font-weight: 700; font-size: 21px; letter-spacing: -0.01em; line-height: 1.2; }
+  .pix-amounts { margin-bottom: 24px; }
+  .pix-amount-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.18); }
+  .pix-amount-row.highlight { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; margin: 10px -14px 0; padding: 14px; }
+  .pix-amount-label { font-size: 14px; opacity: 0.9; }
+  .pix-amount-row.highlight .pix-amount-label { font-weight: 600; opacity: 1; }
+  .pix-amount-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .pix-amount-row.highlight .pix-amount-value { font-size: 15px; }
+  .pix-key-box { background: rgba(0,0,0,0.18); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 20px; margin-top: auto; }
+  .pix-key-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; opacity: 0.75; margin-bottom: 12px; }
+  .pix-key-value { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .pix-key-value > span { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: clamp(18px, 2.4vw, 24px); letter-spacing: 0.02em; word-break: break-all; }
+  .copy-btn {
+    background: #ffffff; color: var(--accent); border: none; padding: 10px 16px; border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.12em; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; transition: all 0.25s; flex-shrink: 0;
+  }
+  .copy-btn svg { width: 14px; height: 14px; }
+  .copy-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+  .copy-btn .icon-check, .copy-btn .copied-txt { display: none; }
+  .copy-btn.copied { background: var(--success); color: #ffffff; }
+  .copy-btn.copied .icon-copy, .copy-btn.copied .copy-txt { display: none; }
+  .copy-btn.copied .icon-check, .copy-btn.copied .copied-txt { display: inline-flex; }
+
+  .company-card { background: var(--bg-elevated); border: 1px solid var(--line); border-left: 3px solid var(--accent); padding: 40px; display: flex; flex-direction: column; }
+  .company-header { padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  .company-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 12px; }
+  .company-name { font-family: 'Fraunces', serif; font-weight: 800; font-size: 30px; line-height: 1; letter-spacing: -0.025em; color: var(--text-primary); }
+  .company-fields { display: flex; flex-direction: column; flex: 1; }
+  .company-field { padding: 13px 0; border-top: 1px solid var(--line); }
+  .company-field:first-child { border-top: none; padding-top: 0; }
+  .field-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 6px; }
+  .field-value { font-family: 'Inter Tight', sans-serif; font-weight: 500; font-size: 15px; color: var(--text-primary); line-height: 1.4; }
+  .field-value.mono { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 14px; letter-spacing: 0.01em; }
+
+  /* ============ CTA ============ */
+  .cta { padding: 160px 0; text-align: center; background: var(--cta-bg); border-top: 1px solid var(--line); position: relative; }
+  .cta h2 { font-family: 'Fraunces', serif; font-weight: 300; font-size: clamp(40px, 6vw, 84px); line-height: 1; letter-spacing: -0.04em; margin-bottom: 32px; }
+  .cta h2 em { font-style: italic; font-weight: 800; color: var(--accent); }
+  .cta-sub { font-size: 20px; color: var(--text-muted); max-width: 680px; margin: 0 auto 48px; }
+  .cta-actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 40px; }
+  .cta-btn { padding: 18px 36px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.15em; cursor: pointer; border: none; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 12px; white-space: nowrap; }
+  .cta-btn svg { width: 16px; height: 16px; }
+  .cta-btn.primary { background: var(--accent); color: #ffffff; box-shadow: 0 12px 32px rgba(255,107,26,0.35); }
+  [data-theme="dark"] .cta-btn.primary { color: #0a0a0b; }
+  [data-theme="light"] .cta-btn.primary { box-shadow: 0 12px 32px rgba(212,84,10,0.3); }
+  .cta-btn.primary:hover { background: var(--accent-bright); transform: translateY(-2px); }
+  .cta-btn.secondary { background: transparent; color: var(--text-primary); border: 1px solid var(--line-bright); }
+  .cta-btn.secondary:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+  .cta-btn:disabled { opacity: 0.6; cursor: wait; }
+  .cta-meta { display: flex; justify-content: center; gap: 64px; flex-wrap: wrap; padding-top: 40px; border-top: 1px solid var(--line); max-width: 860px; margin: 56px auto 0; }
+  .cta-meta-item { text-align: left; }
+  .cta-meta-item .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 8px; }
+  .cta-meta-item .value { font-family: 'Fraunces', serif; font-weight: 500; font-size: 18px; color: var(--text-primary); }
+
+  footer { padding: 48px 0; border-top: 1px solid var(--line); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; }
+  footer .accent { color: var(--accent); }
+
+  /* ============ MODAL ============ */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 24px; }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal { background: var(--bg-elevated); border: 1px solid var(--line-bright); max-width: 540px; width: 100%; max-height: 90vh; overflow-y: auto; transform: translateY(20px) scale(0.96); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; }
+  .modal-overlay.active .modal { transform: translateY(0) scale(1); }
+  .modal-header { padding: 32px 36px 0; position: relative; }
+  .modal-close { position: absolute; top: 20px; right: 20px; background: transparent; border: 1px solid var(--line); color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.25s; }
+  .modal-close:hover { border-color: var(--accent); color: var(--accent); }
+  .modal-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 16px; }
+  .modal-title { font-family: 'Fraunces', serif; font-weight: 300; font-size: 36px; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 12px; }
+  .modal-title em { font-style: italic; font-weight: 800; color: var(--accent); }
+  .modal-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 32px; }
+  .modal-body { padding: 0 36px 32px; }
+  .form-field { margin-bottom: 20px; }
+  .form-field > label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; }
+  .form-field input { width: 100%; padding: 14px 16px; background: var(--bg-deep); border: 1px solid var(--line); color: var(--text-primary); font-family: 'Inter Tight', sans-serif; font-size: 15px; border-radius: 6px; transition: border-color 0.25s; }
+  .form-field input:focus { outline: none; border-color: var(--accent); }
+  .checkbox-field { display: flex; align-items: flex-start; gap: 12px; margin: 28px 0; padding: 16px; background: var(--bg-deep); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+  .checkbox-field input { margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
+  .checkbox-field span { font-size: 13px; color: var(--text-muted); }
+  .modal-footer { padding: 24px 36px; border-top: 1px solid var(--line); display: flex; gap: 12px; justify-content: flex-end; }
+  .success-screen { padding: 56px 36px; text-align: center; display: none; }
+  .success-screen.visible { display: block; }
+  .success-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--success); color: #ffffff; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; animation: successPop 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+  [data-theme="dark"] .success-icon { color: var(--bg-deep); }
+  @keyframes successPop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .success-screen h3 { font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 32px; margin-bottom: 12px; letter-spacing: -0.02em; }
+  .success-screen p { color: var(--text-muted); margin-bottom: 28px; font-size: 15px; }
+  .success-screen .accept-summary { background: var(--bg-deep); border: 1px solid var(--line); padding: 20px; margin-bottom: 28px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.9; color: var(--text-muted); }
+  .success-screen .accept-summary strong { color: var(--text-primary); display: inline-block; min-width: 100px; }
+
+  /* ============ ANIMAÇÕES ============ */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 1s ease, transform 1s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ============ RESPONSIVO ============ */
+  @media (max-width: 980px) {
+    .container { padding: 0 24px; }
+    nav .inner { padding: 16px 16px; gap: 8px; }
+    .nav-meta { display: none; }
+    .nav-btn span.txt { display: none; }
+    .nav-btn { padding: 10px 12px; }
+    .impact-grid { grid-template-columns: repeat(2, 1fr); }
+    .impact-cell:nth-child(2n) { border-right: none; }
+    .impact-cell:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .impact-cell { padding: 32px 20px; }
+    .impact-num { font-size: 56px; }
+    .pain-grid { grid-template-columns: 1fr; gap: 24px; }
+    .pain-side { padding: 32px 24px; }
+    .module.span-6, .module.span-4, .module.span-3 { grid-column: span 12; }
+    .sources-flow { grid-template-columns: 1fr; gap: 32px; }
+    .flow-arrow { transform: rotate(90deg); margin: 0 auto; }
+    .timeline::before { display: none; }
+    .timeline-track { grid-template-columns: 1fr; gap: 16px; }
+    .stack-grid { grid-template-columns: repeat(2, 1fr); }
+    .security-grid { grid-template-columns: 1fr; }
+    .payment-grid { grid-template-columns: 1fr; gap: 24px; }
+    .compose-grid { grid-template-columns: 1fr 1fr; }
+    .scope-grid { grid-template-columns: 1fr; gap: 24px; }
+    .payment-info-grid { grid-template-columns: 1fr; gap: 24px; }
+    .hero-meta { flex-direction: column; gap: 12px; }
+    section { padding: 80px 0; }
+    .cta-actions { flex-direction: column; align-items: stretch; }
+    .modal-title { font-size: 28px; }
+    .consultoria-banner { flex-direction: column; align-items: flex-start; padding: 28px 24px; }
   }
 </style>
 </head>
 <body>
-<div id="progress"></div>
 
-<nav id="nav">
-  <div class="nav-inner">
-    <div class="brand"><span class="dot"></span> Alchemypet Integrado</div>
-    <div class="nav-links">
-      <a href="#entregas">Entregas</a>
-      <a href="#ia">IA</a>
-      <a href="#roadmap">24 meses</a>
-      <a href="#investimento">Investimento</a>
-      <a href="#detalhe">Por módulo</a>
-      <a href="#proximos">Próximos passos</a>
+<nav id="topnav">
+  <div class="inner">
+    <div class="nav-brand">Tudo Mudou<span>!</span></div>
+    <div class="nav-meta">Proposta · Alchemypet · 02.09.2026</div>
+    <div class="nav-actions">
+      <button class="icon-btn" id="themeToggle" title="Alternar tema" aria-label="Alternar tema">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+      <button class="nav-btn ghost" id="navDownloadBtn" title="Baixar PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="txt">PDF</span>
+      </button>
+      <button class="nav-btn primary" id="navAcceptBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span class="txt">Aceitar Proposta</span>
+      </button>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
-<header class="hero" id="topo">
-  <div class="wrap">
-    <span class="eyebrow">Proposta de Orçamento · Contrato de 24 meses</span>
-    <h1>O novo sistema de gestão da Alchemypet</h1>
-    <p>Substituímos o software atual por uma plataforma única, feita para o laboratório: agenda, atendimento, internação, vendas, financeiro, faturamento, exames ligados aos equipamentos, CRM, logística e um agente de IA no atendimento.</p>
-    <div class="badge-prelim"><span class="pulse"></span> Estimativa preliminar — faixas a validar nas pendências do mapeamento</div>
-    <div class="hero-meta">
-      <div class="item"><span class="k" id="h-modulos">0</span><span class="v">módulos entregues</span></div>
-      <div class="item"><span class="k">12 + 12 meses</span><span class="v">construção + sustentação e evolução</span></div>
-      <div class="item"><span class="k" id="h-total">—</span><span class="v">contrato de 24 meses</span></div>
-      <div class="item"><span class="k" id="h-mes">—</span><span class="v">mensalidade equivalente</span></div>
+<header class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="container hero-content">
+    <div class="hero-meta reveal">
+      <span><span class="dot"></span>Proposta Comercial · 004/2026</span>
+      <span>Cliente · Alchemypet</span>
+      <span>Data · 02.09.2026</span>
+    </div>
+    <h1 class="reveal">
+      O laboratório não<br>
+      <em>cabe mais</em><br>
+      <span class="strike">no software de 2005.</span>
+    </h1>
+    <p class="hero-sub reveal">
+      Um sistema único para a Alchemypet: agenda, prontuário, internação, vendas, <strong>financeiro e faturamento</strong>, <strong>resultados direto do AU480 e do Ac·T 10</strong>, CRM, rastreio das amostras e um <strong>agente de IA atendendo em todos os canais</strong>. Cada ação da operação vira registro financeiro — sem redigitação.
+    </p>
+    <div class="hero-tags reveal">
+      <span class="tag">Gestão Completa</span>
+      <span class="tag">Interfaceamento de Equipamentos</span>
+      <span class="tag">CRM + Logística</span>
+      <span class="tag">Agente IA · Chatwoot</span>
+      <span class="tag">Contrato 24 Meses</span>
     </div>
   </div>
-  <div class="scroll-cue">role para ver ▾</div>
 </header>
 
-<!-- CENÁRIO HOJE -->
-<section class="alt" id="hoje">
-  <div class="wrap split">
-    <div class="reveal">
-      <span class="eyebrow">O cenário hoje</span>
-      <h2>Um software que a equipe usa apesar dele</h2>
-      <p class="lead">O sistema atual foi feito em outra época. Ele guarda os dados, mas não ajuda a operar: cada análise está espalhada em várias telas, os catálogos vêm vazios e nada acontece sozinho.</p>
-    </div>
-    <div class="reveal">
-      <ul class="pain-list">
-        <li><span class="x">✕</span> Janela em cima de janela; botões que não fazem nada; tela que trava</li>
-        <li><span class="x">✕</span> A mesma análise de vendas repetida em quatro relatórios diferentes</li>
-        <li><span class="x">✕</span> Saldo do cliente em Vendas, produtividade fora do lugar, "consultas" que significa "consultar"</li>
-        <li><span class="x">✕</span> Vacinas, patologias e produtos precisam ser cadastrados do zero</li>
-        <li><span class="x">✕</span> Vacina vencida não avisa o tutor; comissão sem consolidado; alta não gera cobrança</li>
-        <li><span class="x">✕</span> Resultados dos analisadores digitados à mão; atendimento e logística fora do sistema</li>
-      </ul>
-    </div>
+<section class="impact" style="padding: 0;">
+  <div class="impact-grid">
+    <div class="impact-cell"><div class="impact-num"><em id="k-modulos">20</em></div><div class="impact-label">Módulos Entregues</div></div>
+    <div class="impact-cell"><div class="impact-num"><em>6</em></div><div class="impact-label">Meses até Desligar o Atual</div></div>
+    <div class="impact-cell"><div class="impact-num"><em>2</em></div><div class="impact-label">Analisadores Integrados</div></div>
+    <div class="impact-cell"><div class="impact-num"><em>24</em></div><div class="impact-label">Meses de Contrato</div></div>
   </div>
 </section>
 
-<!-- VISÃO -->
-<section id="visao">
-  <div class="wrap split">
+<section>
+  <div class="container">
     <div class="reveal">
-      <span class="eyebrow">O que muda</span>
-      <h2>Um sistema só, feito para a Alchemypet</h2>
-      <p class="lead">Recriamos o que a equipe usa hoje de forma simples e navegável, e ligamos o que hoje fica de fora: os analisadores do laboratório, o relacionamento com as clínicas, a coleta das amostras e o atendimento por WhatsApp com inteligência artificial.</p>
-      <p class="lead" style="margin-top:14px">Cada ação da operação vira registro financeiro: a medicação aplicada, a alta, o exame liberado. <strong style="color:var(--grafite)">Sem redigitação.</strong></p>
+      <div class="section-label">01 · Diagnóstico</div>
+      <h2 class="section-title">O dado já existe. <em>Falta o sistema</em> trabalhar por vocês.</h2>
     </div>
-    <div class="reveal vision-card">
-      <span class="tag">AI-First · Base para o white-label</span>
-      <h3>Em 6 meses o software atual é desligado</h3>
-      <p>As duas primeiras ondas cobrem tudo o que a equipe usa hoje. As duas seguintes trazem o que o software atual nunca teve. O segundo ano é para estabilizar, evoluir e preparar a revenda.</p>
-      <div class="hero-meta" style="margin-top:24px">
-        <div class="item" style="border-color:var(--linha)"><span class="k" style="color:var(--marinho)">4</span><span class="v" style="color:var(--texto-suave)">ondas trimestrais de entrega no 1º ano</span></div>
-        <div class="item" style="border-color:var(--linha)"><span class="k" style="color:var(--marinho)">2</span><span class="v" style="color:var(--texto-suave)">analisadores integrados: AU480 e Ac·T 10</span></div>
-        <div class="item" style="border-color:var(--linha)"><span class="k" style="color:var(--marinho)">4</span><span class="v" style="color:var(--texto-suave)">canais no atendimento: WhatsApp, Instagram, e-mail e chat</span></div>
+
+    <div class="pain-grid" style="margin-top: 64px;">
+      <div class="pain-side before reveal">
+        <div class="pain-tag">Hoje · Software Atual</div>
+        <div class="pain-headline">Tudo está lá dentro. Nada acontece sozinho.</div>
+        <ul class="pain-list">
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Janela em cima de janela, botões que não fazem nada, tela que trava</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>A mesma análise de vendas repetida em quatro relatórios diferentes</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Vacinas, patologias e produtos precisam ser cadastrados do zero</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Vacina vencida não avisa o tutor; a alta não gera cobrança</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Comissão sem consolidado: é preciso entrar médico por médico</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Resultados dos analisadores digitados à mão, um a um</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>Atendimento, relacionamento e coleta vivem fora do sistema</li>
+        </ul>
+      </div>
+      <div class="pain-side after reveal">
+        <div class="pain-tag">Depois · Alchemypet Integrado</div>
+        <div class="pain-headline">Uma tela por decisão. Cada ação vira registro.</div>
+        <ul class="pain-list">
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M5 12l5 5L20 7"/></svg>Navegação única: nada de pop-up empilhado ou botão decorativo</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M5 12l5 5L20 7"/></svg>Um painel gerencial só: produtividade por colaborador e por setor</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M5 12l5 5L20 7"/></svg>Catálogos pré-carregados: raças, vacinas, medicamentos, patologias</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M5 12l5 5L20 7"/></svg>Lembrete de vacina e aniversário sai por WhatsApp, com registro</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M5 12l5 5L20 7"/></svg>Comissão consolidada e individual, virando conta a pagar</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M5 12l5 5L20 7"/></svg>AU480 e Ac·T 10 entregam o resultado na amostra certa</li>
+          <li><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M5 12l5 5L20 7"/></svg>Atendimento, CRM e rastreio de amostra dentro do mesmo sistema</li>
+        </ul>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ENTREGAS -->
-<section class="alt" id="entregas">
-  <div class="wrap center">
-    <span class="eyebrow reveal">O que será entregue</span>
-    <h2 class="reveal">Vinte módulos em dois blocos</h2>
-    <p class="lead reveal">O bloco A substitui o software atual. O bloco B acrescenta o que ele nunca teve. Os dois podem ser decididos separadamente.</p>
-  </div>
-  <div class="wrap">
-    <div class="bloco-titulo reveal"><span class="letra">A</span><div><h3>Gestão — substitui o software atual</h3><div class="sub" id="bloco-a-sub"></div></div></div>
-    <div class="mods" id="mods-a"></div>
-    <div class="bloco-titulo b reveal"><span class="letra">B</span><div><h3>Laboratório, CRM, Logística e Atendimento — o que hoje não existe</h3><div class="sub" id="bloco-b-sub"></div></div></div>
-    <div class="mods" id="mods-b"></div>
-    <div class="legend reveal">
-      <span><span class="sw" style="background:var(--marinho-2)"></span> Substitui uma função do software atual, refeita</span>
-      <span><span class="sw" style="background:var(--ok)"></span> Novo para a Alchemypet</span>
-      <span><span class="sw" style="background:var(--destaque-2)"></span> Opcional</span>
+<section class="section-alt">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">02 · Arquitetura</div>
+      <h2 class="section-title">Equipamento, canal e clínica. <em>Um só</em> sistema.</h2>
+      <p class="section-intro">Analisadores, WhatsApp, Instagram, e-mail, agenda do Google e as clínicas parceiras alimentando um núcleo único. O resultado sai do aparelho e chega ao laudo; a conversa vira atendimento; o atendimento vira fatura. Sem planilha no meio, sem redigitação.</p>
     </div>
-  </div>
-</section>
 
-<!-- IA E DIFERENCIAIS -->
-<section id="ia">
-  <div class="wrap center">
-    <span class="eyebrow reveal">O que o software atual nunca fez</span>
-    <h2 class="reveal">Onde a inteligência artificial e a integração trabalham por você</h2>
-    <p class="lead reveal">Assistentes que cuidam do operacional, sempre com a equipe validando o que é sensível.</p>
-  </div>
-  <div class="wrap">
-    <div class="ai-grid">
-      <div class="ai-item reveal"><div class="ico">💬</div><div><h3>Atende por WhatsApp, Instagram, e-mail e chat</h3><p>Sobre o Chatwoot, o agente informa status de exame, envia o laudo, agenda e remarca, registra chamados e passa para uma pessoa quando precisa.</p></div></div>
-      <div class="ai-item reveal"><div class="ico">🧪</div><div><h3>Recebe os resultados direto dos analisadores</h3><p>AU480 e Ac·T 10 enviam os resultados para a amostra certa. A equipe técnica confere e libera; ninguém digita.</p></div></div>
-      <div class="ai-item reveal"><div class="ico">📅</div><div><h3>Agenda sozinho, dentro das regras</h3><p>Cada profissional vê só a própria agenda, sincronizada com o Google Agenda. O agente marca respeitando intervalos e plantões.</p></div></div>
-      <div class="ai-item reveal"><div class="ico">🔔</div><div><h3>Lembra o tutor</h3><p>Vacina vencida e aniversário do pet viram mensagem no WhatsApp, manual ou automática, com registro do envio.</p></div></div>
-      <div class="ai-item reveal"><div class="ico">💰</div><div><h3>Fatura a cada ação</h3><p>Medicação aplicada, alta, exame liberado: tudo cai na fatura, na conta do cliente, no fluxo de caixa e na comissão do profissional.</p></div></div>
-      <div class="ai-item reveal"><div class="ico">📍</div><div><h3>Rastreia a amostra de ponta a ponta</h3><p>Da coleta na clínica à liberação do laudo, com rota do coletor, alertas de atraso e pedido de suprimentos pela própria clínica.</p></div></div>
-    </div>
-    <div class="human reveal">
-      <span class="ico" style="display:inline-flex;width:46px;height:46px;font-size:22px;margin-bottom:10px">🤝</span>
-      <p><strong>Você no comando.</strong> Liberar um laudo, alterar um faturamento ou cancelar um pedido sempre passa por uma pessoa. A IA acelera; a equipe decide.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ROADMAP 24 MESES -->
-<section class="alt" id="roadmap">
-  <div class="wrap center">
-    <span class="eyebrow reveal">Contrato de 24 meses</span>
-    <h2 class="reveal">Um ano para construir, um ano para consolidar</h2>
-    <p class="lead reveal">Quatro ondas trimestrais no primeiro ano, cada uma com aceite e valor visível. No segundo ano, sustentação, evolução e preparação do produto white-label.</p>
-  </div>
-  <div class="wrap">
-    <div class="timeline" id="timeline"></div>
-  </div>
-</section>
-
-<!-- INVESTIMENTO -->
-<section class="invest" id="investimento">
-  <div class="wrap center">
-    <span class="eyebrow reveal">Investimento</span>
-    <h2 class="reveal">Quanto custa, onda a onda</h2>
-    <p class="lead reveal">Faixas calculadas a partir do esforço estimado por módulo. O investimento acompanha a entrega ao longo do contrato.</p>
-  </div>
-  <div class="wrap">
-    <div class="inv-grid" id="inv-grid"></div>
-    <div class="totais">
-      <div class="total-box main reveal">
-        <div class="rotulo">Contrato de 24 meses — total estimado</div>
-        <div class="big" id="t-total">—</div>
-        <div class="sub">Construção no 1º ano, sustentação e evolução no 2º, operação em nuvem nos 24 meses e o hardware do gateway de interfaceamento.</div>
+    <div class="sources-flow reveal">
+      <div class="sources-list">
+        <div class="source-item"><span class="name">Beckman Coulter AU480</span><span class="type">Bioquímica · ASTM</span></div>
+        <div class="source-item"><span class="name">Beckman Coulter Ac·T 10</span><span class="type">Hematologia · Serial</span></div>
+        <div class="source-item"><span class="name">WhatsApp · Instagram · E-mail</span><span class="type">Chatwoot</span></div>
+        <div class="source-item"><span class="name">Google Agenda</span><span class="type">Workspace</span></div>
+        <div class="source-item"><span class="name">Clínicas Parceiras</span><span class="type">CRM · Portal</span></div>
+        <div class="source-item"><span class="name">Coleta e Transporte</span><span class="type">Logística</span></div>
+        <div class="source-item"><span class="name">Base Atual</span><span class="type">Migração</span></div>
       </div>
-      <div class="total-box rec reveal">
-        <div class="rotulo">Mensalidade equivalente</div>
-        <div class="big" id="t-mes">—</div>
-        <div class="sub">Por mês: o total diluído em 24 parcelas fixas, com marcos de aceite por onda.</div>
+
+      <div class="flow-arrow">
+        <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
+          <path d="M0 40 L100 40" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>
+          <path d="M95 30 L110 40 L95 50" stroke="var(--accent)" stroke-width="2" fill="none"/>
+        </svg>
+      </div>
+
+      <div class="central-engine">
+        <div class="ce-label">Núcleo da Operação</div>
+        <h4>Alchemypet<br>Integrado</h4>
       </div>
     </div>
-    <div class="comp">
-      <div class="c reveal"><div class="r">Construção · meses 1–12</div><div class="v" id="c-dev">—</div><div class="d" id="c-dev-d">—</div></div>
-      <div class="c reveal"><div class="r">Sustentação e evolução · meses 13–24</div><div class="v" id="c-sust">—</div><div class="d" id="c-sust-d">—</div></div>
-      <div class="c reveal"><div class="r">Operação em nuvem · 24 meses</div><div class="v" id="c-op">—</div><div class="d" id="c-op-d">—</div></div>
-      <div class="c reveal"><div class="r">Hardware do gateway · único</div><div class="v" id="c-hw">—</div><div class="d">Mini-PC e conversores serial junto aos analisadores</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">03 · Escopo</div>
+      <h2 class="section-title">Vinte módulos. <em>Dois blocos</em> que podem ser decididos separadamente.</h2>
+      <p class="section-intro">O bloco A recria o software que a equipe usa hoje, sem o que não serve. O bloco B entrega o que ele nunca teve: laboratório interfaceado, relacionamento, logística e atendimento com IA.</p>
     </div>
-    <div class="disclaimer reveal">
-      <span class="i">ℹ️</span>
-      <p><strong>Como o valor é calculado.</strong> Esforço por módulo em semanas-desenvolvedor (dev-wk) × <span id="d-taxa">—</span> por dev-wk. Sustentação com meio a um desenvolvedor dedicado. Operação inclui hospedagem, Chatwoot, conversas do WhatsApp e tokens de IA. As faixas fecham após confirmar os protocolos dos equipamentos, o detalhamento de Financeiro e Faturamento e se o LIS completo entra aqui ou à parte.</p>
+
+    <div class="block-head reveal">
+      <h3>Bloco A · Gestão</h3>
+      <div class="meta" id="meta-a">—</div>
+    </div>
+    <div class="modules-grid reveal" id="grid-a"></div>
+
+    <div class="block-head reveal">
+      <h3>Bloco B · Laboratório, CRM, Logística e Atendimento</h3>
+      <div class="meta" id="meta-b">—</div>
+    </div>
+    <div class="modules-grid reveal" id="grid-b"></div>
+  </div>
+</section>
+
+<section class="section-alt">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">04 · Cronograma</div>
+      <h2 class="section-title">Quatro ondas no primeiro ano. <em>Consolidação</em> no segundo.</h2>
+      <p class="section-intro">Cada onda entra em produção assim que validada, com aceite próprio. Na onda 2, o software atual é desligado. O segundo ano é de sustentação, evolução e preparação do produto white-label.</p>
+    </div>
+
+    <div class="timeline reveal">
+      <div class="timeline-track" style="--phases: 5;" id="timeline-track"></div>
+
+      <div class="timeline-status">
+        <div class="check-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div class="timeline-status-text">
+          <strong>Software atual desligado em até 6 meses</strong>
+          <span>Ao fim da onda 2, toda a operação de hoje já roda no novo sistema — com a base migrada.</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- DETALHE POR MÓDULO -->
-<section id="detalhe">
-  <div class="wrap center">
-    <span class="eyebrow reveal">Orçamento detalhado</span>
-    <h2 class="reveal">Módulo por módulo</h2>
-    <p class="lead reveal">O que entra em cada módulo, em que onda é entregue, o esforço estimado e o valor correspondente.</p>
+<section>
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">05 · Stack Tecnológico</div>
+      <h2 class="section-title">A mesma base <em>já em produção</em> na Alchemypet.</h2>
+      <p class="section-intro">O Painel Convênio, o Controle de POPs e os Chamados já rodam nessa stack. Nenhuma tecnologia nova entra no projeto — o que reduz risco, custo e tempo de entrega.</p>
+    </div>
+
+    <div class="stack-grid reveal">
+      <div class="stack-item"><div class="stack-cat">Backend</div><div class="stack-tech">FastAPI</div></div>
+      <div class="stack-item"><div class="stack-cat">Frontend</div><div class="stack-tech">Next.js</div></div>
+      <div class="stack-item"><div class="stack-cat">Banco</div><div class="stack-tech">PostgreSQL</div></div>
+      <div class="stack-item"><div class="stack-cat">Atendimento</div><div class="stack-tech">Chatwoot</div></div>
+      <div class="stack-item"><div class="stack-cat">IA</div><div class="stack-tech">Claude</div></div>
+      <div class="stack-item"><div class="stack-cat">Interfaceamento</div><div class="stack-tech">ASTM · Serial</div></div>
+      <div class="stack-item"><div class="stack-cat">Agenda</div><div class="stack-tech">Google Calendar</div></div>
+      <div class="stack-item"><div class="stack-cat">Infraestrutura</div><div class="stack-tech">Docker · Coolify</div></div>
+    </div>
   </div>
-  <div class="wrap">
-    <div class="tabela-wrap reveal">
+</section>
+
+<section class="section-alt">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">06 · Segurança &amp; Conformidade</div>
+      <h2 class="section-title">Resultado de exame é <em>dado sensível</em>. Tratamos como tal.</h2>
+      <p class="section-intro">Prontuário, laudo e dados do tutor protegidos em todas as camadas — do analisador ao container. Operação alinhada à LGPD e à rastreabilidade exigida em laboratório clínico.</p>
+    </div>
+
+    <div class="security-grid reveal">
+      <div class="sec-card">
+        <div class="sec-num">01</div>
+        <h4>Acesso</h4>
+        <ul>
+          <li>Perfis por papel: admin, recepção, veterinário e setor</li>
+          <li>Cada profissional vê apenas a própria agenda e ações</li>
+          <li>Liberação de laudo com validação humana registrada</li>
+          <li>Trilha de auditoria de quem fez o quê e quando</li>
+        </ul>
+      </div>
+      <div class="sec-card">
+        <div class="sec-num">02</div>
+        <h4>Equipamentos</h4>
+        <ul>
+          <li>Gateway on-premise isolado, junto aos analisadores</li>
+          <li>Resultado vinculado à amostra por código de barras</li>
+          <li>Tela de resultados sem vínculo para resolver divergências</li>
+          <li>Nenhum resultado é liberado sem conferência técnica</li>
+        </ul>
+      </div>
+      <div class="sec-card">
+        <div class="sec-num">03</div>
+        <h4>Dados</h4>
+        <ul>
+          <li>Instância isolada por cliente, sem base compartilhada</li>
+          <li>Comunicação HTTPS ponta a ponta</li>
+          <li>Conformidade com a LGPD nos fluxos de atendimento</li>
+          <li>Retenção controlada dos logs de IA e das conversas</li>
+        </ul>
+      </div>
+      <div class="sec-card">
+        <div class="sec-num">04</div>
+        <h4>Operação</h4>
+        <ul>
+          <li>Backup diário do banco e dos arquivos de laudo</li>
+          <li>Monitoramento do gateway e dos canais de atendimento</li>
+          <li>Migração idempotente: reimportar não duplica registro</li>
+          <li>Ambiente de homologação antes de cada onda entrar no ar</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">07 · Investimento</div>
+      <h2 class="section-title">Construção no primeiro ano. <em>Contrato de 24 meses</em>.</h2>
+      <p class="section-intro">O primeiro ano entrega os vinte módulos em quatro ondas, com aceite a cada uma. O segundo ano mantém tudo rodando e evoluindo: Estoque, Relatórios, LIS completo e o empacotamento white-label, priorizados com a diretoria.</p>
+    </div>
+
+    <div class="payment-grid reveal">
+      <div class="payment-card">
+        <div class="payment-header">
+          <div class="payment-tag">Construção · Meses 1 a 12</div>
+          <div class="payment-name">Implementação</div>
+        </div>
+        <div class="payment-body" id="pay-ondas"></div>
+      </div>
+
+      <div class="payment-card highlight">
+        <div class="payment-badge">Contrato 24 Meses</div>
+        <div class="payment-header">
+          <div class="payment-tag">Recorrência · Mensal</div>
+          <div class="payment-name">Parcela do Contrato</div>
+        </div>
+        <div class="payment-body">
+          <div class="payment-row"><span class="payment-label">Sustentação · meses 13 a 24</span><span class="payment-value" id="v-sust">—</span></div>
+          <div class="payment-row"><span class="payment-label">Operação em nuvem</span><span class="payment-value" id="v-op">—</span></div>
+          <div class="payment-row"><span class="payment-label">Gateway · custo único</span><span class="payment-value" id="v-hw">—</span></div>
+          <div class="payment-row"><span class="payment-label">Consultoria estratégica</span><span class="payment-value ok">incluso</span></div>
+          <div class="payment-divider"></div>
+          <div class="payment-total">
+            <span class="payment-total-label">Parcela mensal</span>
+            <span class="payment-total-value" id="v-mes">—</span>
+          </div>
+          <div class="payment-note">
+            <b>Contrato total · 24 meses</b>
+            <span id="v-total">—</span> · o valor integral diluído em 24 parcelas fixas, com marcos de aceite a cada onda.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compose-grid reveal">
+      <div class="compose-cell"><div class="c-label">Construção · meses 1–12</div><div class="c-value" id="c-dev">—</div><div class="c-desc" id="c-dev-d">—</div></div>
+      <div class="compose-cell"><div class="c-label">Sustentação · meses 13–24</div><div class="c-value" id="c-sust">—</div><div class="c-desc" id="c-sust-d">—</div></div>
+      <div class="compose-cell"><div class="c-label">Operação em nuvem · 24 meses</div><div class="c-value" id="c-op">—</div><div class="c-desc" id="c-op-d">—</div></div>
+      <div class="compose-cell"><div class="c-label">Hardware · custo único</div><div class="c-value" id="c-hw">—</div><div class="c-desc">Mini-PC e conversores serial junto aos analisadores</div></div>
+    </div>
+
+    <div class="consultoria-banner reveal">
+      <div class="consultoria-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+        </svg>
+      </div>
+      <div class="consultoria-text">
+        <div class="c-label">Incluso · 24 meses de contrato</div>
+        <div class="c-phrase">Consultoria estratégica e operação assistida por todo o período.</div>
+      </div>
+      <div class="consultoria-badge">Incluso no plano</div>
+    </div>
+
+    <div class="table-wrap reveal">
       <table id="tabela">
         <thead>
-          <tr><th>Módulo</th><th>O que entra</th><th>Onda</th><th class="num">Esforço (dev-wk)</th><th class="num">Valor estimado</th></tr>
+          <tr>
+            <th>Módulo</th><th>O que entra</th><th>Onda</th><th class="num">Esforço</th><th class="num">Valor estimado</th>
+          </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
-    <p class="muted" style="margin-top:14px">O módulo opcional (E15) não entra nos totais acima; o valor com ele aparece na última linha da tabela.</p>
+
+    <div class="scope-grid reveal">
+      <div class="scope-card included">
+        <div class="scope-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="scope-title">Incluso no contrato</div>
+        <ul class="scope-list">
+          <li><strong>Os 20 módulos</strong> dos blocos A e B, entregues em quatro ondas</li>
+          <li>Drivers do <strong>AU480</strong> e do <strong>Ac·T 10</strong> e o gateway de interfaceamento</li>
+          <li>Migração da base atual: clientes, pacientes, catálogo, histórico e modelos</li>
+          <li>Catálogos pré-carregados, incluindo patologias levantadas com IA</li>
+          <li>Chatwoot self-hosted com o agente de IA e suas ferramentas</li>
+          <li>Sustentação e evolução nos meses 13 a 24, com backlog priorizado</li>
+          <li>Treinamento da equipe e homologação antes de cada onda</li>
+          <li><strong>Consultoria estratégica</strong> por todo o período do contrato</li>
+        </ul>
+      </div>
+
+      <div class="scope-card excluded">
+        <div class="scope-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="scope-title">Não incluso (cotado à parte)</div>
+        <ul class="scope-list">
+          <li><strong>Ponto de venda, multiloja</strong> e comissão de pet shop online</li>
+          <li><strong>Estoque e Relatórios</strong> — ainda não percorridos; entram na próxima reunião</li>
+          <li><strong>LIS completo</strong> (controle de qualidade, lotes de reagente, laudo com imagem)</li>
+          <li>Módulo de hotel com reservas e diárias — aqui hotel é apenas setor</li>
+          <li>Outros equipamentos além do AU480 e do Ac·T 10: cada aparelho é um driver</li>
+          <li>Conversas da API oficial do WhatsApp e licenças de terceiros</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="invest-note reveal">
+      <strong>Como o valor foi calculado</strong>
+      Esforço por módulo em semanas-desenvolvedor × <span id="d-taxa">—</span> por semana. Sustentação com meio a um desenvolvedor dedicado nos meses 13 a 24. Operação inclui hospedagem, Chatwoot, conversas do WhatsApp e tokens de IA. As faixas fecham após confirmar os protocolos dos equipamentos, o detalhamento de Financeiro e Faturamento e se o LIS completo entra neste contrato ou à parte.
+    </div>
   </div>
 </section>
 
-<!-- PREMISSAS -->
-<section class="alt" id="premissas">
-  <div class="wrap center">
-    <span class="eyebrow reveal">Para não ter surpresa</span>
-    <h2 class="reveal">Premissas e o que fica de fora</h2>
-  </div>
-  <div class="wrap">
-    <div class="duas">
-      <div class="box reveal">
-        <h3>Premissas do orçamento</h3>
-        <ul>
-          <li><span class="ok">✔</span> Mesma base tecnológica já em produção no Painel Convênio (FastAPI, Next.js, PostgreSQL) e a autenticação existente</li>
-          <li><span class="ok">✔</span> Toda a empresa no Google Workspace: a agenda sincroniza com autorização no domínio</li>
-          <li><span class="ok">✔</span> Os dados atuais estão disponíveis para a migração; o importador é próprio</li>
-          <li><span class="ok">✔</span> Chatwoot self-hosted, sem licença; WhatsApp pela API oficial</li>
-          <li><span class="ok">✔</span> AU480 por protocolo ASTM e Ac·T 10 por saída serial, ligados a um gateway no laboratório; a confirmar nos manuais</li>
-          <li><span class="ok">✔</span> Uma instância por cliente white-label; sem multiunidade na mesma instância</li>
-          <li><span class="ok">✔</span> Esforço, não prazo: o prazo de 12 meses assume dois desenvolvedores no primeiro ano</li>
-        </ul>
+<section class="section-alt">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">08 · Dados de Pagamento</div>
+      <h2 class="section-title">Pagamento via <em>PIX</em> ou boleto.</h2>
+    </div>
+
+    <div class="payment-info-grid reveal">
+      <div class="pix-card">
+        <div class="pix-header">
+          <div class="pix-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4-4 4 4 4-4 4 4-4 4-4-4-4 4-4-4z"/></svg>
+          </div>
+          <div>
+            <div class="pix-label">Chave PIX · CNPJ</div>
+            <div class="pix-name">Tudo Mudou Marketing e Consultoria</div>
+          </div>
+        </div>
+
+        <div class="pix-amounts">
+          <div class="pix-amount-row"><span class="pix-amount-label">Construção · ondas 1 a 4</span><span class="pix-amount-value" id="p-dev">—</span></div>
+          <div class="pix-amount-row"><span class="pix-amount-label">Gateway de interfaceamento · único</span><span class="pix-amount-value" id="p-hw">—</span></div>
+          <div class="pix-amount-row highlight"><span class="pix-amount-label">Parcela mensal · 24 meses</span><span class="pix-amount-value" id="p-mes">—</span></div>
+        </div>
+
+        <div class="pix-key-box">
+          <div class="pix-key-label">Chave para transferência</div>
+          <div class="pix-key-value">
+            <span id="pixKey">40790711000121</span>
+            <button class="copy-btn" id="pixCopyBtn" title="Copiar chave PIX">
+              <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span class="copy-txt">Copiar</span>
+              <span class="copied-txt">Copiado!</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="box reveal">
-        <h3>Fora deste orçamento</h3>
-        <ul>
-          <li><span class="no">✕</span> Ponto de venda, multiloja e comissão de pet shop online</li>
-          <li><span class="no">✕</span> Relatórios redundantes do software atual (lista, consulta, resumo, PDF de vendas)</li>
-          <li><span class="no">✕</span> Escala de colaboradores e módulo de hotel (hotel entra só como setor)</li>
-          <li><span class="no">✕</span> Estoque e Relatórios: ainda não percorridos; entram na próxima reunião</li>
-          <li><span class="no">✕</span> LIS completo (controle de qualidade, lotes de reagente, laudos com imagem): aqui entra só o núcleo que o interfaceamento exige</li>
-          <li><span class="no">✕</span> Outros equipamentos além do AU480 e do Ac·T 10: cada aparelho novo é um driver à parte</li>
-        </ul>
+
+      <div class="company-card">
+        <div class="company-header">
+          <div class="company-tag">Dados Cadastrais</div>
+          <div class="company-name">Tudo Mudou!</div>
+        </div>
+        <div class="company-fields">
+          <div class="company-field">
+            <div class="field-label">Razão Social</div>
+            <div class="field-value">Tudo Mudou Marketing e Consultoria</div>
+          </div>
+          <div class="company-field">
+            <div class="field-label">CNPJ</div>
+            <div class="field-value mono">40.790.711/0001-21</div>
+          </div>
+          <div class="company-field">
+            <div class="field-label">Endereço</div>
+            <div class="field-value">Av. Santo Antônio, 1453 — Vila Osasco</div>
+          </div>
+          <div class="company-field">
+            <div class="field-label">CEP</div>
+            <div class="field-value mono">06083-210</div>
+          </div>
+          <div class="company-field">
+            <div class="field-label">Município / UF</div>
+            <div class="field-value">Osasco — SP</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PRÓXIMOS PASSOS -->
-<section id="proximos">
-  <div class="wrap center">
-    <span class="eyebrow reveal">Próximos passos</span>
-    <h2 class="reveal">Como fechamos o número</h2>
-  </div>
-  <div class="wrap">
-    <div class="steps">
-      <div class="step reveal"><div class="n">01</div><h3>Fechar as pendências</h3><p>Protocolos dos equipamentos, walkthrough de Financeiro e Faturamento, decisão sobre o LIS, plataforma do agente atual e volumes de coleta.</p></div>
-      <div class="step reveal"><div class="n">02</div><h3>Aprovar os blocos</h3><p>Bloco A, bloco B e o opcional podem ser aprovados juntos ou em etapas. As telas das ondas 1 e 2 são apresentadas na próxima reunião.</p></div>
-      <div class="step reveal"><div class="n">03</div><h3>Assinar e iniciar a onda 1</h3><p>Contrato de 24 meses com parcela mensal fixa e marcos de aceite por onda. Cadastros e agenda no ar nos três primeiros meses.</p></div>
-    </div>
-    <div class="cta reveal">
-      <h2>Em seis meses, o software atual desligado. Em doze, o laboratório inteiro integrado.</h2>
-      <p>Aprovando esta proposta, fechamos as pendências e iniciamos a onda 1.</p>
-      <a class="btn" href="#topo">Aprovar e iniciar a onda 1</a>
+<section class="cta">
+  <div class="container">
+    <div class="reveal">
+      <h2>Bora colocar o laboratório <em>inteiro</em> no ar?</h2>
+      <p class="cta-sub">Em seis meses o software atual sai de cena. Em doze, o laboratório opera integrado do analisador à fatura. Aceite a proposta e a gente inicia a onda 1.</p>
+
+      <div class="cta-actions">
+        <button class="cta-btn primary" id="ctaAcceptBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Aceitar Proposta
+        </button>
+        <button class="cta-btn secondary" id="ctaDownloadBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar em PDF
+        </button>
+      </div>
+
+      <div class="cta-meta">
+        <div class="cta-meta-item"><div class="label">Validade</div><div class="value">30 dias</div></div>
+        <div class="cta-meta-item"><div class="label">Contrato</div><div class="value">24 meses</div></div>
+        <div class="cta-meta-item"><div class="label">Onda 1</div><div class="value">Meses 1 a 3</div></div>
+        <div class="cta-meta-item"><div class="label">Suporte</div><div class="value">Período integral</div></div>
+      </div>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap">
-    <strong>Alchemypet Integrado — Orçamento do novo sistema de gestão</strong>
-    <div class="small">Contrato de 24 meses · Setembro de 2026 · Base: mapeamento da reunião de walkthrough (docs/GESTAO-CLINICA-MAPEAMENTO.md)<br>
-    Faixas preliminares, sujeitas às pendências listadas no mapeamento.</div>
+  <div class="container">
+    Tudo Mudou<span class="accent">!</span> · Desenvolvimento de Soluções em Tecnologia · Osasco/SP · 2026
   </div>
 </footer>
 
+<!-- ============ MODAL ============ -->
+<div class="modal-overlay" id="acceptModal">
+  <div class="modal">
+    <div id="formView">
+      <div class="modal-header">
+        <button class="modal-close" id="modalClose" aria-label="Fechar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="modal-label">Aceite da Proposta</div>
+        <h3 class="modal-title">Vamos <em>seguir</em><br>com o projeto.</h3>
+        <p class="modal-sub">Para registrarmos seu aceite formal, precisamos de algumas informações.</p>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-field">
+          <label for="acceptName">Nome Completo</label>
+          <input type="text" id="acceptName" placeholder="Seu nome">
+        </div>
+        <div class="form-field">
+          <label for="acceptRole">Cargo</label>
+          <input type="text" id="acceptRole" placeholder="Ex: Diretor">
+        </div>
+        <div class="form-field">
+          <label for="acceptEmail">E-mail Corporativo</label>
+          <input type="email" id="acceptEmail" placeholder="seu@email.com">
+        </div>
+        <div class="form-field">
+          <label for="acceptCompany">Empresa</label>
+          <input type="text" id="acceptCompany" value="Alchemypet">
+        </div>
+
+        <label class="checkbox-field">
+          <input type="checkbox" id="acceptTerms">
+          <span>Declaro que li, compreendi e estou de acordo com todos os termos descritos nesta proposta comercial, incluindo escopo, investimento, prazos e condições.</span>
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button class="nav-btn ghost" id="modalCancel">Cancelar</button>
+        <button class="nav-btn primary" id="modalConfirm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Confirmar Aceite
+        </button>
+      </div>
+    </div>
+
+    <div class="success-screen" id="successView">
+      <div class="success-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h3>Aceite registrado!</h3>
+      <p>Recebemos seu aceite. Em breve entraremos em contato para os próximos passos.</p>
+      <div class="accept-summary" id="acceptSummary"></div>
+      <button class="nav-btn primary" id="successDownload" style="width: 100%; justify-content: center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar comprovante em PDF
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // ============================================================
-  // PARÂMETROS DO ORÇAMENTO — ajuste aqui e a página recalcula tudo.
-  // ============================================================
-  const CFG = {
-    taxaDevWk: 7500,                 // R$ por semana-desenvolvedor
-    sustentacaoMes: [16000, 32000],  // R$/mês, meio a um dev dedicado (meses 13–24)
-    operacaoMes: [3000, 7000],       // R$/mês: hospedagem, Chatwoot, WhatsApp, tokens de IA
-    hardware: [3000, 5000],          // R$ único: gateway de interfaceamento
-    mesesContrato: 24,
-    mesesSustentacao: 12,
-  };
+// =============================================================
+// PARÂMETROS DO ORÇAMENTO — ajuste aqui e a página recalcula tudo
+// =============================================================
+const CFG = {
+  taxaDevWk: 7500,                 // R$ por semana-desenvolvedor
+  sustentacaoMes: [16000, 32000],  // R$/mês nos meses 13-24 (meio a um dev)
+  operacaoMes: [3000, 7000],       // R$/mês: hospedagem, Chatwoot, WhatsApp, IA
+  hardware: [3000, 5000],          // R$ único: gateway de interfaceamento
+  mesesContrato: 24,
+  mesesSustentacao: 12
+};
 
-  // Módulos (épicos) — esforço em dev-wk [mín, máx]. Fonte: docs/GESTAO-CLINICA-MAPEAMENTO.md §8.
-  const EPICOS = [
-    {id:'E1',  bloco:'A', onda:1, tipo:'sub',  nome:'Fundação do produto',        esc:'Perfis por papel, navegação única, configurações, códigos de item.', wk:[2,3]},
-    {id:'E2',  bloco:'A', onda:1, tipo:'sub',  nome:'Clientes & Pacientes',       esc:'Tutor e pet, origem do cliente, busca por nome, telefone ou pet, ficha do paciente.', wk:[3,4]},
-    {id:'E3',  bloco:'A', onda:1, tipo:'sub',  nome:'Catálogos',                  esc:'Espécies e raças da base atual, pelagem, patologias com IA, vacinas; catálogo unificado com código, preço, custo e pacotes.', wk:[3,5]},
-    {id:'E4',  bloco:'A', onda:1, tipo:'sub',  nome:'Agenda',                     esc:'Multiprofissional, dia e semana, intervalos e plantões, filas por especialista, visão do profissional logado.', wk:[4,6]},
-    {id:'E13', bloco:'A', onda:1, tipo:'novo', nome:'Google Agenda',              esc:'Sincronização com o Google Calendar de cada profissional (Workspace).', wk:[2,3]},
-    {id:'E5',  bloco:'A', onda:2, tipo:'sub',  nome:'Vendas & Orçamento',         esc:'Venda de produtos e serviços, orçamento por código e pacote a partir do cliente, tabela de preço, regras de caixa.', wk:[4,6]},
-    {id:'E6',  bloco:'A', onda:2, tipo:'sub',  nome:'Comissionamento',            esc:'Percentual e valor fixo, confirmação do atendimento, visão individual e consolidado a pagar.', wk:[2,3]},
-    {id:'E7',  bloco:'A', onda:2, tipo:'sub',  nome:'Painel gerencial',           esc:'Produtividade por colaborador e por setor; vendas consolidadas numa tela só.', wk:[2,3]},
-    {id:'E10', bloco:'A', onda:2, tipo:'sub',  nome:'Modelos & Documentos',       esc:'Receitas, prescrições e contratos com geração em PDF.', wk:[2,3]},
-    {id:'E11', bloco:'A', onda:2, tipo:'sub',  nome:'Financeiro',                 esc:'Contas a pagar e lotes, tabela de custos, DRE, fluxo de caixa, contas a receber e saldo do cliente.', wk:[5,8]},
-    {id:'E14', bloco:'A', onda:2, tipo:'sub',  nome:'Faturamento',                esc:'Faturar, faturas em PDF com baixa, lote por clínica ou convênio.', wk:[3,5]},
-    {id:'E12', bloco:'A', onda:2, tipo:'novo', nome:'Migração',                   esc:'Importador da base atual: clientes, pacientes, catálogo, histórico e modelos.', wk:[2,3]},
-    {id:'E9',  bloco:'A', onda:3, tipo:'sub',  nome:'Prontuário & Internação',    esc:'Linha do tempo, prescrição, mapa de execução, alta com cobrança automática, faturamento por ação.', wk:[6,9]},
-    {id:'E8',  bloco:'A', onda:3, tipo:'novo', nome:'Lembretes',                  esc:'Vacinas e aniversários por WhatsApp, manual e automático, com registro.', wk:[2,3]},
-    {id:'E16', bloco:'B', onda:3, tipo:'novo', nome:'Exames & Resultados',        esc:'Pedido, amostra com etiqueta, resultados com referência por espécie, validação humana, laudo em PDF.', wk:[4,6]},
-    {id:'E17', bloco:'B', onda:3, tipo:'novo', nome:'Interfaceamento AU480 + Ac·T 10', esc:'Gateway no laboratório, driver ASTM bidirecional do AU480, driver serial do Ac·T 10, mapeamento de analitos.', wk:[6,10]},
-    {id:'E20', bloco:'B', onda:4, tipo:'novo', nome:'Agente de atendimento (Chatwoot)', esc:'Inbox WhatsApp, Instagram, e-mail e chat; agente de IA com ferramentas; transbordo humano; métricas.', wk:[6,10]},
-    {id:'E18', bloco:'B', onda:4, tipo:'novo', nome:'CRM',                        esc:'Clínicas e tutores, funil, histórico unificado, tarefas, campanhas, indicadores.', wk:[4,7]},
-    {id:'E19', bloco:'B', onda:4, tipo:'novo', nome:'Rastreio & Logística',       esc:'Cadeia de custódia da amostra, rotas de coleta, tela do coletor, envios, pedidos de suprimentos.', wk:[5,8]},
-    {id:'E15', bloco:'A', onda:4, tipo:'opc',  nome:'Painel de TV + tablet por baia', esc:'Internação numa TV e visão por paciente em tablet, na baia.', wk:[2,3], opcional:true},
-  ];
+// Módulos — esforço em dev-wk [mín, máx]. Fonte: docs/GESTAO-CLINICA-MAPEAMENTO.md §8
+const EPICOS = [
+  {id:'E1',  bloco:'A', onda:1, span:4,  nome:'Fundação do produto', esc:'Perfis por papel, navegação única, configurações gerais e códigos de item.', wk:[2,3], feats:['Admin, recepção, veterinário e setor','Configuração de setores e tipos de atendimento','Base de todos os demais módulos']},
+  {id:'E2',  bloco:'A', onda:1, span:4,  nome:'Clientes & Pacientes', esc:'Cadastro de tutor e pet, origem do cliente e ficha do paciente com busca unificada.', wk:[3,4], feats:['Busca por nome, telefone ou nome do pet','Origem do cliente com relatório','Ficha completa do paciente']},
+  {id:'E3',  bloco:'A', onda:1, span:4,  nome:'Catálogos', esc:'Espécies e raças da base atual, pelagens, patologias, vacinas e catálogo unificado de itens.', wk:[3,5], feats:['Produtos, exames, cirurgias e medicamentos','Cada item com código, preço e custo','Patologias levantadas com IA']},
+  {id:'E4',  bloco:'A', onda:1, span:6,  nome:'Agenda', esc:'Agenda multiprofissional com dia e semana, regras de intervalo e plantão, filas por especialista e a visão do profissional logado.', wk:[4,6], feats:['Marcação com busca unificada','Cada profissional vê só a própria agenda','Impressão e controle pela recepção']},
+  {id:'E13', bloco:'A', onda:1, span:6,  nome:'Google Agenda', esc:'Sincronização da agenda de cada profissional com o Google Calendar, usando o Workspace que a empresa já tem.', wk:[2,3], feats:['Autorização no domínio, sem fluxo individual','Base para o agendamento automático por IA']},
+  {id:'E5',  bloco:'A', onda:2, span:6,  nome:'Vendas & Orçamento', esc:'Venda de produtos e serviços, orçamento montado por código e por pacote a partir do cliente, tabela de preço e regras de caixa.', wk:[4,6], feats:['Pacotes prontos e itens avulsos','Tudo por código, sem abreviação','Rank de clientes e vendas por turno']},
+  {id:'E6',  bloco:'A', onda:2, span:3,  nome:'Comissionamento', esc:'Regra por profissional e item, em percentual ou valor fixo, com cálculo automático.', wk:[2,3], feats:['Consolidado de todos numa lista','Visão individual com marcar pago','Vira conta a pagar no financeiro']},
+  {id:'E7',  bloco:'A', onda:2, span:3,  nome:'Painel gerencial', esc:'Produtividade por colaborador e por setor, com as vendas consolidadas numa tela só.', wk:[2,3], feats:['Internação, farmácia, especialistas, hotel','Ticket médio, bruto, líquido e comissão']},
+  {id:'E11', bloco:'A', onda:2, span:6,  nome:'Financeiro', esc:'Contas a pagar e lotes, tabela de custos, DRE, fluxo de caixa, contas a receber e saldo do cliente.', wk:[5,8], feats:['Recebe as comissões automaticamente','Custo por item para margem e DRE','Fluxo de caixa realizado e previsto']},
+  {id:'E14', bloco:'A', onda:2, span:3,  nome:'Faturamento', esc:'Faturar vendas, altas e ações de internação; faturas em PDF com baixa e lote por clínica ou convênio.', wk:[3,5], feats:['Lote por clínica e convênio','Baixa alimentando contas a receber']},
+  {id:'E10', bloco:'A', onda:2, span:3,  nome:'Modelos & Documentos', esc:'Modelos de receita e prescrição e biblioteca de documentos e contratos, com geração em PDF.', wk:[2,3], feats:['Modelos atuais reescritos','Contrato de cirurgia e termos']},
+  {id:'E12', bloco:'A', onda:2, span:6,  nome:'Migração', esc:'Importador da base atual: clientes, pacientes, catálogo, histórico e modelos, de forma idempotente.', wk:[2,3], feats:['Reimportar não duplica registro','Os dados já estão disponíveis','Marco do desligamento do software atual']},
+  {id:'E9',  bloco:'A', onda:3, span:6,  nome:'Prontuário & Internação', esc:'Linha do tempo do paciente, prescrição, procedimentos, parâmetros clínicos, alta com cobrança automática e o mapa de execução na mesma tela dos internados.', wk:[6,9], feats:['Card já mostra o próximo procedimento','Cada ação executada vai para a fatura','Alta e óbito com responsável registrado']},
+  {id:'E8',  bloco:'A', onda:3, span:6,  nome:'Lembretes', esc:'Vacinas vencidas e próximas e aniversários, enviados por WhatsApp de forma manual ou automática.', wk:[2,3], feats:['Registro de cada envio','Dispara pelo agente de atendimento']},
+  {id:'E15', bloco:'A', onda:4, span:6,  nome:'Painel de TV + tablet', esc:'Internação consolidada numa TV e visão por paciente em tablet na baia. Módulo opcional.', wk:[2,3], feats:['Evita erro na aplicação','Opcional — fora do total'], opcional:true},
+  {id:'E16', bloco:'B', onda:3, span:6,  nome:'Exames & Resultados', esc:'Pedido de exame, amostra com etiqueta, mapa de trabalho, resultados com referência por espécie, validação técnica e laudo em PDF.', wk:[4,6], feats:['Pré-requisito do interfaceamento','Valores de referência por espécie','Liberação sempre com validação humana']},
+  {id:'E17', bloco:'B', onda:3, span:6,  nome:'Interfaceamento AU480 + Ac·T 10', esc:'Gateway on-premise no laboratório, driver ASTM bidirecional do AU480 e driver serial do Ac·T 10, com mapeamento de analitos e monitoramento.', wk:[6,10], feats:['AU480 recebe a lista de trabalho','Ac·T 10 envia os parâmetros do hemograma','Tela de resultados sem vínculo']},
+  {id:'E20', bloco:'B', onda:4, span:4,  nome:'Agente de atendimento', esc:'Chatwoot self-hosted com WhatsApp, Instagram, e-mail e chat, e o agente de IA como bot com ferramentas ligadas aos módulos.', wk:[6,10], feats:['Status de exame e envio de laudo','Agendar, remarcar e abrir chamado','Transbordo humano com contexto']},
+  {id:'E18', bloco:'B', onda:4, span:4,  nome:'CRM', esc:'Clínicas parceiras e tutores com funil, histórico unificado, tarefas de follow-up, segmentação e indicadores.', wk:[4,7], feats:['Conversa, chamado, pedido e fatura na mesma linha','Clínicas ativas, novas e em risco']},
+  {id:'E19', bloco:'B', onda:4, span:4,  nome:'Rastreio & Logística', esc:'Cadeia de custódia da amostra por código de barras, rotas de coleta, tela do coletor no celular, envios e pedido de suprimentos.', wk:[5,8], feats:['Da coleta na clínica ao laudo liberado','Alerta de atraso por tipo de amostra','Clínica pede kits pelo portal']}
+];
 
-  const ONDAS = [
-    {n:1, meses:'Meses 1–3',  nome:'Base e agenda',             res:'Cadastros, catálogos e agenda no ar; a recepção já opera no novo sistema.'},
-    {n:2, meses:'Meses 3–6',  nome:'Operação e dinheiro',       res:'Vendas, comissões, financeiro, faturamento e migração: o software atual é desligado.'},
-    {n:3, meses:'Meses 6–9',  nome:'Clínica e laboratório',     res:'Prontuário e internação, lembretes, exames com resultados direto do AU480 e do Ac·T 10.'},
-    {n:4, meses:'Meses 9–12', nome:'Relacionamento e logística', res:'Chatwoot com agente de IA, CRM, rastreio de amostras e rotas de coleta.'},
-  ];
+const ONDAS = [
+  {n:1, meses:'Meses 1–3',  nome:'Base e agenda',              res:'Cadastros, catálogos e agenda no ar. A recepção já opera no novo sistema.'},
+  {n:2, meses:'Meses 3–6',  nome:'Operação e dinheiro',        res:'Vendas, comissões, financeiro, faturamento e migração. O software atual é desligado.'},
+  {n:3, meses:'Meses 6–9',  nome:'Clínica e laboratório',      res:'Prontuário e internação, lembretes e exames com resultado direto dos analisadores.'},
+  {n:4, meses:'Meses 9–12', nome:'Relacionamento e logística', res:'Chatwoot com agente de IA, CRM e rastreio de amostras com rotas de coleta.'}
+];
 
-  // ---------- cálculo ----------
-  const somaWk = (lista) => lista.reduce((a,e)=>[a[0]+e.wk[0], a[1]+e.wk[1]], [0,0]);
-  const reais = (wk) => wk.map(w => w * CFG.taxaDevWk);
-  const base = EPICOS.filter(e => !e.opcional);
-  const opc  = EPICOS.filter(e => e.opcional);
-  const wkBase = somaWk(base), wkOpc = somaWk(opc);
-  const dev = reais(wkBase);
-  const sust = CFG.sustentacaoMes.map(v => v * CFG.mesesSustentacao);
-  const op   = CFG.operacaoMes.map(v => v * CFG.mesesContrato);
-  const hw   = CFG.hardware;
-  const total = [dev[0]+sust[0]+op[0]+hw[0], dev[1]+sust[1]+op[1]+hw[1]];
-  const mes = total.map(v => v / CFG.mesesContrato);
+// ---------- cálculo ----------
+const somaWk = l => l.reduce((a,e)=>[a[0]+e.wk[0], a[1]+e.wk[1]], [0,0]);
+const reais  = wk => wk.map(w => w * CFG.taxaDevWk);
+const base   = EPICOS.filter(e => !e.opcional);
+const opc    = EPICOS.filter(e => e.opcional);
+const wkBase = somaWk(base);
+const dev    = reais(wkBase);
+const sust   = CFG.sustentacaoMes.map(v => v * CFG.mesesSustentacao);
+const op     = CFG.operacaoMes.map(v => v * CFG.mesesContrato);
+const hw     = CFG.hardware;
+const total  = [dev[0]+sust[0]+op[0]+hw[0], dev[1]+sust[1]+op[1]+hw[1]];
+const mes    = total.map(v => v / CFG.mesesContrato);
+const ondaWk = n => somaWk(base.filter(e => e.onda === n));
 
-  // ---------- formatação ----------
-  const brl = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0});
-  const mil = (v) => {
-    if (v >= 1_000_000) return 'R$ ' + (v/1_000_000).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' mi';
-    return 'R$ ' + Math.round(v/1000).toLocaleString('pt-BR') + ' mil';
-  };
-  const faixa = (arr, f=mil) => f(arr[0]) + ' a ' + f(arr[1]);
-  const faixaWk = (arr) => arr[0] + '–' + arr[1];
-  const el = (id) => document.getElementById(id);
+// ---------- formatação ----------
+const brl = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0});
+const mil = v => v >= 1e6
+  ? 'R$ ' + (v/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' mi'
+  : 'R$ ' + Math.round(v/1000).toLocaleString('pt-BR') + ' mil';
+const faixa   = (a, f=mil) => f(a[0]) + ' a ' + f(a[1]);
+const faixaWk = a => a[0] + '–' + a[1] + ' sem';
+const el = id => document.getElementById(id);
 
-  // ---------- hero e totais ----------
-  el('h-modulos').textContent = EPICOS.length;
-  el('h-total').textContent = faixa(total);
-  el('h-mes').textContent = faixa(mes);
-  el('t-total').textContent = faixa(total);
-  el('t-mes').textContent = faixa(mes);
-  el('c-dev').textContent = faixa(dev);
-  el('c-dev-d').textContent = faixaWk(wkBase) + ' dev-wk nas ondas 1 a 4';
-  el('c-sust').textContent = faixa(sust);
-  el('c-sust-d').textContent = faixa(CFG.sustentacaoMes) + '/mês, meio a um dev dedicado';
-  el('c-op').textContent = faixa(op);
-  el('c-op-d').textContent = faixa(CFG.operacaoMes) + '/mês';
-  el('c-hw').textContent = faixa(hw, brl.format);
-  el('d-taxa').textContent = brl.format(CFG.taxaDevWk);
-  el('bloco-a-sub').textContent = faixaWk(somaWk(base.filter(e=>e.bloco==='A'))) + ' dev-wk · ' + faixa(reais(somaWk(base.filter(e=>e.bloco==='A'))));
-  el('bloco-b-sub').textContent = faixaWk(somaWk(base.filter(e=>e.bloco==='B'))) + ' dev-wk · ' + faixa(reais(somaWk(base.filter(e=>e.bloco==='B'))));
+// ---------- números ----------
+el('k-modulos').textContent = EPICOS.length;
+el('v-sust').textContent  = faixa(CFG.sustentacaoMes, brl.format) + '/mês';
+el('v-op').textContent    = faixa(CFG.operacaoMes, brl.format) + '/mês';
+el('v-hw').textContent    = faixa(hw, brl.format);
+el('v-mes').textContent   = faixa(mes);
+el('v-total').textContent = faixa(total);
+el('c-dev').textContent   = faixa(dev);
+el('c-dev-d').textContent = wkBase[0] + ' a ' + wkBase[1] + ' semanas-desenvolvedor nas quatro ondas';
+el('c-sust').textContent  = faixa(sust);
+el('c-sust-d').textContent= faixa(CFG.sustentacaoMes, brl.format) + ' por mês, meio a um dev dedicado';
+el('c-op').textContent    = faixa(op);
+el('c-op-d').textContent  = faixa(CFG.operacaoMes, brl.format) + ' por mês';
+el('c-hw').textContent    = faixa(hw, brl.format);
+el('d-taxa').textContent  = brl.format(CFG.taxaDevWk);
+el('p-dev').textContent   = faixa(dev);
+el('p-hw').textContent    = faixa(hw, brl.format);
+el('p-mes').textContent   = faixa(mes);
 
-  // ---------- cards de módulos ----------
-  const stTxt = {sub:'Substitui o atual', novo:'Novo', opc:'Opcional'};
-  const modCard = (e) => `
-    <div class="mod reveal${e.opcional?' is-opc':''}">
-      <span class="id">${e.id} · Onda ${e.onda}</span>
-      <span class="nome">${e.nome}</span>
-      <p>${e.esc}</p>
-      <span class="st ${e.tipo}">${stTxt[e.tipo]}</span>
-    </div>`;
-  el('mods-a').innerHTML = EPICOS.filter(e=>e.bloco==='A').map(modCard).join('');
-  el('mods-b').innerHTML = EPICOS.filter(e=>e.bloco==='B').map(modCard).join('');
+const wkA = somaWk(base.filter(e=>e.bloco==='A')), wkB = somaWk(base.filter(e=>e.bloco==='B'));
+el('meta-a').textContent = base.filter(e=>e.bloco==='A').length + ' módulos · ' + faixa(reais(wkA));
+el('meta-b').textContent = base.filter(e=>e.bloco==='B').length + ' módulos · ' + faixa(reais(wkB));
 
-  // ---------- timeline ----------
-  const ondaWk = (n) => somaWk(base.filter(e=>e.onda===n));
-  el('timeline').innerHTML = ONDAS.map(o => {
-    const eps = base.filter(e=>e.onda===o.n);
-    return `
-    <div class="phase reveal">
-      <div class="num">${o.n}</div>
-      <div class="phase-card">
-        <div class="top"><h3>Onda ${o.n} — ${o.nome}</h3><span class="prazo">${o.meses} · ${faixaWk(ondaWk(o.n))} dev-wk</span></div>
-        <div class="ep">${eps.map(e=>`<span>${e.id} ${e.nome}</span>`).join('')}</div>
-        <p class="resultado">${o.res}</p>
-      </div>
-    </div>`;
-  }).join('') + `
-    <div class="phase sust reveal">
-      <div class="num">2º</div>
-      <div class="phase-card">
-        <div class="top"><h3>Meses 13–24 — Sustentação e evolução</h3><span class="prazo">${faixa(CFG.sustentacaoMes)}/mês</span></div>
-        <p>Ajustes de uso, Estoque e Relatórios, LIS completo (controle de qualidade, reagentes), hotel, novos equipamentos e o empacotamento white-label, priorizados com a diretoria.</p>
-        <p class="resultado">Operação assistida e um backlog de evolução com meio a um desenvolvedor dedicado.</p>
-      </div>
-    </div>`;
+// ---------- módulos ----------
+const cardModulo = e => `
+  <div class="module span-${e.span}">
+    <div class="module-num"><span>${e.id}${e.opcional ? ' · Opcional' : ''}</span><span class="wave">Onda ${e.onda}</span></div>
+    <h3>${e.nome}</h3>
+    <p>${e.esc}</p>
+    <ul class="module-features">${(e.feats||[]).map(f=>`<li>${f}</li>`).join('')}</ul>
+  </div>`;
+el('grid-a').innerHTML = EPICOS.filter(e=>e.bloco==='A').map(cardModulo).join('');
+el('grid-b').innerHTML = EPICOS.filter(e=>e.bloco==='B').map(cardModulo).join('');
 
-  // ---------- cards de investimento ----------
-  el('inv-grid').innerHTML = ONDAS.map(o => `
-    <div class="inv reveal"><div class="fase">Onda ${o.n} · ${o.meses}</div><div class="nome">${o.nome}</div><div class="valor">${faixa(reais(ondaWk(o.n)))}</div><div class="prazo">${faixaWk(ondaWk(o.n))} dev-wk</div></div>
-  `).join('') + `
-    <div class="inv reveal"><div class="fase">Meses 13–24</div><div class="nome">Sustentação e evolução</div><div class="valor">${faixa(sust)}</div><div class="prazo">${faixa(CFG.sustentacaoMes)}/mês</div></div>
-  `;
+// ---------- cronograma ----------
+el('timeline-track').innerHTML = ONDAS.map(o => `
+  <div class="phase">
+    <div class="phase-marker"></div>
+    <div class="phase-content">
+      <div class="phase-week">Onda 0${o.n} · ${o.meses}</div>
+      <h4>${o.nome}</h4>
+      <p>${o.res}</p>
+      <div class="epics">${base.filter(e=>e.onda===o.n).map(e=>e.id + ' ' + e.nome).join('<br>')}</div>
+    </div>
+  </div>`).join('') + `
+  <div class="phase">
+    <div class="phase-marker"></div>
+    <div class="phase-content">
+      <div class="phase-week">2º ano · Meses 13–24</div>
+      <h4>Sustentação e evolução</h4>
+      <p>Operação assistida e backlog priorizado com a diretoria, com meio a um desenvolvedor dedicado.</p>
+      <div class="epics">Estoque e Relatórios<br>LIS completo<br>Hotel e novos equipamentos<br>Empacotamento white-label</div>
+    </div>
+  </div>`;
 
-  // ---------- tabela detalhada ----------
-  const linha = (e) => `
-    <tr class="${e.opcional?'opc':''}">
-      <td><span class="id">${e.id}</span><span class="nome">${e.nome}</span></td>
-      <td class="esc">${e.esc}</td>
-      <td><span class="onda-pill">Onda ${e.onda}</span></td>
-      <td class="num">${faixaWk(e.wk)}</td>
-      <td class="num">${faixa(reais(e.wk))}</td>
-    </tr>`;
-  const subtotal = (rot, lista, cls='sub') => {
-    const wk = somaWk(lista);
-    return `<tr class="${cls}"><td colspan="3">${rot}</td><td class="num">${faixaWk(wk)}</td><td class="num">${faixa(reais(wk))}</td></tr>`;
-  };
-  const A = base.filter(e=>e.bloco==='A'), B = base.filter(e=>e.bloco==='B');
-  const wkTudo = [wkBase[0]+wkOpc[0], wkBase[1]+wkOpc[1]];
-  document.querySelector('#tabela tbody').innerHTML =
-    `<tr class="bloco"><td colspan="5">Bloco A — Gestão (substitui o software atual)</td></tr>` +
-    A.map(linha).join('') + subtotal('Subtotal bloco A', A) +
-    `<tr class="bloco"><td colspan="5">Bloco B — Laboratório, CRM, Logística e Atendimento</td></tr>` +
-    B.map(linha).join('') + subtotal('Subtotal bloco B', B) +
-    `<tr class="total"><td colspan="3">Construção — ondas 1 a 4 (meses 1–12) <span class="esc">· blocos A + B</span></td><td class="num">${faixaWk(wkBase)}</td><td class="num">${faixa(dev)}</td></tr>` +
-    `<tr class="bloco"><td colspan="5">Opcional</td></tr>` +
-    opc.map(linha).join('') +
-    `<tr class="sub"><td colspan="3">Construção com o opcional</td><td class="num">${faixaWk(wkTudo)}</td><td class="num">${faixa(reais(wkTudo))}</td></tr>`;
+// ---------- card de ondas ----------
+el('pay-ondas').innerHTML = ONDAS.map(o => `
+  <div class="payment-row">
+    <span class="payment-label">Onda 0${o.n} · ${o.nome}</span>
+    <span class="payment-value">${faixa(reais(ondaWk(o.n)))}</span>
+  </div>`).join('') + `
+  <div class="payment-divider"></div>
+  <div class="payment-total">
+    <span class="payment-total-label">Construção</span>
+    <span class="payment-total-value">${faixa(dev)}</span>
+  </div>
+  <div class="payment-note">
+    <b>Condição</b>
+    Diluída nas parcelas do contrato de 24 meses, com marco de aceite ao fim de cada onda.
+  </div>`;
 
-  // ---------- comportamento ----------
-  const progress = document.getElementById('progress');
-  const onScroll = () => {
-    const h = document.documentElement;
-    progress.style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight) * 100) + '%';
-  };
-  window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+// ---------- tabela ----------
+const linha = e => `
+  <tr class="${e.opcional ? 'opt-row' : ''}">
+    <td><span class="id">${e.id}</span><span class="nome">${e.nome}</span></td>
+    <td>${e.esc}</td>
+    <td><span class="wave">Onda ${e.onda}</span></td>
+    <td class="num">${faixaWk(e.wk)}</td>
+    <td class="num">${faixa(reais(e.wk))}</td>
+  </tr>`;
+const subLinha = (rot, lista) => {
+  const wk = somaWk(lista);
+  return `<tr class="sub-row"><td colspan="3">${rot}</td><td class="num">${faixaWk(wk)}</td><td class="num">${faixa(reais(wk))}</td></tr>`;
+};
+const A = base.filter(e=>e.bloco==='A'), B = base.filter(e=>e.bloco==='B');
+document.querySelector('#tabela tbody').innerHTML =
+  `<tr class="block-row"><td colspan="5">Bloco A · Gestão — substitui o software atual</td></tr>` +
+  A.map(linha).join('') + subLinha('Subtotal do bloco A', A) +
+  `<tr class="block-row"><td colspan="5">Bloco B · Laboratório, CRM, Logística e Atendimento</td></tr>` +
+  B.map(linha).join('') + subLinha('Subtotal do bloco B', B) +
+  `<tr class="total-row"><td colspan="3">Construção · ondas 1 a 4</td><td class="num">${faixaWk(wkBase)}</td><td class="num">${faixa(dev)}</td></tr>` +
+  `<tr class="block-row"><td colspan="5">Opcional</td></tr>` + opc.map(linha).join('');
 
-  let lastY = window.scrollY; const nav = document.getElementById('nav');
-  window.addEventListener('scroll', () => {
-    const y = window.scrollY;
-    nav.style.transform = (y > lastY && y > 120) ? 'translateY(-100%)' : 'translateY(0)';
-    lastY = y;
-  }, {passive:true});
+// =============================================================
+// TEMA
+// =============================================================
+const htmlEl = document.documentElement;
+document.getElementById('themeToggle').addEventListener('click', () => {
+  htmlEl.dataset.theme = htmlEl.dataset.theme === 'dark' ? 'light' : 'dark';
+});
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, {threshold:0.12});
-  document.querySelectorAll('.reveal').forEach((n,i) => { n.style.transitionDelay = (Math.min(i % 6, 5) * 0.05) + 's'; io.observe(n); });
+// =============================================================
+// REVEAL
+// =============================================================
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -60px 0px' });
+document.querySelectorAll('.reveal').forEach(n => observer.observe(n));
+document.querySelectorAll('.hero .reveal').forEach((n, i) => setTimeout(() => n.classList.add('visible'), 180 + i * 170));
+
+// =============================================================
+// COPIAR CHAVE PIX
+// =============================================================
+const pixCopyBtn = document.getElementById('pixCopyBtn');
+pixCopyBtn.addEventListener('click', async () => {
+  const key = document.getElementById('pixKey').textContent.trim();
+  try {
+    await navigator.clipboard.writeText(key);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = key; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (err) {}
+    document.body.removeChild(ta);
+  }
+  pixCopyBtn.classList.add('copied');
+  setTimeout(() => pixCopyBtn.classList.remove('copied'), 2200);
+});
+
+// =============================================================
+// MODAL
+// =============================================================
+const modal = document.getElementById('acceptModal');
+const formView = document.getElementById('formView');
+const successView = document.getElementById('successView');
+
+const openModal = () => {
+  formView.style.display = 'block';
+  successView.classList.remove('visible');
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+const closeModal = () => {
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+};
+
+document.getElementById('navAcceptBtn').addEventListener('click', openModal);
+document.getElementById('ctaAcceptBtn').addEventListener('click', openModal);
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalCancel').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+});
+
+let acceptData = null;
+
+document.getElementById('modalConfirm').addEventListener('click', () => {
+  const name = document.getElementById('acceptName').value.trim();
+  const role = document.getElementById('acceptRole').value.trim();
+  const email = document.getElementById('acceptEmail').value.trim();
+  const company = document.getElementById('acceptCompany').value.trim();
+  const terms = document.getElementById('acceptTerms').checked;
+
+  if (!name || !role || !email || !company) { alert('Por favor, preencha todos os campos.'); return; }
+  if (!terms) { alert('É necessário concordar com os termos da proposta.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Por favor, insira um e-mail válido.'); return; }
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-BR');
+  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const protocol = 'AP-' + now.getTime().toString(36).toUpperCase();
+
+  acceptData = { name, role, email, company, date: dateStr, time: timeStr, protocol };
+
+  document.getElementById('acceptSummary').innerHTML =
+    '<strong>Aceitante:</strong> ' + name + '<br>' +
+    '<strong>Cargo:</strong> ' + role + '<br>' +
+    '<strong>E-mail:</strong> ' + email + '<br>' +
+    '<strong>Empresa:</strong> ' + company + '<br>' +
+    '<strong>Data:</strong> ' + dateStr + ' às ' + timeStr + '<br>' +
+    '<strong>Protocolo:</strong> ' + protocol;
+
+  formView.style.display = 'none';
+  successView.classList.add('visible');
+});
+
+// =============================================================
+// PDF (texto vetorial via jsPDF)
+// =============================================================
+const { jsPDF } = window.jspdf;
+
+const PDF = {
+  pageW: 210, pageH: 297, marginX: 18, marginTop: 22, marginBottom: 22,
+  c: {
+    surface: [250, 248, 244],
+    text: [21, 17, 13],
+    textMuted: [107, 99, 88],
+    textDim: [154, 146, 134],
+    line: [220, 215, 207],
+    accent: [212, 84, 10],
+    accentDeep: [138, 53, 0],
+    accentLight: [255, 240, 230],
+    success: [45, 134, 89],
+    warn: [184, 132, 26]
+  }
+};
+
+class PDFBuilder {
+  constructor() {
+    this.doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    this.y = PDF.marginTop;
+    this.page = 1;
+    this.contentW = PDF.pageW - PDF.marginX * 2;
+  }
+
+  ensure(needed) { if (this.y + needed > PDF.pageH - PDF.marginBottom) this.newPage(); }
+
+  newPage() {
+    this.drawFooter();
+    this.doc.addPage();
+    this.page++;
+    this.y = PDF.marginTop;
+    this.drawHeader();
+  }
+
+  drawHeader() {
+    const d = this.doc;
+    d.setFont('helvetica', 'bold'); d.setFontSize(10); d.setTextColor(...PDF.c.text);
+    d.text('Tudo Mudou!', PDF.marginX, 12);
+    d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(...PDF.c.textMuted);
+    d.text('Proposta Comercial · Alchemypet · 02.09.2026', PDF.pageW - PDF.marginX, 12, { align: 'right' });
+    d.setDrawColor(...PDF.c.line); d.setLineWidth(0.2);
+    d.line(PDF.marginX, 15, PDF.pageW - PDF.marginX, 15);
+  }
+
+  drawFooter() {
+    const d = this.doc;
+    d.setDrawColor(...PDF.c.line); d.setLineWidth(0.2);
+    d.line(PDF.marginX, PDF.pageH - 15, PDF.pageW - PDF.marginX, PDF.pageH - 15);
+    d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(...PDF.c.textDim);
+    d.text('Tudo Mudou! · Osasco/SP · 2026', PDF.marginX, PDF.pageH - 10);
+    d.text('Página ' + this.page, PDF.pageW - PDF.marginX, PDF.pageH - 10, { align: 'right' });
+  }
+
+  spacer(h) { this.y += h; }
+
+  sectionLabel(text) {
+    this.ensure(12);
+    const d = this.doc;
+    d.setDrawColor(...PDF.c.accent); d.setLineWidth(0.6);
+    d.line(PDF.marginX, this.y, PDF.marginX + 8, this.y);
+    d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.accent);
+    d.text(text.toUpperCase(), PDF.marginX + 11, this.y + 1.5);
+    this.y += 8;
+  }
+
+  sectionTitle(text) {
+    this.ensure(20);
+    const d = this.doc;
+    d.setFont('times', 'normal'); d.setFontSize(26); d.setTextColor(...PDF.c.text);
+    d.splitTextToSize(text, this.contentW).forEach(line => {
+      this.ensure(11);
+      d.text(line, PDF.marginX, this.y + 8);
+      this.y += 11;
+    });
+    this.y += 2;
+  }
+
+  intro(text) {
+    this.ensure(10);
+    const d = this.doc;
+    d.setFont('helvetica', 'normal'); d.setFontSize(10.5); d.setTextColor(...PDF.c.textMuted);
+    d.splitTextToSize(text, this.contentW * 0.9).forEach(line => {
+      this.ensure(6);
+      d.text(line, PDF.marginX, this.y + 4);
+      this.y += 5.5;
+    });
+    this.y += 4;
+  }
+
+  kpiRow(items) {
+    this.ensure(28);
+    const d = this.doc;
+    const colW = this.contentW / items.length;
+    d.setFillColor(...PDF.c.surface);
+    d.rect(PDF.marginX, this.y, this.contentW, 24, 'F');
+    items.forEach((item, i) => {
+      const x = PDF.marginX + colW * i;
+      if (i < items.length - 1) {
+        d.setDrawColor(...PDF.c.line); d.setLineWidth(0.2);
+        d.line(x + colW, this.y + 4, x + colW, this.y + 20);
+      }
+      d.setFont('times', 'bolditalic'); d.setFontSize(26); d.setTextColor(...PDF.c.accent);
+      d.text(item.num, x + colW / 2, this.y + 12, { align: 'center' });
+      d.setFont('helvetica', 'bold'); d.setFontSize(7); d.setTextColor(...PDF.c.textMuted);
+      d.text(item.label.toUpperCase(), x + colW / 2, this.y + 19, { align: 'center' });
+    });
+    this.y += 28;
+  }
+
+  twoColList(leftItems, rightItems, leftTitle, rightTitle) {
+    const d = this.doc;
+    const colW = (this.contentW - 6) / 2;
+    const drawCol = (items, title, x, isAfter) => {
+      d.setFont('helvetica', 'bold'); d.setFontSize(7.5);
+      d.setTextColor(...(isAfter ? PDF.c.accent : PDF.c.textDim));
+      d.text(title.toUpperCase(), x, this.y + 4);
+      this.y += 8;
+      items.forEach(item => {
+        if (isAfter) {
+          d.setDrawColor(...PDF.c.accent); d.setLineWidth(0.5);
+          d.line(x, this.y + 2.5, x + 2, this.y + 4);
+          d.line(x + 2, this.y + 4, x + 4, this.y);
+        } else {
+          d.setDrawColor(...PDF.c.textDim); d.setLineWidth(0.4);
+          d.line(x, this.y + 0.5, x + 3, this.y + 3.5);
+          d.line(x, this.y + 3.5, x + 3, this.y + 0.5);
+        }
+        d.setFont('helvetica', 'normal'); d.setFontSize(9);
+        d.setTextColor(...(isAfter ? PDF.c.text : PDF.c.textMuted));
+        const lines = d.splitTextToSize(item, colW - 7);
+        let cy = this.y + 3;
+        lines.forEach(line => { d.text(line, x + 6, cy); cy += 4.5; });
+        this.y += Math.max(6, lines.length * 4.5 + 2);
+      });
+    };
+    const start = this.y;
+    drawCol(leftItems, leftTitle, PDF.marginX, false);
+    const leftEnd = this.y;
+    this.y = start;
+    drawCol(rightItems, rightTitle, PDF.marginX + colW + 6, true);
+    this.y = Math.max(leftEnd, this.y) + 4;
+  }
+
+  moduleRow(e) {
+    const d = this.doc;
+    const descLines = d.splitTextToSize(e.esc, this.contentW - 62);
+    const h = Math.max(14, descLines.length * 4.2 + 8);
+    this.ensure(h + 2);
+    const startY = this.y;
+
+    d.setFillColor(...PDF.c.surface);
+    d.rect(PDF.marginX, startY, this.contentW, h, 'F');
+    d.setFillColor(...PDF.c.accent);
+    d.rect(PDF.marginX, startY, 1, h, 'F');
+
+    d.setFont('helvetica', 'bold'); d.setFontSize(7); d.setTextColor(...PDF.c.accent);
+    d.text(e.id + ' · ONDA ' + e.onda, PDF.marginX + 5, startY + 5.5);
+
+    d.setFont('times', 'bold'); d.setFontSize(11); d.setTextColor(...PDF.c.text);
+    d.text(e.nome, PDF.marginX + 5, startY + 11);
+
+    d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(...PDF.c.textMuted);
+    let cy = startY + 5.5;
+    descLines.forEach(line => { d.text(line, PDF.marginX + 58, cy); cy += 4.2; });
+
+    d.setFont('courier', 'bold'); d.setFontSize(9); d.setTextColor(...PDF.c.accent);
+    d.text(faixa(reais(e.wk)), PDF.pageW - PDF.marginX - 3, startY + 8, { align: 'right' });
+
+    this.y += h + 2;
+  }
+
+  timelineRow(phases) {
+    const d = this.doc;
+    this.ensure(48);
+    const colW = this.contentW / phases.length;
+    d.setDrawColor(...PDF.c.accent); d.setLineWidth(0.5);
+    d.line(PDF.marginX + 6, this.y + 4, PDF.pageW - PDF.marginX - 6, this.y + 4);
+
+    phases.forEach((p, i) => {
+      const x = PDF.marginX + colW * i;
+      const cx = x + colW / 2;
+      d.setFillColor(...(i === phases.length - 1 ? PDF.c.success : PDF.c.accent));
+      d.circle(cx, this.y + 4, 2.2, 'F');
+      d.setFillColor(255, 255, 255);
+      d.circle(cx, this.y + 4, 0.8, 'F');
+
+      const cardY = this.y + 10;
+      d.setFillColor(...PDF.c.surface);
+      d.rect(x + 1.5, cardY, colW - 3, 34, 'F');
+      d.setDrawColor(...PDF.c.line); d.setLineWidth(0.15);
+      d.rect(x + 1.5, cardY, colW - 3, 34);
+
+      d.setFont('helvetica', 'bold'); d.setFontSize(6.5); d.setTextColor(...PDF.c.accent);
+      d.text(p.phase.toUpperCase(), x + 4, cardY + 5);
+
+      d.setFont('times', 'bold'); d.setFontSize(9); d.setTextColor(...PDF.c.text);
+      const titleLines = d.splitTextToSize(p.title, colW - 7);
+      d.text(titleLines, x + 4, cardY + 10);
+
+      d.setFont('helvetica', 'normal'); d.setFontSize(7); d.setTextColor(...PDF.c.textMuted);
+      let cy = cardY + 10 + titleLines.length * 4 + 2;
+      d.splitTextToSize(p.desc, colW - 7).slice(0, 5).forEach(line => { d.text(line, x + 4, cy); cy += 3.4; });
+    });
+    this.y += 48;
+  }
+
+  successBox(title, desc) {
+    this.ensure(22);
+    const d = this.doc;
+    d.setFillColor(241, 248, 244);
+    d.rect(PDF.marginX, this.y, this.contentW, 18, 'F');
+    d.setFillColor(...PDF.c.success);
+    d.rect(PDF.marginX, this.y, 1, 18, 'F');
+    d.setFillColor(...PDF.c.success);
+    d.circle(PDF.marginX + 10, this.y + 9, 4, 'F');
+    d.setDrawColor(255, 255, 255); d.setLineWidth(0.6);
+    d.line(PDF.marginX + 8, this.y + 9, PDF.marginX + 9.5, this.y + 10.5);
+    d.line(PDF.marginX + 9.5, this.y + 10.5, PDF.marginX + 12.2, this.y + 7.5);
+    d.setFont('times', 'bolditalic'); d.setFontSize(11); d.setTextColor(...PDF.c.text);
+    d.text(title, PDF.marginX + 18, this.y + 8);
+    d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setTextColor(...PDF.c.textMuted);
+    d.text(desc, PDF.marginX + 18, this.y + 13);
+    this.y += 24;
+  }
+
+  paymentCards() {
+    const d = this.doc;
+    const cardH = 76;
+    this.ensure(cardH + 8);
+    const colW = (this.contentW - 6) / 2;
+    const startY = this.y;
+
+    // Esquerda: construção por onda
+    const xL = PDF.marginX;
+    d.setFillColor(...PDF.c.surface);
+    d.rect(xL, startY, colW, cardH, 'F');
+    d.setDrawColor(...PDF.c.line); d.setLineWidth(0.3);
+    d.rect(xL, startY, colW, cardH);
+
+    d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(...PDF.c.accent);
+    d.text('CONSTRUÇÃO · MESES 1 A 12', xL + 6, startY + 7);
+    d.setFont('times', 'bold'); d.setFontSize(17); d.setTextColor(...PDF.c.text);
+    d.text('Implementação', xL + 6, startY + 17);
+    d.setDrawColor(...PDF.c.line);
+    d.line(xL + 6, startY + 21, xL + colW - 6, startY + 21);
+
+    let cy = startY + 29;
+    ONDAS.forEach(o => {
+      d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(...PDF.c.textMuted);
+      d.text('Onda 0' + o.n + ' · ' + o.nome, xL + 6, cy);
+      d.setFont('courier', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.text);
+      d.text(faixa(reais(ondaWk(o.n))), xL + colW - 6, cy, { align: 'right' });
+      cy += 6;
+    });
+
+    d.setDrawColor(...PDF.c.line);
+    d.line(xL + 6, cy, xL + colW - 6, cy);
+    d.setFont('times', 'bolditalic'); d.setFontSize(11); d.setTextColor(...PDF.c.text);
+    d.text('Construção', xL + 6, cy + 8);
+    d.setFont('times', 'bold'); d.setFontSize(15); d.setTextColor(...PDF.c.accent);
+    d.text(faixa(dev), xL + colW - 6, cy + 8, { align: 'right' });
+
+    // Direita: contrato mensal
+    const xR = PDF.marginX + colW + 6;
+    d.setFillColor(...PDF.c.accentLight);
+    d.rect(xR, startY, colW, cardH, 'F');
+    d.setDrawColor(...PDF.c.accent); d.setLineWidth(0.8);
+    d.rect(xR, startY, colW, cardH);
+
+    const badge = 'CONTRATO 24 MESES';
+    d.setFont('helvetica', 'bold'); d.setFontSize(7.5);
+    const bw = d.getTextWidth(badge) + 8;
+    d.setFillColor(...PDF.c.accent);
+    d.roundedRect(xR + colW - bw - 6, startY - 3, bw, 6, 1, 1, 'F');
+    d.setTextColor(255, 255, 255);
+    d.text(badge, xR + colW - bw - 6 + bw / 2, startY + 1, { align: 'center' });
+
+    d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(...PDF.c.accent);
+    d.text('RECORRÊNCIA · MENSAL', xR + 6, startY + 7);
+    d.setFont('times', 'bold'); d.setFontSize(17); d.setTextColor(...PDF.c.text);
+    d.text('Parcela do Contrato', xR + 6, startY + 17);
+    d.setDrawColor(...PDF.c.accent); d.setLineWidth(0.2);
+    d.line(xR + 6, startY + 21, xR + colW - 6, startY + 21);
+
+    const rows = [
+      ['Sustentação (meses 13-24)', faixa(CFG.sustentacaoMes, brl.format)],
+      ['Operação em nuvem (24 meses)', faixa(CFG.operacaoMes, brl.format)],
+      ['Gateway (custo único)', faixa(hw, brl.format)],
+      ['Consultoria estratégica', 'incluso']
+    ];
+    let ry = startY + 29;
+    rows.forEach(([k, v]) => {
+      d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(...PDF.c.textMuted);
+      d.text(k, xR + 6, ry);
+      d.setFont('courier', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.text);
+      d.text(v, xR + colW - 6, ry, { align: 'right' });
+      ry += 6;
+    });
+
+    d.setDrawColor(...PDF.c.accent);
+    d.line(xR + 6, ry, xR + colW - 6, ry);
+    d.setFont('times', 'bolditalic'); d.setFontSize(11); d.setTextColor(...PDF.c.text);
+    d.text('Parcela mensal', xR + 6, ry + 8);
+    d.setFont('times', 'bold'); d.setFontSize(15); d.setTextColor(...PDF.c.accent);
+    d.text(faixa(mes), xR + colW - 6, ry + 8, { align: 'right' });
+
+    this.y = startY + cardH + 6;
+  }
+
+  totalBox() {
+    this.ensure(24);
+    const d = this.doc;
+    d.setFillColor(...PDF.c.accent);
+    d.rect(PDF.marginX, this.y, this.contentW, 20, 'F');
+    d.setFillColor(...PDF.c.accentDeep);
+    d.rect(PDF.marginX, this.y, 3, 20, 'F');
+    d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(255, 255, 255);
+    d.text('CONTRATO DE 24 MESES · TOTAL ESTIMADO', PDF.marginX + 8, this.y + 7);
+    d.setFont('times', 'bolditalic'); d.setFontSize(18); d.setTextColor(255, 255, 255);
+    d.text(faixa(total), PDF.marginX + 8, this.y + 16);
+    d.setFont('courier', 'bold'); d.setFontSize(11);
+    d.text(faixa(mes) + ' / mês', PDF.pageW - PDF.marginX - 6, this.y + 14, { align: 'right' });
+    this.y += 26;
+  }
+
+  scopeSection(includedItems, excludedItems) {
+    const d = this.doc;
+    const colW = (this.contentW - 6) / 2;
+    const lineH = 6.5, padding = 6, titleH = 18;
+    const cardH = titleH + Math.max(includedItems.length, excludedItems.length) * lineH + padding * 2;
+    this.ensure(cardH + 6);
+    const startY = this.y;
+
+    const drawCol = (x, items, title, isIncluded) => {
+      d.setFillColor(...PDF.c.surface);
+      d.rect(x, startY, colW, cardH, 'F');
+      d.setFillColor(...(isIncluded ? PDF.c.success : PDF.c.textDim));
+      d.rect(x, startY, 1, cardH, 'F');
+
+      d.setFont('times', 'bold'); d.setFontSize(12); d.setTextColor(...PDF.c.text);
+      d.text(title, x + padding, startY + padding + 5);
+
+      d.setFontSize(8.5);
+      let cy = startY + padding + titleH;
+      items.forEach(item => {
+        d.setFont('helvetica', 'bold');
+        d.setTextColor(...(isIncluded ? PDF.c.success : PDF.c.textDim));
+        d.text(isIncluded ? '→' : '×', x + padding, cy);
+        d.setFont('helvetica', 'normal'); d.setTextColor(...PDF.c.textMuted);
+        const lines = d.splitTextToSize(item, colW - padding * 2 - 6);
+        lines.slice(0, 2).forEach((line, i) => { d.text(line, x + padding + 5, cy + i * 4); });
+        cy += lineH;
+      });
+    };
+
+    drawCol(PDF.marginX, includedItems, 'Incluso no contrato', true);
+    drawCol(PDF.marginX + colW + 6, excludedItems, 'Não incluso (à parte)', false);
+    this.y = startY + cardH + 6;
+  }
+
+  noticeBox(label, text, color) {
+    color = color || PDF.c.warn;
+    const d = this.doc;
+    const lines = d.splitTextToSize(text, this.contentW - 10);
+    const h = 6 + lines.length * 5 + 4;
+    this.ensure(h);
+    d.setFillColor(...PDF.c.surface);
+    d.rect(PDF.marginX, this.y, this.contentW, h, 'F');
+    d.setFillColor(...color);
+    d.rect(PDF.marginX, this.y, 1, h, 'F');
+    d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(...color);
+    d.text(label.toUpperCase(), PDF.marginX + 5, this.y + 5);
+    d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setTextColor(...PDF.c.textMuted);
+    let cy = this.y + 10;
+    lines.forEach(line => { d.text(line, PDF.marginX + 5, cy); cy += 5; });
+    this.y += h + 4;
+  }
+
+  paymentInfo() {
+    const d = this.doc;
+    const cardH = 74;
+    this.ensure(cardH + 8);
+    const colW = (this.contentW - 6) / 2;
+    const startY = this.y;
+
+    const xL = PDF.marginX;
+    d.setFillColor(...PDF.c.accent);
+    d.rect(xL, startY, colW, cardH, 'F');
+    d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(255, 255, 255);
+    d.text('CHAVE PIX · CNPJ', xL + 8, startY + 11);
+    d.setFont('times', 'bold'); d.setFontSize(13);
+    d.splitTextToSize('Tudo Mudou Marketing e Consultoria', colW - 16).forEach((line, i) => {
+      d.text(line, xL + 8, startY + 19 + i * 5.5);
+    });
+    const keyY = startY + 38;
+    d.setFillColor(...PDF.c.accentDeep);
+    d.rect(xL + 6, keyY, colW - 12, cardH - 38 - 6, 'F');
+    d.setFont('helvetica', 'bold'); d.setFontSize(7); d.setTextColor(255, 255, 255);
+    d.text('CHAVE PARA TRANSFERÊNCIA', xL + 12, keyY + 7);
+    d.setFont('courier', 'bold'); d.setFontSize(17);
+    d.text('40.790.711/0001-21', xL + 12, keyY + 19);
+
+    const xR = PDF.marginX + colW + 6;
+    d.setFillColor(...PDF.c.surface);
+    d.rect(xR, startY, colW, cardH, 'F');
+    d.setFillColor(...PDF.c.accent);
+    d.rect(xR, startY, 1, cardH, 'F');
+    d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(...PDF.c.accent);
+    d.text('DADOS CADASTRAIS', xR + 6, startY + 8);
+
+    const fields = [
+      ['Razão Social', 'Tudo Mudou Marketing e Consultoria'],
+      ['CNPJ', '40.790.711/0001-21'],
+      ['Endereço', 'Av. Santo Antônio, 1453 — Vila Osasco'],
+      ['CEP', '06083-210'],
+      ['Município / UF', 'Osasco — SP']
+    ];
+    let cy = startY + 17;
+    const rowH = (cardH - 20) / fields.length;
+    fields.forEach(([label, value]) => {
+      d.setFont('helvetica', 'bold'); d.setFontSize(6.5); d.setTextColor(...PDF.c.textDim);
+      d.text(label.toUpperCase(), xR + 6, cy);
+      d.setFont('times', 'bold'); d.setFontSize(9.5); d.setTextColor(...PDF.c.text);
+      d.text(d.splitTextToSize(value, colW - 12)[0], xR + 6, cy + 4.5);
+      cy += rowH;
+    });
+
+    this.y = startY + cardH + 4;
+  }
+
+  acceptanceBlock(data) {
+    this.ensure(70);
+    const d = this.doc;
+    d.setFillColor(...PDF.c.surface);
+    d.rect(PDF.marginX, this.y, this.contentW, 60, 'F');
+    d.setDrawColor(...PDF.c.success); d.setLineWidth(1);
+    d.rect(PDF.marginX, this.y, this.contentW, 60);
+    d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.success);
+    d.text('ACEITE FORMAL DA PROPOSTA', PDF.marginX + 6, this.y + 8);
+    d.setFont('times', 'bolditalic'); d.setFontSize(20); d.setTextColor(...PDF.c.text);
+    d.text('Proposta Aceita', PDF.marginX + 6, this.y + 18);
+
+    let cy = this.y + 28;
+    [['Aceitante:', data.name], ['Cargo:', data.role], ['E-mail:', data.email],
+     ['Empresa:', data.company], ['Data:', data.date + ' às ' + data.time],
+     ['Protocolo:', data.protocol]].forEach(([label, value]) => {
+      d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.textMuted);
+      d.text(label, PDF.marginX + 6, cy);
+      d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setTextColor(...PDF.c.text);
+      d.text(value, PDF.marginX + 32, cy);
+      cy += 5.2;
+    });
+    this.y += 66;
+  }
+
+  build(includeAcceptance) {
+    const d = this.doc;
+
+    // ---- CAPA ----
+    this.drawHeader();
+    this.y = 48;
+
+    d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.accent);
+    d.text('PROPOSTA COMERCIAL · 004/2026', PDF.marginX, this.y);
+    this.y += 14;
+
+    d.setFont('times', 'normal'); d.setFontSize(40); d.setTextColor(...PDF.c.text);
+    d.text('O laboratório não', PDF.marginX, this.y); this.y += 16;
+    d.setFont('times', 'bolditalic'); d.setTextColor(...PDF.c.accent);
+    d.text('cabe mais', PDF.marginX, this.y); this.y += 16;
+    d.setFont('times', 'bold'); d.setTextColor(...PDF.c.text);
+    d.text('no software de 2005.', PDF.marginX, this.y); this.y += 18;
+
+    d.setFont('helvetica', 'normal'); d.setFontSize(11); d.setTextColor(...PDF.c.textMuted);
+    d.splitTextToSize('Um sistema único para a Alchemypet: agenda, prontuário, internação, vendas, financeiro e faturamento, resultados direto do AU480 e do Ac·T 10, CRM, rastreio das amostras e um agente de IA atendendo em todos os canais. Cada ação da operação vira registro financeiro — sem redigitação.', this.contentW * 0.94).forEach(line => {
+      d.text(line, PDF.marginX, this.y); this.y += 6;
+    });
+    this.y += 12;
+
+    d.setFillColor(...PDF.c.accentLight);
+    d.rect(PDF.marginX, this.y, this.contentW, 22, 'F');
+    d.setDrawColor(...PDF.c.accent); d.setLineWidth(0.5);
+    d.rect(PDF.marginX, this.y, this.contentW, 22);
+    [['CLIENTE', 'Alchemypet', 0], ['FORNECEDOR', 'Tudo Mudou!', 60], ['DATA', '02.09.2026', 130]].forEach(([k, v, dx]) => {
+      d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(...PDF.c.accent);
+      d.text(k, PDF.marginX + 6 + dx, this.y + 7);
+      d.setFont('times', 'bold'); d.setFontSize(15); d.setTextColor(...PDF.c.text);
+      d.text(v, PDF.marginX + 6 + dx, this.y + 15);
+    });
+    this.y += 28;
+
+    this.kpiRow([
+      { num: String(EPICOS.length), label: 'Módulos' },
+      { num: '6', label: 'Meses p/ desligar' },
+      { num: '2', label: 'Analisadores' },
+      { num: '24', label: 'Meses' }
+    ]);
+
+    // ---- DIAGNÓSTICO ----
+    this.newPage();
+    this.sectionLabel('01 · Diagnóstico');
+    this.sectionTitle('O dado já existe. Falta o sistema trabalhar por vocês.');
+    this.spacer(2);
+    this.twoColList(
+      ['Janela em cima de janela, botões que não fazem nada, tela que trava',
+       'A mesma análise de vendas repetida em quatro relatórios',
+       'Vacinas, patologias e produtos cadastrados do zero',
+       'Vacina vencida não avisa o tutor; a alta não gera cobrança',
+       'Comissão sem consolidado: é preciso entrar médico por médico',
+       'Resultados dos analisadores digitados à mão, um a um',
+       'Atendimento, relacionamento e coleta fora do sistema'],
+      ['Navegação única, sem pop-up empilhado ou botão decorativo',
+       'Um painel gerencial só: produtividade por colaborador e setor',
+       'Catálogos pré-carregados: raças, vacinas, medicamentos, patologias',
+       'Lembrete de vacina e aniversário por WhatsApp, com registro',
+       'Comissão consolidada e individual, virando conta a pagar',
+       'AU480 e Ac·T 10 entregam o resultado na amostra certa',
+       'Atendimento, CRM e rastreio dentro do mesmo sistema'],
+      'Hoje · Software Atual',
+      'Depois · Alchemypet Integrado'
+    );
+
+    // ---- ESCOPO ----
+    this.newPage();
+    this.sectionLabel('03 · Escopo');
+    this.sectionTitle('Vinte módulos em dois blocos.');
+    this.intro('O bloco A recria o software que a equipe usa hoje, sem o que não serve. O bloco B entrega o que ele nunca teve: laboratório interfaceado, relacionamento, logística e atendimento com IA.');
+
+    d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.accent);
+    d.text('BLOCO A · GESTÃO — SUBSTITUI O SOFTWARE ATUAL', PDF.marginX, this.y + 3);
+    this.y += 8;
+    base.filter(e => e.bloco === 'A').forEach(e => this.moduleRow(e));
+
+    this.spacer(4);
+    this.ensure(14);
+    d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.accent);
+    d.text('BLOCO B · LABORATÓRIO, CRM, LOGÍSTICA E ATENDIMENTO', PDF.marginX, this.y + 3);
+    this.y += 8;
+    base.filter(e => e.bloco === 'B').forEach(e => this.moduleRow(e));
+
+    // ---- CRONOGRAMA ----
+    this.newPage();
+    this.sectionLabel('04 · Cronograma');
+    this.sectionTitle('Quatro ondas no primeiro ano.');
+    this.intro('Cada onda entra em produção assim que validada, com aceite próprio. Na onda 2, o software atual é desligado. O segundo ano é de sustentação, evolução e preparação do produto white-label.');
+    this.spacer(4);
+    this.timelineRow(ONDAS.map(o => ({
+      phase: 'Onda 0' + o.n + ' · ' + o.meses,
+      title: o.nome,
+      desc: o.res
+    })).concat([{ phase: '2º ano · Meses 13-24', title: 'Sustentação', desc: 'Estoque, Relatórios, LIS completo e white-label, priorizados com a diretoria.' }]));
+    this.spacer(6);
+    this.successBox('Software atual desligado em até 6 meses', 'Ao fim da onda 2, toda a operação de hoje já roda no novo sistema, com a base migrada.');
+
+    // ---- INVESTIMENTO ----
+    this.newPage();
+    this.sectionLabel('07 · Investimento');
+    this.sectionTitle('Construção no primeiro ano. Contrato de 24 meses.');
+    this.intro('O primeiro ano entrega os vinte módulos em quatro ondas, com aceite a cada uma. O segundo ano mantém tudo rodando e evoluindo: Estoque, Relatórios, LIS completo e o empacotamento white-label.');
+    this.spacer(4);
+    this.paymentCards();
+    this.totalBox();
+    this.scopeSection(
+      ['Os 20 módulos dos blocos A e B, em quatro ondas',
+       'Drivers do AU480 e do Ac·T 10 e o gateway',
+       'Migração da base atual, de forma idempotente',
+       'Catálogos pré-carregados, patologias com IA',
+       'Chatwoot self-hosted com o agente de IA',
+       'Sustentação e evolução nos meses 13 a 24',
+       'Treinamento da equipe e homologação por onda',
+       'Consultoria estratégica por todo o contrato'],
+      ['Ponto de venda, multiloja e comissão online',
+       'Estoque e Relatórios (próxima reunião)',
+       'LIS completo: CQ, reagentes, laudo com imagem',
+       'Módulo de hotel com reservas e diárias',
+       'Outros equipamentos além do AU480 e Ac·T 10',
+       'Conversas do WhatsApp e licenças de terceiros']
+    );
+    this.noticeBox('Como o valor foi calculado', 'Esforço por módulo em semanas-desenvolvedor multiplicado por ' + brl.format(CFG.taxaDevWk) + ' por semana. Sustentação com meio a um desenvolvedor dedicado nos meses 13 a 24. Operação inclui hospedagem, Chatwoot, conversas do WhatsApp e tokens de IA. As faixas fecham após confirmar os protocolos dos equipamentos, o detalhamento de Financeiro e Faturamento e se o LIS completo entra neste contrato.');
+
+    // ---- PAGAMENTO ----
+    this.newPage();
+    this.sectionLabel('08 · Dados de Pagamento');
+    this.sectionTitle('Pagamento via PIX ou boleto.');
+    this.spacer(4);
+    this.paymentInfo();
+
+    this.spacer(8);
+    this.sectionLabel('Condições Gerais');
+    this.spacer(2);
+    [['Validade', '30 dias a partir da data de emissão'],
+     ['Contrato', '24 meses a partir do início da onda 1'],
+     ['Onda 1', 'Meses 1 a 3 — base, catálogos e agenda'],
+     ['Software atual', 'Desligado ao fim da onda 2 (mês 6)'],
+     ['Suporte e manutenção', 'Inclusos durante todo o contrato']].forEach(([k, v]) => {
+      this.ensure(9);
+      d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...PDF.c.textDim);
+      d.text(k.toUpperCase(), PDF.marginX, this.y + 4);
+      d.setFont('times', 'bold'); d.setFontSize(11); d.setTextColor(...PDF.c.text);
+      d.text(v, PDF.marginX + 55, this.y + 4);
+      d.setDrawColor(...PDF.c.line); d.setLineWidth(0.15);
+      d.line(PDF.marginX, this.y + 7, PDF.pageW - PDF.marginX, this.y + 7);
+      this.y += 9;
+    });
+
+    if (includeAcceptance && acceptData) {
+      this.spacer(10);
+      this.acceptanceBlock(acceptData);
+    }
+
+    this.drawFooter();
+    return this.doc;
+  }
+}
+
+async function generatePDF(includeAcceptance) {
+  const buttons = ['navDownloadBtn', 'ctaDownloadBtn', 'successDownload'].map(id => document.getElementById(id));
+  buttons.forEach(b => b && (b.disabled = true));
+  try {
+    await new Promise(r => setTimeout(r, 50));
+    const doc = new PDFBuilder().build(includeAcceptance);
+    let filename = 'Proposta-Alchemypet-TudoMudou.pdf';
+    if (includeAcceptance && acceptData) {
+      filename = 'Proposta-Alchemypet-Aceite-' + acceptData.name.replace(/[^a-zA-Z0-9]/g, '-') + '.pdf';
+    }
+    doc.save(filename);
+  } catch (err) {
+    console.error('Erro ao gerar PDF:', err);
+    alert('Não foi possível gerar o PDF. Tente novamente.');
+  } finally {
+    buttons.forEach(b => b && (b.disabled = false));
+  }
+}
+
+document.getElementById('navDownloadBtn').addEventListener('click', () => generatePDF(false));
+document.getElementById('ctaDownloadBtn').addEventListener('click', () => generatePDF(false));
+document.getElementById('successDownload').addEventListener('click', () => {
+  closeModal();
+  setTimeout(() => generatePDF(true), 400);
+});
 </script>
+
 </body>
 </html>
