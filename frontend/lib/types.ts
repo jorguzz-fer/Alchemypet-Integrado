@@ -267,6 +267,9 @@ export type FiltrosChamado = {
   motivo?: string;
   status?: StatusChamado | '';
   busca?: string;
+  // Período pela data do chamado (YYYY-MM-DD), ambos opcionais.
+  data_de?: string;
+  data_ate?: string;
   ordem?: 'recentes' | 'antigos';
   page?: number;
   per_page?: number;

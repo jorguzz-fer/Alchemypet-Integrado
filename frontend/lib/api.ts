@@ -101,6 +101,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   try {
     res = await fetch(url, { method, headers, body: payload, signal });
   } catch (err) {
+    // Requisição cancelada pelo chamador (troca rápida de filtros): propaga
+    // o AbortError para a tela ignorar, em vez de exibir "API indisponível".
+    if (err instanceof DOMException && err.name === 'AbortError') throw err;
     // Falha de rede (API fora do ar, DNS, CORS, etc.).
     throw new ApiError(
       'Não foi possível conectar à API. Verifique se o serviço está disponível.',

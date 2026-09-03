@@ -716,6 +716,9 @@ header.top {
 .fgroup.wide {
   grid-column: span 2;
 }
+.fgroup.full {
+  grid-column: 1 / -1;
+}
 .fgroup label {
   font-size: 0.72rem;
   font-weight: 700;

@@ -1,4 +1,5 @@
 """Endpoints de Chamados (recebidos por e-mail)."""
+from datetime import date
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
@@ -27,7 +28,11 @@ _ORDEM_COMPLEX = {"alta": 0, "media": 1, "baixa": 2}
 _ROTULO_COMPLEX = {"alta": "Alta", "media": "Média", "baixa": "Baixa"}
 
 
-def _filtrar(stmt, complexidade, motivo, status, busca):
+def _filtrar(stmt, complexidade, motivo, status, busca, data_de=None, data_ate=None):
+    if data_de:
+        stmt = stmt.where(Chamado.data >= data_de)
+    if data_ate:
+        stmt = stmt.where(Chamado.data <= data_ate)
     if complexidade:
         stmt = stmt.where(Chamado.complexidade == complexidade)
     if motivo:
@@ -50,12 +55,16 @@ def listar(
     motivo: str | None = None,
     status: str | None = None,
     busca: str | None = None,
+    data_de: date | None = None,
+    data_ate: date | None = None,
     ordem: str | None = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
-    base = _filtrar(select(Chamado), complexidade, motivo, status, busca)
+    if data_de and data_ate and data_de > data_ate:
+        raise HTTPException(422, "A data inicial não pode ser maior que a data final")
+    base = _filtrar(select(Chamado), complexidade, motivo, status, busca, data_de, data_ate)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
     if ordem == "antigos":
         base = base.order_by(Chamado.data.asc().nullsfirst(), Chamado.created_at.asc())
