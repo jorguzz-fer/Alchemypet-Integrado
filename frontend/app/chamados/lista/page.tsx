@@ -7,7 +7,7 @@ import type {
   Chamado,
   FiltrosChamado,
 } from '@/lib/types';
-import { formatNumero } from '@/lib/format';
+import { formatData, formatNumero } from '@/lib/format';
 import ChamadoFormModal from '@/components/ChamadoFormModal';
 import OrdenarSelect from '@/components/OrdenarSelect';
 
@@ -18,6 +18,8 @@ const FILTROS_INICIAIS: FiltrosChamado = {
   motivo: '',
   status: '',
   busca: '',
+  data_de: '',
+  data_ate: '',
   ordem: 'recentes',
   page: 1,
   per_page: PER_PAGE,
@@ -200,6 +202,26 @@ export default function ChamadosListaPage() {
         }}
       >
         <div className="fgroup">
+          <label htmlFor="ch-f-data-de">Data de</label>
+          <input
+            id="ch-f-data-de"
+            type="date"
+            value={filtros.data_de ?? ''}
+            max={filtros.data_ate || undefined}
+            onChange={(e) => aplicar({ data_de: e.target.value })}
+          />
+        </div>
+        <div className="fgroup">
+          <label htmlFor="ch-f-data-ate">Data até</label>
+          <input
+            id="ch-f-data-ate"
+            type="date"
+            value={filtros.data_ate ?? ''}
+            min={filtros.data_de || undefined}
+            onChange={(e) => aplicar({ data_ate: e.target.value })}
+          />
+        </div>
+        <div className="fgroup">
           <label htmlFor="ch-f-complex">Complexidade</label>
           <select
             id="ch-f-complex"
@@ -241,7 +263,7 @@ export default function ChamadosListaPage() {
             ))}
           </select>
         </div>
-        <div className="fgroup wide">
+        <div className="fgroup full">
           <label htmlFor="ch-f-busca">Busca</label>
           <input
             id="ch-f-busca"
@@ -303,6 +325,7 @@ export default function ChamadosListaPage() {
           <table>
             <thead>
               <tr>
+                <th>Data</th>
                 <th>Assunto</th>
                 <th>Complexidade</th>
                 <th>Motivo</th>
@@ -313,14 +336,14 @@ export default function ChamadosListaPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="empty-row" colSpan={5}>
+                  <td className="empty-row" colSpan={6}>
                     <div className="spinner" />
                     Carregando chamados…
                   </td>
                 </tr>
               ) : erro ? (
                 <tr>
-                  <td className="empty-row" colSpan={5}>
+                  <td className="empty-row" colSpan={6}>
                     <div style={{ color: 'var(--erro)', fontWeight: 700 }}>{erro}</div>
                     <button
                       className="btn primary sm"
@@ -333,13 +356,14 @@ export default function ChamadosListaPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td className="empty-row" colSpan={5}>
+                  <td className="empty-row" colSpan={6}>
                     Nenhum chamado para os filtros selecionados.
                   </td>
                 </tr>
               ) : (
                 items.map((c) => (
                   <tr key={c.id}>
+                    <td className="nowrap">{formatData(c.data)}</td>
                     <td className="wrap">{c.assunto || '—'}</td>
                     <td>
                       <span className={`cxtag ${c.complexidade || 'media'}`}>

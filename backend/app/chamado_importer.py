@@ -1,6 +1,6 @@
 """Importação da planilha 'APRESENTAÇÃO CHAMADOS VIA E-MAIL'.
 
-Uma aba simples com colunas: ASSUNTO | LINK GMAIL | COMPLEXIDADE | MOTIVOS
+Uma aba simples com colunas: [DATA] | ASSUNTO | LINK GMAIL | COMPLEXIDADE | MOTIVOS
 (+ colunas agregadas que ignoramos, pois recalculamos os agregados a partir
 da lista). Upsert idempotente pela chave natural (link do Gmail, ou hash do
 assunto+motivo quando não houver link).
@@ -15,9 +15,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .chamado_classifier import normalizar_complexidade, normalizar_motivo
+from .importer import _to_date
 from .models import Chamado
 
 _HDR = {
+    "data": {"data", "data do chamado", "data chamado", "dt", "recebido em"},
     "assunto": {"assunto", "cliente", "clinica"},
     "link": {"link gmail", "link", "e-mail", "email"},
     "complexidade": {"complexidade"},
@@ -84,6 +86,7 @@ def importar_chamados_xlsx(db: Session, conteudo: bytes) -> dict:
         link = _norm(get(row, "link"))
         complexidade = normalizar_complexidade(_norm(get(row, "complexidade")))
         motivo = normalizar_motivo(_norm(get(row, "motivo")))
+        data = _to_date(get(row, "data")) if "data" in cm else None
         chave = _chave(link, assunto, motivo, r)
 
         existente = staged.get(chave) or db.scalar(select(Chamado).where(Chamado.chave == chave))
@@ -95,8 +98,12 @@ def importar_chamados_xlsx(db: Session, conteudo: bytes) -> dict:
             # Preserva status/resposta (controle no painel); atualiza dados.
             for k, v in campos.items():
                 setattr(existente, k, v)
+            # Data: só sobrescreve quando a planilha traz uma (não apaga
+            # data preenchida manualmente ao reimportar planilha antiga sem coluna).
+            if data is not None:
+                existente.data = data
         else:
-            novo = Chamado(chave=chave, status="aberto", **campos)
+            novo = Chamado(chave=chave, status="aberto", data=data, **campos)
             db.add(novo)
             staged[chave] = novo
             importados += 1
