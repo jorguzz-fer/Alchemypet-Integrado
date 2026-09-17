@@ -476,6 +476,69 @@ header.top {
   border-color: var(--destaque);
   color: var(--destaque);
 }
+.btn.danger {
+  background: var(--erro);
+  color: #fff;
+  box-shadow: var(--sombra);
+}
+.btn.danger:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.btn.danger:disabled {
+  filter: none;
+  transform: none;
+}
+
+/* Manutenção: seleção de conjuntos e listas simples */
+.field label.check-inline,
+.check-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  color: var(--texto);
+  padding: 8px 0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.check-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--linha);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  cursor: pointer;
+  font-size: 0.86rem;
+}
+.check-item input {
+  margin-top: 3px;
+}
+.check-item span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.check-item em {
+  font-style: normal;
+  color: var(--texto-suave);
+  font-size: 0.78rem;
+}
+.lista-simples {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
 .btn.sm {
   padding: 6px 11px;
   font-size: 0.78rem;

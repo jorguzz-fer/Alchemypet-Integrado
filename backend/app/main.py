@@ -16,6 +16,7 @@ from .routers import (
     pop,
     tratativas,
     usuarios,
+    manutencao,
 )
 from .security import hash_senha, usuario_atual
 
@@ -42,6 +43,7 @@ app.include_router(importacao.router, dependencies=protegido)
 app.include_router(pop.router, dependencies=protegido)
 app.include_router(chamado.router, dependencies=protegido)
 app.include_router(usuarios.router)  # protege internamente (usuario_atual/exige_admin)
+app.include_router(manutencao.router)  # exige_admin no próprio router
 
 
 def _migracao_leve() -> None:

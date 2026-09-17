@@ -100,6 +100,18 @@ export function IconeChamados({ className, size = 18 }: IconeProps) {
   );
 }
 
+// Manutenção — vassoura/limpeza de dados
+export function IconeManutencao({ className, size = 18 }: IconeProps) {
+  return (
+    <svg className={className} {...base(size)}>
+      <path d="m19 3-9 9" />
+      <path d="M10 12 4.5 17.5A2.1 2.1 0 0 0 7.5 20.5L13 15" />
+      <path d="M8 14l3 3" />
+      <path d="M13 15l-3-3" />
+    </svg>
+  );
+}
+
 export function iconeModulo(key: string, className?: string) {
   if (key === 'triagem') return <IconeTriagem className={className} />;
   return <IconeConvenio className={className} />;
