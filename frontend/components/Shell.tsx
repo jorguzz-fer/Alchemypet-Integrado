@@ -12,6 +12,7 @@ import {
   IconePop,
   IconeTriagem,
   IconeUsuarios,
+  IconeManutencao,
 } from '@/components/icons';
 
 export default function Shell({ children }: { children: React.ReactNode }) {
@@ -137,6 +138,12 @@ export default function Shell({ children }: { children: React.ReactNode }) {
                 className={`side-link${linkAtivo('/usuarios') ? ' ativo' : ''}`}
               >
                 <IconeUsuarios className="side-ic" /> Usuários
+              </Link>
+              <Link
+                href="/manutencao"
+                className={`side-link${linkAtivo('/manutencao') ? ' ativo' : ''}`}
+              >
+                <IconeManutencao className="side-ic" /> Manutenção
               </Link>
             </div>
           ) : null}

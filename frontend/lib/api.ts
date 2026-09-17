@@ -7,6 +7,9 @@ import type {
   FiltrosPendencias,
   HealthResponse,
   ImportarResponse,
+  LimpezaBody,
+  LimpezaPrevia,
+  LimpezaResultado,
   LoginResponse,
   NovaPendencia,
   NovaTratativa,
@@ -370,5 +373,21 @@ export const api = {
 
   exportarChamados(formato: 'xlsx' | 'pdf'): Promise<void> {
     return baixarArquivo(`/chamados/export.${formato}`, `chamados-por-email.${formato}`);
+  },
+
+  // ===== Manutenção (admin) =====
+  limpezaPrevia(
+    data_ate: string,
+    incluir_sem_data: boolean,
+    signal?: AbortSignal,
+  ): Promise<LimpezaPrevia> {
+    return request<LimpezaPrevia>('/manutencao/previa', {
+      query: { data_ate, incluir_sem_data },
+      signal,
+    });
+  },
+
+  limpar(body: LimpezaBody): Promise<LimpezaResultado> {
+    return request<LimpezaResultado>('/manutencao/limpar', { method: 'POST', body });
   },
 };

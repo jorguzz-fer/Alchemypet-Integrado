@@ -295,3 +295,30 @@ export interface ChamadoImportResponse {
   importados: number;
   total: number;
 }
+
+// ===== Manutenção (admin): limpeza de registros antigos =====
+
+export type AlvoLimpeza = 'chamados' | 'convenio' | 'triagem';
+
+export interface LimpezaPrevia {
+  data_ate: string;
+  incluir_sem_data: boolean;
+  chamados: number;
+  convenio: number;
+  triagem: number;
+  tratativas: number;
+}
+
+export interface LimpezaBody {
+  data_ate: string;
+  incluir_sem_data: boolean;
+  alvos: AlvoLimpeza[];
+  confirmacao: string;
+}
+
+export interface LimpezaResultado {
+  chamados: number;
+  convenio: number;
+  triagem: number;
+  tratativas: number;
+}
