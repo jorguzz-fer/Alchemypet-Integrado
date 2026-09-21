@@ -8,13 +8,15 @@ import type {
   PendenciasResponse,
   StatusPlanilha,
 } from '@/lib/types';
-import { formatNumero, labelPeriodo } from '@/lib/format';
+import { formatData, formatNumero, labelPeriodo } from '@/lib/format';
+import { nomeModulo } from '@/lib/modulos';
 import StatusBadge from '@/components/StatusBadge';
 
 const PER_PAGE = 8;
 
 interface Props {
-  modulo: Modulo;
+  // Módulo fixo, ou o selecionado no filtro (''/undefined = todos).
+  modulo?: Modulo | '';
   // Filtros atuais do dashboard (ano/mês/gestão) — status é definido pelo tipo.
   filtrosBase: FiltrosPendencias;
   // Recorte do indicador clicado.
@@ -48,10 +50,13 @@ export default function DetalheIndicador({
       setErro(null);
       try {
         const query: FiltrosPendencias = {
-          modulo,
+          modulo: modulo || '',
           ano: filtrosBase.ano,
           mes_de: filtrosBase.mes_de,
           mes_ate: filtrosBase.mes_ate,
+          data_de: filtrosBase.data_de,
+          data_ate: filtrosBase.data_ate,
+          motivo: filtrosBase.motivo,
           gestao: filtrosBase.gestao,
           status: tipo.status,
           page,
@@ -107,11 +112,12 @@ export default function DetalheIndicador({
         <table>
           <thead>
             <tr>
-              <th>Período</th>
+              <th>Tipo</th>
+              <th>Data</th>
               <th>Guia</th>
               <th>Paciente</th>
               <th>Clínica</th>
-              <th>Informação necessária</th>
+              <th>Motivo</th>
               <th>Responsável</th>
               <th>Status</th>
             </tr>
@@ -119,7 +125,7 @@ export default function DetalheIndicador({
           <tbody>
             {loading ? (
               <tr>
-                <td className="empty-row" colSpan={7}>
+                <td className="empty-row" colSpan={8}>
                   <div className="spinner" />
                   Carregando…
                 </td>
@@ -128,7 +134,7 @@ export default function DetalheIndicador({
               <tr>
                 <td
                   className="empty-row"
-                  colSpan={7}
+                  colSpan={8}
                   style={{ color: 'var(--erro)' }}
                 >
                   {erro}
@@ -136,18 +142,26 @@ export default function DetalheIndicador({
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td className="empty-row" colSpan={7}>
+                <td className="empty-row" colSpan={8}>
                   Nenhum registro.
                 </td>
               </tr>
             ) : (
               items.map((p) => (
                 <tr key={p.id}>
-                  <td className="nowrap">{labelPeriodo(p.ano, p.mes)}</td>
+                  <td className="nowrap">
+                    <span className={`tipo-tag ${p.modulo}`}>{nomeModulo(p.modulo)}</span>
+                  </td>
+                  <td className="nowrap" title={labelPeriodo(p.ano, p.mes)}>
+                    {p.data_pedido ? formatData(p.data_pedido) : labelPeriodo(p.ano, p.mes)}
+                  </td>
                   <td className="nowrap">{p.guia || '—'}</td>
                   <td>{p.paciente || '—'}</td>
                   <td className="wrap">{p.clinica || '—'}</td>
-                  <td className="wrap">{p.informacao_necessaria || '—'}</td>
+                  <td className="wrap">
+                    {p.motivo || '—'}
+                    {p.observacao ? <div className="obs">{p.observacao}</div> : null}
+                  </td>
                   <td>{p.responsavel || '—'}</td>
                   <td>
                     <StatusBadge status={p.status} />

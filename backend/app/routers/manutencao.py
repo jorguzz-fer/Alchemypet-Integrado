@@ -1,7 +1,7 @@
 """Manutenção de dados (somente admin).
 
 Limpeza de registros antigos por data limite — chamados e pendências
-(convênio/triagem). POPs nunca são afetados por este módulo.
+(convênio/particular). POPs nunca são afetados por este módulo.
 
 Critério de "antigo" (registro entra na limpeza quando):
 - Chamado: `data <= data_ate`; sem data → só quando `incluir_sem_data`.
@@ -25,7 +25,8 @@ from ..security import exige_admin
 
 router = APIRouter(prefix="/manutencao", tags=["manutencao"], dependencies=[Depends(exige_admin)])
 
-ALVOS = ("chamados", "convenio", "triagem")
+ALVOS = ("chamados", "convenio", "particular")
+_ALIAS = {"triagem": "particular"}
 PALAVRA_CONFIRMACAO = "APAGAR"
 
 
@@ -34,7 +35,7 @@ class LimpezaPrevia(BaseModel):
     incluir_sem_data: bool
     chamados: int
     convenio: int
-    triagem: int
+    particular: int
     tratativas: int
 
 
@@ -48,7 +49,7 @@ class LimpezaBody(BaseModel):
 class LimpezaResultado(BaseModel):
     chamados: int
     convenio: int
-    triagem: int
+    particular: int
     tratativas: int
 
 
@@ -93,13 +94,13 @@ def _contar_tratativas(db: Session, cond) -> int:
 @router.get("/previa", response_model=LimpezaPrevia)
 def previa(data_ate: date, incluir_sem_data: bool = False, db: Session = Depends(get_db)):
     c_conv = _cond_pendencia("convenio", data_ate, incluir_sem_data)
-    c_tri = _cond_pendencia("triagem", data_ate, incluir_sem_data)
+    c_tri = _cond_pendencia("particular", data_ate, incluir_sem_data)
     return LimpezaPrevia(
         data_ate=data_ate,
         incluir_sem_data=incluir_sem_data,
         chamados=_contar(db, Chamado, _cond_chamado(data_ate, incluir_sem_data)),
         convenio=_contar(db, Pendencia, c_conv),
-        triagem=_contar(db, Pendencia, c_tri),
+        particular=_contar(db, Pendencia, c_tri),
         tratativas=_contar_tratativas(db, or_(c_conv, c_tri)),
     )
 
@@ -108,12 +109,12 @@ def previa(data_ate: date, incluir_sem_data: bool = False, db: Session = Depends
 def limpar(body: LimpezaBody, db: Session = Depends(get_db)):
     if body.confirmacao.strip().upper() != PALAVRA_CONFIRMACAO:
         raise HTTPException(400, f'Digite "{PALAVRA_CONFIRMACAO}" para confirmar a limpeza')
-    alvos = {a for a in body.alvos if a in ALVOS}
+    alvos = {_ALIAS.get(a, a) for a in body.alvos if _ALIAS.get(a, a) in ALVOS}
     if not alvos:
         raise HTTPException(400, "Selecione ao menos um conjunto de registros")
 
-    res = {"chamados": 0, "convenio": 0, "triagem": 0, "tratativas": 0}
-    for modulo in ("convenio", "triagem"):
+    res = {"chamados": 0, "convenio": 0, "particular": 0, "tratativas": 0}
+    for modulo in ("convenio", "particular"):
         if modulo not in alvos:
             continue
         cond = _cond_pendencia(modulo, body.data_ate, body.incluir_sem_data)

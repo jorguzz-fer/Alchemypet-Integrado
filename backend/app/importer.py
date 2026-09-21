@@ -13,6 +13,7 @@ import openpyxl
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from .motivos import classificar_motivo, gestao_por_status
 from .models import Clinica, Pendencia
 
 MES_MAP = {
@@ -248,10 +249,12 @@ def importar_xlsx(db: Session, conteudo: bytes, modulo: str = "convenio") -> dic
             # Trunca aos limites das colunas varchar (o Postgres é rígido).
             # Necessário porque abas com colunas desalinhadas na origem podem
             # jogar um comentário longo num campo curto (ex.: confirmação).
+            motivo, observacao = classificar_motivo(info)
             campos = dict(
                 guia=_fit(guia, 40), paciente=_fit(paciente, 160),
                 cod_clinica=_fit(cod_clinica, 40), clinica=_fit(clinica, 200),
-                informacao_necessaria=info, resposta_cliente=resposta,
+                informacao_necessaria=info, motivo=motivo, observacao=observacao,
+                resposta_cliente=resposta,
                 responsavel=_fit(_norm(get(row, "responsavel")), 120),
                 # colaborador/confirmacao/triagem são TEXT: sem truncagem.
                 colaborador=_norm(get(row, "colaborador")),
@@ -267,9 +270,8 @@ def importar_xlsx(db: Session, conteudo: bytes, modulo: str = "convenio") -> dic
                 for k, v in campos.items():
                     setattr(existente, k, v)
             else:
-                # Gestão inicial deriva do status (concluído -> resolvido).
-                gestao = "resolvido" if status == "concluido" else "aberto"
-                nova = Pendencia(chave=chave, modulo=modulo, gestao=gestao, **campos)
+                # Gestão inicial deriva do status da planilha.
+                nova = Pendencia(chave=chave, modulo=modulo, gestao=gestao_por_status(status), **campos)
                 db.add(nova)
                 staged[chave] = nova
                 importados += 1

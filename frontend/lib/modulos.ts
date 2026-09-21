@@ -9,9 +9,9 @@ export interface InfoModulo {
 // Ordem no menu lateral.
 export const MODULOS: InfoModulo[] = [
   {
-    key: 'triagem',
-    nome: 'Triagem',
-    descricao: 'pendências cadastrais (Triagem/SAC)',
+    key: 'particular',
+    nome: 'Particular',
+    descricao: 'pendências particulares',
   },
   {
     key: 'convenio',
@@ -21,9 +21,20 @@ export const MODULOS: InfoModulo[] = [
 ];
 
 export function moduloValido(m: string | undefined): m is Modulo {
-  return m === 'convenio' || m === 'triagem';
+  return m === 'convenio' || m === 'particular';
+}
+
+// Nome antigo do módulo particular (links salvos/favoritos).
+export function moduloLegado(m: string | undefined): Modulo | null {
+  return m === 'triagem' ? 'particular' : null;
 }
 
 export function infoModulo(m: Modulo): InfoModulo {
   return MODULOS.find((x) => x.key === m) ?? MODULOS[0];
+}
+
+export function nomeModulo(m: string | undefined): string {
+  if (m === 'particular') return 'Particular';
+  if (m === 'convenio') return 'Convênio';
+  return '—';
 }

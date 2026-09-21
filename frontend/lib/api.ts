@@ -243,7 +243,7 @@ export const api = {
     });
   },
 
-  clinicas(modulo: string, signal?: AbortSignal): Promise<ClinicasResponse> {
+  clinicas(modulo?: string, signal?: AbortSignal): Promise<ClinicasResponse> {
     return request<ClinicasResponse>('/clinicas', {
       query: { modulo },
       signal,

@@ -6,6 +6,17 @@ from pydantic import BaseModel, ConfigDict, Field
 
 Status = Literal["pendente", "tratativa", "concluido"]
 Gestao = Literal["aberto", "andamento", "resolvido"]
+Modulo = Literal["convenio", "particular"]
+MotivoPendencia = Literal[
+    "Confirmar exame",
+    "Requisição sem sinalização de exame",
+    "Exames não lançados no convênio",
+    "Confirmar dados do paciente",
+    "Confirmar clínica",
+    "Amostra sem requisição",
+    "Clínica desativada",
+    "Observação",
+]
 
 
 class PendenciaOut(BaseModel):
@@ -17,11 +28,11 @@ class PendenciaOut(BaseModel):
     paciente: str
     cod_clinica: str
     clinica: str
-    informacao_necessaria: str
+    motivo: str
+    observacao: str
     resposta_cliente: str
     responsavel: str
     colaborador: str
-    confirmacao: str
     triagem: str
     status: Status
     gestao: Gestao
@@ -35,16 +46,16 @@ class PendenciaOut(BaseModel):
 
 
 class PendenciaCreate(BaseModel):
-    modulo: Literal["convenio", "triagem"] = "convenio"
+    modulo: Modulo = "convenio"
     guia: str = Field("", max_length=40)
     paciente: str = Field("", max_length=160)
     cod_clinica: str = Field("", max_length=40)
     clinica: str = Field("", max_length=200)
-    informacao_necessaria: str
+    motivo: MotivoPendencia
+    observacao: str = ""
     resposta_cliente: str = ""
     responsavel: str = Field("", max_length=120)
     colaborador: str = ""
-    confirmacao: str = ""
     triagem: str = ""
     data_pedido: date | None = None
     data_devolutiva: date | None = None
@@ -58,11 +69,12 @@ class PendenciaUpdate(BaseModel):
     paciente: str | None = Field(None, max_length=160)
     cod_clinica: str | None = Field(None, max_length=40)
     clinica: str | None = Field(None, max_length=200)
-    informacao_necessaria: str | None = None
+    modulo: Modulo | None = None
+    motivo: MotivoPendencia | None = None
+    observacao: str | None = None
     resposta_cliente: str | None = None
     responsavel: str | None = Field(None, max_length=120)
     colaborador: str | None = None
-    confirmacao: str | None = None
     triagem: str | None = None
     data_pedido: date | None = None
     data_devolutiva: date | None = None
@@ -155,6 +167,8 @@ class DashboardOut(BaseModel):
     por_mes: list[SerieMes]
     top_clinicas: list[TopItem]
     top_motivos: list[TopItem]
+    # Particular × Convênio dentro do filtro atual.
+    por_modulo: list[TopItem] = []
 
 
 class ClinicasOut(BaseModel):

@@ -113,6 +113,6 @@ export function IconeManutencao({ className, size = 18 }: IconeProps) {
 }
 
 export function iconeModulo(key: string, className?: string) {
-  if (key === 'triagem') return <IconeTriagem className={className} />;
+  if (key === 'particular') return <IconeTriagem className={className} />;
   return <IconeConvenio className={className} />;
 }

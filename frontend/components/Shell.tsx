@@ -49,32 +49,41 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav className="side-nav">
-          {/* Dashboard — visão geral e pendências (dados de triagem). */}
+          {/* Dashboard — visão geral e lista de TODAS as pendências. */}
           <div className="side-group">
             <Link
-              href="/triagem"
-              className={`side-group-title link${linkAtivo('/triagem', true) ? ' ativo' : ''}`}
+              href="/dashboard"
+              className={`side-group-title link${linkAtivo('/dashboard', true) ? ' ativo' : ''}`}
             >
               <IconeDashboard className="side-ic" />
               Dashboard
             </Link>
             <Link
-              href="/triagem/pendencias"
-              className={`side-link${linkAtivo('/triagem/pendencias') ? ' ativo' : ''}`}
+              href="/pendencias"
+              className={`side-link${linkAtivo('/pendencias') ? ' ativo' : ''}`}
             >
               Pendências
             </Link>
           </div>
 
-          {/* Triagem — fila operacional de triagens a resolver. */}
+          {/* Particular — pendências particulares e fila de triagem. */}
           <div className="side-group">
-            <div className="side-group-title">
-              <IconeTriagem className="side-ic" />
-              Triagem
-            </div>
             <Link
-              href="/triagem/fila"
-              className={`side-link${linkAtivo('/triagem/fila') ? ' ativo' : ''}`}
+              href="/particular"
+              className={`side-group-title link${linkAtivo('/particular', true) ? ' ativo' : ''}`}
+            >
+              <IconeTriagem className="side-ic" />
+              Particular
+            </Link>
+            <Link
+              href="/particular/pendencias"
+              className={`side-link${linkAtivo('/particular/pendencias') ? ' ativo' : ''}`}
+            >
+              Particular
+            </Link>
+            <Link
+              href="/particular/fila"
+              className={`side-link${linkAtivo('/particular/fila') ? ' ativo' : ''}`}
             >
               <IconeFila className="side-ic-sm" /> Fazer triagem
             </Link>
@@ -93,7 +102,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               href="/convenio/pendencias"
               className={`side-link${linkAtivo('/convenio/pendencias') ? ' ativo' : ''}`}
             >
-              Pendências
+              Convênio
             </Link>
           </div>
 

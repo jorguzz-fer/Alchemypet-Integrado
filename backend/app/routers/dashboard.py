@@ -73,7 +73,9 @@ def dashboard(f: Filtros = Depends(_filtros), db: Session = Depends(get_db)):
     serie = [SerieMes(ano=a, mes=m, **por_mes[(a, m)]) for (a, m) in chaves]
 
     top_clinicas = _top((r.clinica for r in rows), 8)
-    top_motivos = _top((r.informacao_necessaria for r in rows), 8, corta=80)
+    top_motivos = _top((r.motivo for r in rows), 8, corta=80)
+    _rotulo_mod = {"particular": "Particular", "convenio": "Convênio"}
+    por_modulo = _top((_rotulo_mod.get(r.modulo, r.modulo) for r in rows), 4)
 
     return DashboardOut(
         total=total,
@@ -87,4 +89,5 @@ def dashboard(f: Filtros = Depends(_filtros), db: Session = Depends(get_db)):
         por_mes=serie,
         top_clinicas=top_clinicas,
         top_motivos=top_motivos,
+        por_modulo=por_modulo,
     )

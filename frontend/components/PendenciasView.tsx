@@ -1,7 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { notFound, redirect, useParams } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 import type {
   FiltrosPendencias,
@@ -11,35 +10,29 @@ import type {
   PendenciasResponse,
 } from '@/lib/types';
 import { formatData, formatNumero, labelPeriodo } from '@/lib/format';
-import { moduloLegado, moduloValido } from '@/lib/modulos';
+import { infoModulo, nomeModulo } from '@/lib/modulos';
 import Filtros from '@/components/Filtros';
 import StatusBadge from '@/components/StatusBadge';
 import TratativasModal from '@/components/TratativasModal';
 import PendenciaFormModal from '@/components/PendenciaFormModal';
 import OrdenarSelect from '@/components/OrdenarSelect';
+import type { Ordem } from '@/lib/types';
 
 const PER_PAGE = 25;
 
-type OrdemFila = 'prioridade' | 'recentes';
-const OPCOES_FILA = [
-  { value: 'prioridade', label: 'Mais antigas primeiro' },
-  { value: 'recentes', label: 'Mais recentes primeiro' },
-];
-
-// Fila = só o que ainda não foi concluído, mais antigas primeiro.
 const FILTROS_INICIAIS: FiltrosPendencias = {
+  modulo: '',
   ano: '',
   mes_de: '',
   mes_ate: '',
   data_de: '',
   data_ate: '',
+  status: '',
   gestao: '',
   motivo: '',
   clinica: '',
   responsavel: '',
   busca: '',
-  abertas: true,
-  ordem: 'prioridade',
   page: 1,
   per_page: PER_PAGE,
 };
@@ -50,39 +43,49 @@ const GESTAO_CLASSE: Record<Gestao, string> = {
   resolvido: 'g-resolvido',
 };
 
-export default function FilaTriagemPage() {
-  const params = useParams();
-  const rawModulo = params.modulo as string;
-  const legado = moduloLegado(rawModulo);
-  if (legado) redirect(`/${legado}/fila`);
-  if (!moduloValido(rawModulo)) notFound();
-  const modulo: Modulo = rawModulo;
+function csvEscape(v: unknown): string {
+  const s = v === null || v === undefined ? '' : String(v);
+  if (/[";\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+// Lista de pendências. Sem `modulo`, mostra todas (particular + convênio)
+// com seletor de tipo nos filtros; a importação exige um módulo fixo.
+export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
+  const descricao = modulo ? infoModulo(modulo).descricao : 'pendências (particular e convênio)';
 
   const [filtros, setFiltros] = useState<FiltrosPendencias>(FILTROS_INICIAIS);
   const [resp, setResp] = useState<PendenciasResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  const [ordem, setOrdem] = useState<OrdemFila>('prioridade');
+  const [ordem, setOrdem] = useState<Ordem>('recentes');
   const [clinicas, setClinicas] = useState<string[]>([]);
-  const [ocupado, setOcupado] = useState<Record<string, boolean>>({});
+  const [salvandoGestao, setSalvandoGestao] = useState<Record<string, boolean>>(
+    {},
+  );
   const [modal, setModal] = useState<Pendencia | null>(null);
   const [form, setForm] = useState<'nova' | Pendencia | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
+  const [excluindo, setExcluindo] = useState<Record<string, boolean>>({});
 
+  const [importando, setImportando] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // Trocar de módulo limpa filtros e avisos.
   useEffect(() => {
     setFiltros(FILTROS_INICIAIS);
-    setOrdem('prioridade');
     setAviso(null);
   }, [modulo]);
 
+  // Lista de clínicas do módulo.
   useEffect(() => {
     const ctrl = new AbortController();
     api
       .clinicas(modulo, ctrl.signal)
       .then((c) => setClinicas(c.items ?? []))
       .catch(() => {
-        /* filtro de clínica indisponível */
+        /* clinicas indisponivel: filtro fica vazio */
       });
     return () => ctrl.abort();
   }, [modulo]);
@@ -93,13 +96,7 @@ export default function FilaTriagemPage() {
       setErro(null);
       try {
         const r = await api.listPendencias(
-          {
-            ...f,
-            modulo,
-            abertas: true,
-            ordem,
-            per_page: f.per_page ?? PER_PAGE,
-          },
+          { ...f, modulo: modulo ?? f.modulo, ordem, per_page: f.per_page ?? PER_PAGE },
           signal,
         );
         setResp(r);
@@ -134,23 +131,43 @@ export default function FilaTriagemPage() {
 
   async function alterarGestao(p: Pendencia, novo: Gestao) {
     if (novo === p.gestao) return;
-    setOcupado((s) => ({ ...s, [p.id]: true }));
+    setSalvandoGestao((s) => ({ ...s, [p.id]: true }));
+    setResp((r) =>
+      r
+        ? {
+            ...r,
+            items: r.items.map((it) =>
+              it.id === p.id ? { ...it, gestao: novo } : it,
+            ),
+          }
+        : r,
+    );
     try {
-      await api.patchPendencia(p.id, { gestao: novo });
+      const atualizada = await api.patchPendencia(p.id, { gestao: novo });
+      setResp((r) =>
+        r
+          ? {
+              ...r,
+              items: r.items.map((it) => (it.id === p.id ? atualizada : it)),
+            }
+          : r,
+      );
+    } catch (e) {
       setResp((r) =>
         r
           ? {
               ...r,
               items: r.items.map((it) =>
-                it.id === p.id ? { ...it, gestao: novo } : it,
+                it.id === p.id ? { ...it, gestao: p.gestao } : it,
               ),
             }
           : r,
       );
-    } catch (e) {
-      setAviso(e instanceof ApiError ? e.message : 'Falha ao atualizar a gestão.');
+      setAviso(
+        e instanceof ApiError ? e.message : 'Falha ao atualizar a gestão.',
+      );
     } finally {
-      setOcupado((s) => {
+      setSalvandoGestao((s) => {
         const n = { ...s };
         delete n[p.id];
         return n;
@@ -158,38 +175,46 @@ export default function FilaTriagemPage() {
     }
   }
 
-  // Ação rápida da fila: conclui a triagem e a remove da lista de abertas.
-  async function concluir(p: Pendencia) {
-    setOcupado((s) => ({ ...s, [p.id]: true }));
+  async function importar(file: File) {
+    if (!modulo) return;
+    setImportando(true);
+    setAviso(null);
     try {
-      await api.patchPendencia(p.id, { status: 'concluido', gestao: 'resolvido' });
-      setAviso(`Triagem concluída (guia ${p.guia || '—'}).`);
-      await carregar(filtros);
+      const r = await api.importar(file, modulo);
+      setAviso(
+        `Importação concluída: ${formatNumero(r.importados)} registro(s), ` +
+          `${formatNumero(r.abas)} aba(s), total ${formatNumero(r.total)}.`,
+      );
+      setFiltros((f) => ({ ...f, page: 1 }));
+      await carregar({ ...filtros, page: 1 });
     } catch (e) {
-      setAviso(e instanceof ApiError ? e.message : 'Falha ao concluir a triagem.');
+      setAviso(
+        e instanceof ApiError
+          ? e.message
+          : 'Não foi possível importar a planilha.',
+      );
     } finally {
-      setOcupado((s) => {
-        const n = { ...s };
-        delete n[p.id];
-        return n;
-      });
+      setImportando(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   }
 
   async function excluir(p: Pendencia) {
     const ok = window.confirm(
-      `Excluir a triagem da guia ${p.guia || '—'} (${p.paciente || 'sem paciente'})?\n\nEsta ação não pode ser desfeita.`,
+      `Excluir a pendência da guia ${p.guia || '—'} (${p.paciente || 'sem paciente'})?\n\nEsta ação não pode ser desfeita.`,
     );
     if (!ok) return;
-    setOcupado((s) => ({ ...s, [p.id]: true }));
+    setExcluindo((s) => ({ ...s, [p.id]: true }));
     try {
       await api.deletePendencia(p.id);
-      setAviso('Triagem excluída.');
+      setAviso('Pendência excluída.');
       await carregar(filtros);
     } catch (e) {
-      setAviso(e instanceof ApiError ? e.message : 'Falha ao excluir a triagem.');
+      setAviso(
+        e instanceof ApiError ? e.message : 'Falha ao excluir a pendência.',
+      );
     } finally {
-      setOcupado((s) => {
+      setExcluindo((s) => {
         const n = { ...s };
         delete n[p.id];
         return n;
@@ -202,26 +227,81 @@ export default function FilaTriagemPage() {
     setForm(null);
     setAviso(
       criacao
-        ? `Triagem criada (guia ${p.guia || '—'}).`
-        : `Triagem atualizada (guia ${p.guia || '—'}).`,
+        ? `Pendência criada (guia ${p.guia || '—'}).`
+        : `Pendência atualizada (guia ${p.guia || '—'}).`,
     );
     if (criacao) setFiltros((f) => ({ ...f, page: 1 }));
     await carregar(criacao ? { ...filtros, page: 1 } : filtros);
+  }
+
+  function exportarCSV() {
+    if (items.length === 0) return;
+    const cols: { key: keyof Pendencia; label: string }[] = [
+      { key: 'modulo', label: 'Tipo' },
+      { key: 'data_pedido', label: 'Data do pedido' },
+      { key: 'ano', label: 'Ano' },
+      { key: 'mes', label: 'Mes' },
+      { key: 'guia', label: 'Guia' },
+      { key: 'paciente', label: 'Paciente' },
+      { key: 'clinica', label: 'Clinica' },
+      { key: 'motivo', label: 'Motivo' },
+      { key: 'observacao', label: 'Observacao' },
+      { key: 'responsavel', label: 'Responsavel' },
+      { key: 'status', label: 'Status planilha' },
+      { key: 'gestao', label: 'Gestao' },
+    ];
+    const linhas = [
+      cols.map((c) => csvEscape(c.label)).join(';'),
+      ...items.map((it) => cols.map((c) => csvEscape(it[c.key])).join(';')),
+    ];
+    const blob = new Blob(['﻿' + linhas.join('\n')], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${modulo ?? 'todas'}-pendencias-pagina-${page}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Fazer triagem</h1>
-          <div className="lead">
-            Fila de triagens em aberto — as mais antigas aparecem primeiro.
-          </div>
+          <h1>Pendências</h1>
+          <div className="lead">Gestão operacional das {descricao}.</div>
         </div>
         <div className="actions">
-          <button className="btn primary" onClick={() => setForm('nova')}>
-            + Nova triagem
+          <button
+            className="btn ghost"
+            onClick={exportarCSV}
+            disabled={items.length === 0}
+          >
+            Exportar CSV
           </button>
+          {modulo ? (
+            <button
+              className="btn ghost"
+              onClick={() => fileRef.current?.click()}
+              disabled={importando}
+            >
+              {importando ? 'Importando…' : 'Importar planilha'}
+            </button>
+          ) : null}
+          <button className="btn primary" onClick={() => setForm('nova')}>
+            + Nova pendência
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) importar(f);
+            }}
+          />
         </div>
       </div>
 
@@ -229,13 +309,14 @@ export default function FilaTriagemPage() {
         value={filtros}
         onApply={setFiltros}
         clinicas={clinicas}
+        showTipo={!modulo}
         showClinica
         showResponsavel
         showBusca
         resumo={
           resp ? (
             <>
-              <b>{formatNumero(total)}</b> triagem(ns) em aberto
+              <b>{formatNumero(total)}</b> pendência(s) encontrada(s)
             </>
           ) : null
         }
@@ -253,15 +334,14 @@ export default function FilaTriagemPage() {
       <div className="tablewrap">
         <div className="tabletools">
           <div className="t-left">
-            Na fila
+            Registros
             <span className="count">{formatNumero(total)}</span>
           </div>
           <div className="t-right">
             <OrdenarSelect
               value={ordem}
-              opcoes={OPCOES_FILA}
               onChange={(v) => {
-                setOrdem(v as OrdemFila);
+                setOrdem(v as Ordem);
                 setFiltros((f) => ({ ...f, page: 1 }));
               }}
             />
@@ -275,28 +355,30 @@ export default function FilaTriagemPage() {
           <table>
             <thead>
               <tr>
+                {!modulo ? <th>Tipo</th> : null}
                 <th>Data</th>
                 <th>Guia</th>
                 <th>Paciente</th>
                 <th>Clínica</th>
                 <th>Motivo</th>
                 <th>Responsável</th>
-                <th>Status</th>
+                <th>Status planilha</th>
                 <th>Gestão</th>
+                <th>Tratativas</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="empty-row" colSpan={9}>
+                  <td className="empty-row" colSpan={11}>
                     <div className="spinner" />
-                    Carregando fila…
+                    Carregando pendências…
                   </td>
                 </tr>
               ) : erro ? (
                 <tr>
-                  <td className="empty-row" colSpan={9}>
+                  <td className="empty-row" colSpan={11}>
                     <div style={{ color: 'var(--erro)', fontWeight: 700 }}>
                       {erro}
                     </div>
@@ -311,13 +393,18 @@ export default function FilaTriagemPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td className="empty-row" colSpan={9}>
-                    Nenhuma triagem em aberto. 🎉
+                  <td className="empty-row" colSpan={11}>
+                    Nenhuma pendência para os filtros selecionados.
                   </td>
                 </tr>
               ) : (
                 items.map((p) => (
                   <tr key={p.id}>
+                    {!modulo ? (
+                      <td className="nowrap">
+                        <span className={`tipo-tag ${p.modulo}`}>{nomeModulo(p.modulo)}</span>
+                      </td>
+                    ) : null}
                     <td className="nowrap" title={labelPeriodo(p.ano, p.mes)}>
                       {p.data_pedido ? formatData(p.data_pedido) : labelPeriodo(p.ano, p.mes)}
                     </td>
@@ -349,7 +436,7 @@ export default function FilaTriagemPage() {
                       <select
                         className={`gsel ${GESTAO_CLASSE[p.gestao]}`}
                         value={p.gestao}
-                        disabled={!!ocupado[p.id]}
+                        disabled={!!salvandoGestao[p.id]}
                         onChange={(e) =>
                           alterarGestao(p, e.target.value as Gestao)
                         }
@@ -359,28 +446,22 @@ export default function FilaTriagemPage() {
                         <option value="resolvido">Resolvido</option>
                       </select>
                     </td>
+                    <td>
+                      <button className="notebtn" onClick={() => setModal(p)}>
+                        Tratativas
+                      </button>
+                    </td>
                     <td className="nowrap">
                       <div className="row-acoes">
-                        <button
-                          className="notebtn ok"
-                          onClick={() => concluir(p)}
-                          disabled={!!ocupado[p.id]}
-                          title="Concluir triagem"
-                        >
-                          {ocupado[p.id] ? '…' : 'Concluir'}
-                        </button>
                         <button className="notebtn" onClick={() => setForm(p)}>
                           Editar
-                        </button>
-                        <button className="notebtn" onClick={() => setModal(p)}>
-                          Tratativas
                         </button>
                         <button
                           className="notebtn danger"
                           onClick={() => excluir(p)}
-                          disabled={!!ocupado[p.id]}
+                          disabled={!!excluindo[p.id]}
                         >
-                          Excluir
+                          {excluindo[p.id] ? '…' : 'Excluir'}
                         </button>
                       </div>
                     </td>
@@ -407,7 +488,10 @@ export default function FilaTriagemPage() {
             <span className="cur">
               {page} / {totalPaginas}
             </span>
-            <button onClick={() => irPara(page + 1)} disabled={page >= totalPaginas}>
+            <button
+              onClick={() => irPara(page + 1)}
+              disabled={page >= totalPaginas}
+            >
               Próxima
             </button>
             <button

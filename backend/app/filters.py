@@ -12,7 +12,8 @@ SLA_DIAS = 7
 
 @dataclass
 class Filtros:
-    modulo: str = "convenio"
+    # None = todos os módulos (particular + convênio).
+    modulo: str | None = None
     ano: int | None = None
     mes_de: int | None = None
     mes_ate: int | None = None
@@ -23,10 +24,20 @@ class Filtros:
     busca: str | None = None
     antigas: bool = False
     abertas: bool = False
+    data_de: date | None = None
+    data_ate: date | None = None
+    motivo: str | None = None
 
 
 def aplicar(stmt: Select, f: Filtros) -> Select:
-    stmt = stmt.where(Pendencia.modulo == f.modulo)
+    if f.modulo:
+        stmt = stmt.where(Pendencia.modulo == f.modulo)
+    if f.data_de:
+        stmt = stmt.where(Pendencia.data_pedido >= f.data_de)
+    if f.data_ate:
+        stmt = stmt.where(Pendencia.data_pedido <= f.data_ate)
+    if f.motivo:
+        stmt = stmt.where(Pendencia.motivo == f.motivo)
     if f.ano:
         stmt = stmt.where(Pendencia.ano == f.ano)
     if f.mes_de:
@@ -58,6 +69,8 @@ def aplicar(stmt: Select, f: Filtros) -> Select:
             safunc.lower(Pendencia.paciente).like(termo)
             | safunc.lower(Pendencia.guia).like(termo)
             | safunc.lower(Pendencia.clinica).like(termo)
+            | safunc.lower(Pendencia.motivo).like(termo)
+            | safunc.lower(Pendencia.observacao).like(termo)
             | safunc.lower(Pendencia.informacao_necessaria).like(termo)
             | safunc.lower(Pendencia.responsavel).like(termo)
         )
