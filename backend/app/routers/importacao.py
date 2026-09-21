@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..importer import importar_xlsx
+from ..motivos import MODULOS, normalizar_modulo
 from ..schemas import ImportResult
 
 router = APIRouter(tags=["importacao"])
@@ -15,7 +16,8 @@ async def importar(
     modulo: str = Form("convenio"),
     db: Session = Depends(get_db),
 ):
-    if modulo not in ("convenio", "triagem"):
+    modulo = normalizar_modulo(modulo) or ""
+    if modulo not in MODULOS:
         raise HTTPException(422, "Módulo inválido")
     if not file.filename or not file.filename.lower().endswith((".xlsx", ".xlsm")):
         raise HTTPException(400, "Envie um arquivo .xlsx")

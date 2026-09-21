@@ -2,11 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
-import type { Gestao, Modulo, Pendencia, PendenciaInput } from '@/lib/types';
+import type {
+  Gestao,
+  Modulo,
+  MotivoPendencia,
+  Pendencia,
+  PendenciaInput,
+} from '@/lib/types';
+import { MOTIVOS_PENDENCIA, MOTIVO_OBSERVACAO } from '@/lib/types';
 
 interface Props {
-  // Módulo da pendência (usado na criação).
-  modulo: Modulo;
+  // Módulo fixo da tela. Ausente (tela "todas"): o formulário pede o tipo.
+  modulo?: Modulo;
   // Quando presente, é edição; ausente, é criação.
   pendencia?: Pendencia | null;
   onClose: () => void;
@@ -14,32 +21,47 @@ interface Props {
 }
 
 type FormState = {
+  modulo: Modulo;
   data_pedido: string;
   guia: string;
   paciente: string;
   cod_clinica: string;
   clinica: string;
-  informacao_necessaria: string;
+  motivo: MotivoPendencia | '';
+  observacao: string;
   responsavel: string;
   resposta_cliente: string;
   data_devolutiva: string;
-  confirmacao: string;
   triagem: string;
   gestao: Gestao;
 };
 
-function estadoInicial(p?: Pendencia | null): FormState {
+function motivoValido(m: string | undefined): MotivoPendencia | '' {
+  return (MOTIVOS_PENDENCIA as readonly string[]).includes(m ?? '')
+    ? (m as MotivoPendencia)
+    : '';
+}
+
+function hoje(): string {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+function estadoInicial(p: Pendencia | null | undefined, modulo?: Modulo): FormState {
   return {
-    data_pedido: p?.data_pedido ?? '',
+    modulo: p?.modulo ?? modulo ?? 'particular',
+    data_pedido: p ? (p.data_pedido ?? '') : hoje(),
     guia: p?.guia ?? '',
     paciente: p?.paciente ?? '',
     cod_clinica: p?.cod_clinica ?? '',
     clinica: p?.clinica ?? '',
-    informacao_necessaria: p?.informacao_necessaria ?? '',
+    motivo: motivoValido(p?.motivo),
+    observacao: p?.observacao ?? '',
     responsavel: p?.responsavel ?? '',
     resposta_cliente: p?.resposta_cliente ?? '',
     data_devolutiva: p?.data_devolutiva ?? '',
-    confirmacao: p?.confirmacao ?? '',
     triagem: p?.triagem ?? '',
     gestao: p?.gestao ?? 'aberto',
   };
@@ -52,7 +74,7 @@ export default function PendenciaFormModal({
   onSaved,
 }: Props) {
   const editando = !!pendencia;
-  const [form, setForm] = useState<FormState>(estadoInicial(pendencia));
+  const [form, setForm] = useState<FormState>(estadoInicial(pendencia, modulo));
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -70,8 +92,12 @@ export default function PendenciaFormModal({
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.informacao_necessaria.trim()) {
-      setErro('Informe a “Informação necessária”.');
+    if (!form.motivo) {
+      setErro('Selecione o motivo da pendência.');
+      return;
+    }
+    if (form.motivo === MOTIVO_OBSERVACAO && !form.observacao.trim()) {
+      setErro('Descreva o ocorrido no campo “Observação”.');
       return;
     }
     setSalvando(true);
@@ -82,10 +108,10 @@ export default function PendenciaFormModal({
       paciente: form.paciente.trim(),
       cod_clinica: form.cod_clinica.trim(),
       clinica: form.clinica.trim(),
-      informacao_necessaria: form.informacao_necessaria.trim(),
+      motivo: form.motivo,
+      observacao: form.observacao.trim(),
       responsavel: form.responsavel.trim(),
       resposta_cliente: form.resposta_cliente.trim(),
-      confirmacao: form.confirmacao.trim(),
       triagem: form.triagem.trim(),
       data_pedido: form.data_pedido || null,
       data_devolutiva: form.data_devolutiva || null,
@@ -97,8 +123,8 @@ export default function PendenciaFormModal({
         ? await api.patchPendencia(pendencia!.id, body)
         : await api.createPendencia({
             ...body,
-            modulo,
-            informacao_necessaria: form.informacao_necessaria.trim(),
+            modulo: form.modulo,
+            motivo: form.motivo,
           });
       onSaved(salva);
     } catch (err) {
@@ -122,12 +148,26 @@ export default function PendenciaFormModal({
         <h3>{editando ? 'Editar pendência' : 'Nova pendência'}</h3>
         <div className="m-sub">
           {editando
-            ? 'Altere os campos e salve. O status da planilha é recalculado pela confirmação/devolutiva.'
-            : 'Lance uma pendência de convênio diretamente no painel.'}
+            ? 'Altere os campos e salve. O status da planilha acompanha a gestão.'
+            : 'Lance uma pendência diretamente no painel.'}
         </div>
 
         <form onSubmit={salvar}>
           <div className="form-grid">
+            {!modulo && !editando ? (
+              <div className="field col-2">
+                <label htmlFor="pf-tipo">Tipo *</label>
+                <select
+                  id="pf-tipo"
+                  value={form.modulo}
+                  onChange={(e) => set('modulo', e.target.value as Modulo)}
+                >
+                  <option value="particular">Particular</option>
+                  <option value="convenio">Convênio</option>
+                </select>
+              </div>
+            ) : null}
+
             <div className="field">
               <label htmlFor="pf-data">Data do pedido</label>
               <input
@@ -177,12 +217,34 @@ export default function PendenciaFormModal({
             </div>
 
             <div className="field col-2">
-              <label htmlFor="pf-info">Informação necessária *</label>
+              <label htmlFor="pf-motivo">Motivo *</label>
+              <select
+                id="pf-motivo"
+                value={form.motivo}
+                onChange={(e) => set('motivo', e.target.value as MotivoPendencia | '')}
+              >
+                <option value="">Selecione…</option>
+                {MOTIVOS_PENDENCIA.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="field col-2">
+              <label htmlFor="pf-obs">
+                Observação{form.motivo === MOTIVO_OBSERVACAO ? ' *' : ''}
+              </label>
               <textarea
-                id="pf-info"
-                value={form.informacao_necessaria}
-                onChange={(e) => set('informacao_necessaria', e.target.value)}
-                placeholder="Ex.: LANÇAR EXAME NO CONVÊNIO"
+                id="pf-obs"
+                value={form.observacao}
+                onChange={(e) => set('observacao', e.target.value)}
+                placeholder={
+                  form.motivo === MOTIVO_OBSERVACAO
+                    ? 'Descreva o ocorrido (obrigatório para o motivo "Observação")'
+                    : 'Detalhes adicionais (opcional)'
+                }
               />
             </div>
 
@@ -228,17 +290,6 @@ export default function PendenciaFormModal({
               />
             </div>
             <div className="field">
-              <label htmlFor="pf-conf">Confirmação</label>
-              <input
-                id="pf-conf"
-                value={form.confirmacao}
-                maxLength={120}
-                placeholder="Ex.: OK"
-                onChange={(e) => set('confirmacao', e.target.value)}
-              />
-            </div>
-
-            <div className="field col-2">
               <label htmlFor="pf-triagem">Triagem</label>
               <input
                 id="pf-triagem"

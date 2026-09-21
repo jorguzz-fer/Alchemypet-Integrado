@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-// Raiz redireciona para o Dashboard (dados de triagem).
+// Raiz redireciona para o Dashboard (todas as pendências).
 export default function Home() {
-  redirect('/triagem');
+  redirect('/dashboard');
 }

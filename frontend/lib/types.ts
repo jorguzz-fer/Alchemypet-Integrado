@@ -3,7 +3,21 @@
 export type StatusPlanilha = 'pendente' | 'tratativa' | 'concluido';
 export type Gestao = 'aberto' | 'andamento' | 'resolvido';
 
-export type Modulo = 'convenio' | 'triagem';
+export type Modulo = 'convenio' | 'particular';
+
+// Motivos das pendências (lista fechada; "Observação" exige descrição).
+export const MOTIVOS_PENDENCIA = [
+  'Confirmar exame',
+  'Requisição sem sinalização de exame',
+  'Exames não lançados no convênio',
+  'Confirmar dados do paciente',
+  'Confirmar clínica',
+  'Amostra sem requisição',
+  'Clínica desativada',
+  'Observação',
+] as const;
+export type MotivoPendencia = (typeof MOTIVOS_PENDENCIA)[number];
+export const MOTIVO_OBSERVACAO: MotivoPendencia = 'Observação';
 
 export interface Pendencia {
   id: string;
@@ -12,11 +26,11 @@ export interface Pendencia {
   paciente: string;
   cod_clinica: string;
   clinica: string;
-  informacao_necessaria: string;
+  motivo: string;
+  observacao: string;
   resposta_cliente: string;
   responsavel: string;
   colaborador: string;
-  confirmacao: string;
   triagem: string;
   status: StatusPlanilha;
   gestao: Gestao;
@@ -77,7 +91,8 @@ export interface HealthResponse {
 // Definido como type alias (nao interface) para ganhar index signature
 // implicita e poder ser passado como querystring (Record<string, ...>).
 export type FiltrosPendencias = {
-  modulo?: Modulo;
+  // Ausente/vazio = todos os módulos (particular + convênio).
+  modulo?: Modulo | '';
   ano?: number | string;
   mes_de?: number | string;
   mes_ate?: number | string;
@@ -86,6 +101,10 @@ export type FiltrosPendencias = {
   clinica?: string;
   responsavel?: string;
   busca?: string;
+  // Dia/período pela data do pedido (YYYY-MM-DD).
+  data_de?: string;
+  data_ate?: string;
+  motivo?: string;
   antigas?: boolean;
   abertas?: boolean;
   ordem?: 'prioridade' | 'recentes' | 'antigos';
@@ -127,6 +146,7 @@ export interface DashboardResponse {
   por_mes: PorMes[];
   top_clinicas: TopItem[];
   top_motivos: TopItem[];
+  por_modulo: TopItem[];
 }
 
 export interface ClinicasResponse {
@@ -146,11 +166,11 @@ export interface PendenciaInput {
   paciente?: string;
   cod_clinica?: string;
   clinica?: string;
-  informacao_necessaria?: string;
+  motivo?: MotivoPendencia;
+  observacao?: string;
   resposta_cliente?: string;
   responsavel?: string;
   colaborador?: string;
-  confirmacao?: string;
   triagem?: string;
   data_pedido?: string | null;
   data_devolutiva?: string | null;
@@ -158,8 +178,8 @@ export interface PendenciaInput {
   status?: StatusPlanilha;
 }
 
-// Body para criacao manual (POST /pendencias): informacao_necessaria obrigatória.
-export type NovaPendencia = PendenciaInput & { informacao_necessaria: string };
+// Body para criacao manual (POST /pendencias): motivo obrigatório.
+export type NovaPendencia = PendenciaInput & { motivo: MotivoPendencia };
 
 // Body do PATCH /pendencias/{id}: qualquer subconjunto dos campos.
 export type PatchPendencia = PendenciaInput;
@@ -298,14 +318,14 @@ export interface ChamadoImportResponse {
 
 // ===== Manutenção (admin): limpeza de registros antigos =====
 
-export type AlvoLimpeza = 'chamados' | 'convenio' | 'triagem';
+export type AlvoLimpeza = 'chamados' | 'convenio' | 'particular';
 
 export interface LimpezaPrevia {
   data_ate: string;
   incluir_sem_data: boolean;
   chamados: number;
   convenio: number;
-  triagem: number;
+  particular: number;
   tratativas: number;
 }
 
@@ -319,6 +339,6 @@ export interface LimpezaBody {
 export interface LimpezaResultado {
   chamados: number;
   convenio: number;
-  triagem: number;
+  particular: number;
   tratativas: number;
 }

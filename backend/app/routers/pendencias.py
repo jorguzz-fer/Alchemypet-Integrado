@@ -9,25 +9,20 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..filters import Filtros, aplicar
 from ..models import Pendencia, Tratativa, Usuario
+from ..motivos import MODULOS, MOTIVO_OBSERVACAO, normalizar_modulo, status_por_gestao
 from ..security import usuario_atual
 from ..schemas import PendenciaCreate, PendenciaOut, PendenciaPage, PendenciaUpdate
 
 router = APIRouter(prefix="/pendencias", tags=["pendencias"])
 
 
-def _derivar_status(confirmacao: str, resposta: str, data_dev: date | None) -> str:
-    """Mesma regra da importação: concluído se confirmação = OK; em tratativa
-    se há resposta/devolutiva; senão pendente."""
-    conf = (confirmacao or "").strip().lower()
-    if conf == "ok" or conf.startswith("ok ") or conf == "okk":
-        return "concluido"
-    if (resposta or "").strip() or data_dev:
-        return "tratativa"
-    return "pendente"
+def _validar_observacao(motivo: str, observacao: str) -> None:
+    if motivo == MOTIVO_OBSERVACAO and not (observacao or "").strip():
+        raise HTTPException(422, 'Descreva o ocorrido no campo "Observação"')
 
 
 def _filtros(
-    modulo: str = "convenio",
+    modulo: str | None = None,
     ano: int | None = None,
     mes_de: int | None = None,
     mes_ate: int | None = None,
@@ -38,12 +33,18 @@ def _filtros(
     busca: str | None = None,
     antigas: bool = False,
     abertas: bool = False,
+    data_de: date | None = None,
+    data_ate: date | None = None,
+    motivo: str | None = None,
 ) -> Filtros:
-    if modulo not in ("convenio", "triagem"):
+    modulo = normalizar_modulo(modulo)
+    if modulo is not None and modulo not in MODULOS:
         raise HTTPException(422, "Módulo inválido")
+    if data_de and data_ate and data_de > data_ate:
+        raise HTTPException(422, "A data inicial não pode ser maior que a data final")
     return Filtros(
         modulo, ano, mes_de, mes_ate, status, gestao, clinica, responsavel,
-        busca, antigas, abertas,
+        busca, antigas, abertas, data_de, data_ate, motivo,
     )
 
 
@@ -80,21 +81,21 @@ def listar(
 def criar(dados: PendenciaCreate, db: Session = Depends(get_db)):
     """Lançamento manual de pendência (substitui a digitação na planilha)."""
     campos = dados.model_dump()
-    gestao = campos.pop("gestao", None)
+    gestao = campos.pop("gestao", None) or "aberto"
+    _validar_observacao(campos["motivo"], campos["observacao"])
 
     # Período (ano/mês) derivado da data do pedido, quando houver.
     dp = campos.get("data_pedido")
     ano = dp.year if dp else None
     mes = dp.month if dp else None
 
-    status = _derivar_status(campos["confirmacao"], campos["resposta_cliente"], campos["data_devolutiva"])
-
     p = Pendencia(
         chave=uuid4().hex,  # lançamento manual: chave única própria
         modulo=campos.pop("modulo", None) or "convenio",
         aba="Manual",
-        status=status,
-        gestao=gestao or ("resolvido" if status == "concluido" else "aberto"),
+        # O status da planilha acompanha a gestão.
+        status=status_por_gestao(gestao),
+        gestao=gestao,
         ano=ano,
         mes=mes,
         **campos,
@@ -125,6 +126,7 @@ def atualizar(
         raise HTTPException(404, "Pendência não encontrada")
 
     enviados = dados.model_dump(exclude_unset=True)
+    _validar_observacao(enviados.get("motivo", p.motivo), enviados.get("observacao", p.observacao))
     gestao_anterior = p.gestao
     for k, v in enviados.items():
         setattr(p, k, v)
@@ -145,10 +147,9 @@ def atualizar(
         p.ano = p.data_pedido.year if p.data_pedido else None
         p.mes = p.data_pedido.month if p.data_pedido else None
 
-    # Recalcula status da planilha quando não foi informado explicitamente,
-    # mas algum campo que o define mudou.
-    if "status" not in enviados and enviados.keys() & {"confirmacao", "resposta_cliente", "data_devolutiva"}:
-        p.status = _derivar_status(p.confirmacao, p.resposta_cliente, p.data_devolutiva)
+    # O status da planilha acompanha a gestão (resolvido → concluído etc.).
+    if "gestao" in enviados or "status" not in enviados:
+        p.status = status_por_gestao(p.gestao)
 
     db.commit()
     db.refresh(p)

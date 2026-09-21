@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import Pendencia, Tratativa, Usuario
+from ..motivos import status_por_gestao
 from ..schemas import TratativaCreate, TratativaOut
 from ..security import usuario_atual
 
@@ -53,6 +54,7 @@ def criar(
     # Registrar tratativa avança a gestão da pendência.
     if dados.gestao:
         p.gestao = dados.gestao
+        p.status = status_por_gestao(p.gestao)
     db.add(t)
     db.commit()
     db.refresh(t)

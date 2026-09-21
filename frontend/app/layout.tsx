@@ -5,7 +5,7 @@ import Shell from '@/components/Shell';
 
 export const metadata: Metadata = {
   title: 'Painel Alchemypet',
-  description: 'Gestão de pendências (Triagem e Convênio) da Alchemypet.',
+  description: 'Gestão de pendências (Particular e Convênio) da Alchemypet.',
 };
 
 export default function RootLayout({

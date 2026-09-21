@@ -11,14 +11,14 @@ const PALAVRA = 'APAGAR';
 const ALVOS: { key: AlvoLimpeza; rotulo: string; descricao: string }[] = [
   { key: 'chamados', rotulo: 'Chamados', descricao: 'Caixa de chamados (por data do chamado)' },
   { key: 'convenio', rotulo: 'Pendências de Convênio', descricao: 'Inclui as tratativas' },
-  { key: 'triagem', rotulo: 'Pendências de Triagem', descricao: 'Inclui as tratativas' },
+  { key: 'particular', rotulo: 'Pendências Particulares', descricao: 'Inclui as tratativas' },
 ];
 
 export default function ManutencaoPage() {
   const { usuario } = useAuth();
-  const [dataAte, setDataAte] = useState('2026-09-01');
+  const [dataAte, setDataAte] = useState('2026-08-31');
   const [semData, setSemData] = useState(false);
-  const [alvos, setAlvos] = useState<AlvoLimpeza[]>(['chamados', 'convenio', 'triagem']);
+  const [alvos, setAlvos] = useState<AlvoLimpeza[]>(['chamados', 'convenio', 'particular']);
 
   const [previa, setPrevia] = useState<LimpezaPrevia | null>(null);
   const [calculando, setCalculando] = useState(false);
@@ -63,7 +63,7 @@ export default function ManutencaoPage() {
     ? alvos.reduce((acc, a) => acc + previa[a], 0)
     : 0;
   const tratativasSel =
-    previa && (alvos.includes('convenio') || alvos.includes('triagem')) ? previa.tratativas : 0;
+    previa && (alvos.includes('convenio') || alvos.includes('particular')) ? previa.tratativas : 0;
 
   async function apagar() {
     setApagando(true);
@@ -175,7 +175,7 @@ export default function ManutencaoPage() {
           <ul className="lista-simples">
             <li>Chamados apagados: <b>{formatNumero(resultado.chamados)}</b></li>
             <li>Pendências de Convênio apagadas: <b>{formatNumero(resultado.convenio)}</b></li>
-            <li>Pendências de Triagem apagadas: <b>{formatNumero(resultado.triagem)}</b></li>
+            <li>Pendências Particulares apagadas: <b>{formatNumero(resultado.particular)}</b></li>
             <li>Tratativas apagadas: <b>{formatNumero(resultado.tratativas)}</b></li>
           </ul>
         </div>

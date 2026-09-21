@@ -47,10 +47,16 @@ app.include_router(manutencao.router)  # exige_admin no próprio router
 
 
 def _migracao_leve() -> None:
-    """Adiciona colunas de auth ao usuario em bancos já existentes (idempotente).
+    """Adiciona colunas a bancos já existentes (idempotente).
     create_all não altera tabelas; no Postgres usamos ADD COLUMN IF NOT EXISTS.
-    Em SQLite novo, create_all já cria o schema completo."""
+    Em SQLite (dev) só acrescentamos as colunas novas da pendência."""
     if not engine.url.get_backend_name().startswith("postgresql"):
+        with engine.begin() as conn:
+            cols = {r[1] for r in conn.execute(text("PRAGMA table_info(pendencia)"))}
+            if cols and "motivo" not in cols:
+                conn.execute(text("ALTER TABLE pendencia ADD COLUMN motivo VARCHAR(80) DEFAULT ''"))
+            if cols and "observacao" not in cols:
+                conn.execute(text("ALTER TABLE pendencia ADD COLUMN observacao TEXT DEFAULT ''"))
         return
     ddl = [
         "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS email VARCHAR(160)",
@@ -65,6 +71,10 @@ def _migracao_leve() -> None:
         # Multi-módulo: registros existentes são do convênio.
         "ALTER TABLE pendencia ADD COLUMN IF NOT EXISTS modulo VARCHAR(20) DEFAULT 'convenio'",
         "CREATE INDEX IF NOT EXISTS ix_pendencia_modulo ON pendencia (modulo)",
+        # Motivo (lista fechada) + observação substituem "informação necessária".
+        "ALTER TABLE pendencia ADD COLUMN IF NOT EXISTS motivo VARCHAR(80) DEFAULT ''",
+        "ALTER TABLE pendencia ADD COLUMN IF NOT EXISTS observacao TEXT DEFAULT ''",
+        "CREATE INDEX IF NOT EXISTS ix_pendencia_motivo ON pendencia (motivo)",
     ]
     with engine.begin() as conn:
         for stmt in ddl:
@@ -88,12 +98,34 @@ def _recarimba_chaves(db) -> None:
     db.commit()
 
 
+def _migracao_dados(db) -> None:
+    """Ajustes de dados idempotentes:
+    - módulo 'triagem' passa a se chamar 'particular';
+    - pendências sem motivo ganham motivo/observação a partir do texto legado;
+    - status da planilha passa a acompanhar a gestão (resolvido → concluído)."""
+    from .models import Pendencia
+    from .motivos import classificar_motivo
+
+    db.execute(text("UPDATE pendencia SET modulo = 'particular' WHERE modulo = 'triagem'"))
+    db.execute(text("UPDATE pendencia SET status = 'concluido' WHERE gestao = 'resolvido' AND status <> 'concluido'"))
+    db.execute(text("UPDATE pendencia SET status = 'tratativa' WHERE gestao = 'andamento' AND status <> 'tratativa'"))
+    db.commit()
+    pendentes = db.scalars(
+        select(Pendencia).where(Pendencia.motivo == "", Pendencia.informacao_necessaria != "")
+    ).all()
+    for p in pendentes:
+        p.motivo, p.observacao = classificar_motivo(p.informacao_necessaria)
+    if pendentes:
+        db.commit()
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
     _migracao_leve()
     with SessionLocal() as db:
         _recarimba_chaves(db)
+        _migracao_dados(db)
     # Garante um admin inicial (idempotente) a partir das variáveis de ambiente.
     with SessionLocal() as db:
         email = settings.ADMIN_EMAIL.strip().lower()

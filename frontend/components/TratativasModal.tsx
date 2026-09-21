@@ -116,8 +116,8 @@ export default function TratativasModal({ pendencia, onClose, onSaved }: Props) 
             <b>Clínica:</b> {pendencia.clinica || '—'}
           </div>
           <div style={{ marginTop: 4 }}>
-            <b>Informação necessária:</b>{' '}
-            {pendencia.informacao_necessaria || '—'}
+            <b>Motivo:</b> {pendencia.motivo || '—'}
+            {pendencia.observacao ? <> &nbsp;·&nbsp; <b>Obs.:</b> {pendencia.observacao}</> : null}
           </div>
         </div>
 

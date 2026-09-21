@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { FiltrosPendencias } from '@/lib/types';
+import { MOTIVOS_PENDENCIA } from '@/lib/types';
 import { nomeMes } from '@/lib/format';
 
 interface FiltrosProps {
@@ -9,6 +10,8 @@ interface FiltrosProps {
   onApply: (f: FiltrosPendencias) => void;
   // Campos extras (tabela de pendencias).
   clinicas?: string[];
+  // Seletor Particular/Convênio (telas que mostram todos os módulos).
+  showTipo?: boolean;
   showClinica?: boolean;
   showResponsavel?: boolean;
   showBusca?: boolean;
@@ -30,6 +33,7 @@ export default function Filtros({
   value,
   onApply,
   clinicas,
+  showTipo = false,
   showClinica = false,
   showResponsavel = false,
   showBusca = false,
@@ -58,11 +62,15 @@ export default function Filtros({
 
   function limpar() {
     const vazio: FiltrosPendencias = {
+      modulo: '',
       ano: '',
       mes_de: '',
       mes_ate: '',
+      data_de: '',
+      data_ate: '',
       status: '',
       gestao: '',
+      motivo: '',
       clinica: '',
       responsavel: '',
       busca: '',
@@ -75,6 +83,21 @@ export default function Filtros({
 
   return (
     <form className="filters" onSubmit={aplicar}>
+      {showTipo ? (
+        <div className="fgroup">
+          <label htmlFor="f-tipo">Tipo</label>
+          <select
+            id="f-tipo"
+            value={draft.modulo ?? ''}
+            onChange={(e) => set('modulo', e.target.value as FiltrosPendencias['modulo'])}
+          >
+            <option value="">Todas</option>
+            <option value="particular">Particular</option>
+            <option value="convenio">Convênio</option>
+          </select>
+        </div>
+      ) : null}
+
       <div className="fgroup">
         <label htmlFor="f-ano">Ano</label>
         <select
@@ -118,6 +141,44 @@ export default function Filtros({
           {MESES.map((m) => (
             <option key={m} value={m}>
               {nomeMes(m)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="fgroup">
+        <label htmlFor="f-dia-de">Dia (de)</label>
+        <input
+          id="f-dia-de"
+          type="date"
+          value={draft.data_de ?? ''}
+          max={draft.data_ate || undefined}
+          onChange={(e) => set('data_de', e.target.value)}
+        />
+      </div>
+
+      <div className="fgroup">
+        <label htmlFor="f-dia-ate">Dia (até)</label>
+        <input
+          id="f-dia-ate"
+          type="date"
+          value={draft.data_ate ?? ''}
+          min={draft.data_de || undefined}
+          onChange={(e) => set('data_ate', e.target.value)}
+        />
+      </div>
+
+      <div className="fgroup">
+        <label htmlFor="f-motivo">Motivo</label>
+        <select
+          id="f-motivo"
+          value={draft.motivo ?? ''}
+          onChange={(e) => set('motivo', e.target.value)}
+        >
+          <option value="">Todos</option>
+          {MOTIVOS_PENDENCIA.map((m) => (
+            <option key={m} value={m}>
+              {m}
             </option>
           ))}
         </select>
@@ -192,7 +253,7 @@ export default function Filtros({
           <input
             id="f-busca"
             type="text"
-            placeholder="Guia, paciente, clínica, informação…"
+            placeholder="Guia, paciente, clínica, motivo, observação…"
             value={draft.busca ?? ''}
             onChange={(e) => set('busca', e.target.value)}
           />

@@ -490,6 +490,28 @@ header.top {
   transform: none;
 }
 
+/* Pendências: etiqueta de tipo (Particular/Convênio) e observação na célula */
+.tipo-tag {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #e8f7f7;
+  color: var(--marinho);
+}
+.tipo-tag.convenio {
+  background: #eef1f8;
+  color: #3a4a7a;
+}
+td .obs {
+  margin-top: 3px;
+  font-size: 0.76rem;
+  color: var(--texto-suave);
+  white-space: pre-wrap;
+}
+
 /* Manutenção: seleção de conjuntos e listas simples */
 .field label.check-inline,
 .check-inline {

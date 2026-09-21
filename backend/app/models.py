@@ -48,7 +48,7 @@ class Pendencia(Base):
     __tablename__ = "pendencia"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    # Módulo/operação: convenio | triagem
+    # Módulo/operação: convenio | particular
     modulo: Mapped[str] = mapped_column(String(20), default="convenio", index=True)
     # Chave natural para importação idempotente (modulo|aba|guia|paciente|info).
     chave: Mapped[str] = mapped_column(String(64), unique=True, index=True)
@@ -57,7 +57,11 @@ class Pendencia(Base):
     paciente: Mapped[str] = mapped_column(String(160), default="")
     cod_clinica: Mapped[str] = mapped_column(String(40), default="")
     clinica: Mapped[str] = mapped_column(String(200), default="", index=True)
+    # Legado (texto livre das planilhas antigas); substituído por motivo/observacao.
     informacao_necessaria: Mapped[str] = mapped_column(Text, default="")
+    # Motivo (lista fechada, ver motivos.MOTIVOS_PENDENCIA) + observação livre.
+    motivo: Mapped[str] = mapped_column(String(80), default="", index=True)
+    observacao: Mapped[str] = mapped_column(Text, default="")
     resposta_cliente: Mapped[str] = mapped_column(Text, default="")
     responsavel: Mapped[str] = mapped_column(String(120), default="", index=True)
     # TEXT (sem limite): campos que, em abas com colunas desalinhadas na
