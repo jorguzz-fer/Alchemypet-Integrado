@@ -170,6 +170,18 @@ class Tratativa(Base):
     usuario: Mapped["Usuario | None"] = relationship()
 
 
+class Migracao(Base):
+    """Marca migrações de dados de execução única.
+
+    Sem este registro, uma migração cara (ou que precisa rodar só uma vez,
+    como o realinhamento das chaves naturais) seria repetida a cada boot."""
+
+    __tablename__ = "migracao"
+
+    chave: Mapped[str] = mapped_column(String(80), primary_key=True)
+    aplicada_em: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
 class RelatorioQualidade(Base):
     """Relatório Gerencial de Qualidade: .docx enviado pela Qualidade e o PDF
     diagramado gerado a partir dele. Guardamos o .docx para permitir regerar o
