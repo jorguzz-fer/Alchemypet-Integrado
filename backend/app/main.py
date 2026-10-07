@@ -14,6 +14,7 @@ from .routers import (
     importacao,
     pendencias,
     pop,
+    relatorio_qualidade,
     tratativas,
     usuarios,
     manutencao,
@@ -27,6 +28,9 @@ app.add_middleware(
     allow_origins=settings.cors_list,
     allow_credentials=True,
     allow_methods=["*"],
+    # Sem isto o navegador esconde o Content-Disposition e os downloads
+    # (relatórios, exports) chegam com nome genérico.
+    expose_headers=["Content-Disposition"],
     allow_headers=["*"],
 )
 
@@ -42,6 +46,7 @@ app.include_router(catalogos.router, dependencies=protegido)
 app.include_router(importacao.router, dependencies=protegido)
 app.include_router(pop.router, dependencies=protegido)
 app.include_router(chamado.router, dependencies=protegido)
+app.include_router(relatorio_qualidade.router, dependencies=protegido)
 app.include_router(usuarios.router)  # protege internamente (usuario_atual/exige_admin)
 app.include_router(manutencao.router)  # exige_admin no próprio router
 

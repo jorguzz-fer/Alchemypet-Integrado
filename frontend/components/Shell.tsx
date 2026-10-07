@@ -10,6 +10,7 @@ import {
   IconeDashboard,
   IconeFila,
   IconePop,
+  IconeRelatorio,
   IconeTriagem,
   IconeUsuarios,
   IconeManutencao,
@@ -120,6 +121,23 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               className={`side-link${linkAtivo('/pop/lista') ? ' ativo' : ''}`}
             >
               Lista de POPs
+            </Link>
+          </div>
+
+          {/* Qualidade — relatórios gerenciais diagramados a partir do .docx. */}
+          <div className="side-group">
+            <Link
+              href="/relatorios"
+              className={`side-group-title link${linkAtivo('/relatorios') ? ' ativo' : ''}`}
+            >
+              <IconeRelatorio className="side-ic" />
+              Qualidade
+            </Link>
+            <Link
+              href="/relatorios"
+              className={`side-link${linkAtivo('/relatorios') ? ' ativo' : ''}`}
+            >
+              Relatórios gerenciais
             </Link>
           </div>
 

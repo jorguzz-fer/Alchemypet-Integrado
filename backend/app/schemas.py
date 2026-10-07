@@ -305,3 +305,29 @@ class ChamadoDashboardOut(BaseModel):
 class ChamadoImportResult(BaseModel):
     importados: int
     total: int
+
+
+# ===== Relatórios Gerenciais de Qualidade =====
+
+
+class RelatorioQualidadeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    arquivo: str
+    tipo: str
+    titulo: str
+    periodo: str
+    paginas: int
+    setores: int
+    pontos_atencao: int
+    tamanho_pdf: int
+    enviado_por_nome: str | None = None
+    created_at: datetime
+
+
+class RelatorioQualidadePage(BaseModel):
+    total: int
+    page: int
+    per_page: int
+    items: list[RelatorioQualidadeOut]

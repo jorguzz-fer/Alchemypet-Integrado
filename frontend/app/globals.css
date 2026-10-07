@@ -490,6 +490,36 @@ header.top {
   transform: none;
 }
 
+/* Relatórios: área de envio do .docx */
+.dropzone {
+  background: var(--card);
+  border: 1.5px dashed var(--linha);
+  border-radius: var(--raio);
+  padding: 26px 20px;
+  text-align: center;
+  box-shadow: var(--sombra);
+  transition: 0.15s;
+}
+.dropzone.ativo {
+  border-color: var(--destaque);
+  background: #f2fbfb;
+}
+.dropzone.ocupado {
+  opacity: 0.75;
+}
+.dz-titulo {
+  font-weight: 700;
+  color: var(--marinho);
+  font-size: 1rem;
+}
+.dz-sub {
+  color: var(--texto-suave);
+  font-size: 0.84rem;
+  margin: 6px auto 14px;
+  max-width: 560px;
+  line-height: 1.5;
+}
+
 /* Pendências: etiqueta de tipo (Particular/Convênio) e observação na célula */
 .tipo-tag {
   display: inline-block;

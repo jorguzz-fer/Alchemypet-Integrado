@@ -7,6 +7,9 @@ import type {
   FiltrosPendencias,
   HealthResponse,
   ImportarResponse,
+  FiltrosRelatorio,
+  RelatorioQualidade,
+  RelatoriosResponse,
   LimpezaBody,
   LimpezaPrevia,
   LimpezaResultado,
@@ -389,5 +392,43 @@ export const api = {
 
   limpar(body: LimpezaBody): Promise<LimpezaResultado> {
     return request<LimpezaResultado>('/manutencao/limpar', { method: 'POST', body });
+  },
+
+  // ===== Relatórios Gerenciais de Qualidade =====
+  listRelatorios(
+    filtros: FiltrosRelatorio = {},
+    signal?: AbortSignal,
+  ): Promise<RelatoriosResponse> {
+    return request<RelatoriosResponse>('/relatorios-qualidade', { query: filtros, signal });
+  },
+
+  // Envia o .docx e recebe os dados do PDF já diagramado.
+  importarRelatorio(file: File): Promise<RelatorioQualidade> {
+    const fd = new FormData();
+    fd.append('file', file);
+    return request<RelatorioQualidade>('/relatorios-qualidade/importar', {
+      method: 'POST',
+      formData: fd,
+    });
+  },
+
+  regerarRelatorio(id: string): Promise<RelatorioQualidade> {
+    return request<RelatorioQualidade>(
+      `/relatorios-qualidade/${encodeURIComponent(id)}/regerar`,
+      { method: 'POST' },
+    );
+  },
+
+  deleteRelatorio(id: string): Promise<void> {
+    return request<void>(`/relatorios-qualidade/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  baixarRelatorio(id: string, formato: 'pdf' | 'docx'): Promise<void> {
+    return baixarArquivo(
+      `/relatorios-qualidade/${encodeURIComponent(id)}.${formato}`,
+      `relatorio-qualidade.${formato}`,
+    );
   },
 };

@@ -342,3 +342,37 @@ export interface LimpezaResultado {
   particular: number;
   tratativas: number;
 }
+
+
+// ===== Relatórios Gerenciais de Qualidade =====
+
+export type TipoRelatorio = 'executivo' | 'completo';
+
+export interface RelatorioQualidade {
+  id: string;
+  arquivo: string;
+  tipo: TipoRelatorio;
+  titulo: string;
+  periodo: string;
+  paginas: number;
+  setores: number;
+  pontos_atencao: number;
+  tamanho_pdf: number;
+  enviado_por_nome: string | null;
+  created_at: string;
+}
+
+export type FiltrosRelatorio = {
+  busca?: string;
+  tipo?: TipoRelatorio | '';
+  ordem?: Ordem;
+  page?: number;
+  per_page?: number;
+};
+
+export interface RelatoriosResponse {
+  total: number;
+  page: number;
+  per_page: number;
+  items: RelatorioQualidade[];
+}
