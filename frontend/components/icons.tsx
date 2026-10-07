@@ -112,6 +112,18 @@ export function IconeManutencao({ className, size = 18 }: IconeProps) {
   );
 }
 
+// Relatórios — documento com selo de qualidade
+export function IconeRelatorio({ className, size = 18 }: IconeProps) {
+  return (
+    <svg className={className} {...base(size)}>
+      <path d="M6 2h7l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+      <path d="M13 2v5h5" />
+      <path d="M8 13h5" />
+      <path d="M8 17h8" />
+    </svg>
+  );
+}
+
 export function iconeModulo(key: string, className?: string) {
   if (key === 'particular') return <IconeTriagem className={className} />;
   return <IconeConvenio className={className} />;

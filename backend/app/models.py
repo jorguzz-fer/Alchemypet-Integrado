@@ -6,7 +6,9 @@ como string, enums validados na camada Pydantic (colunas String).
 from datetime import date, datetime, timezone
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    Boolean, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -166,3 +168,33 @@ class Tratativa(Base):
 
     pendencia: Mapped["Pendencia"] = relationship(back_populates="tratativas")
     usuario: Mapped["Usuario | None"] = relationship()
+
+
+class RelatorioQualidade(Base):
+    """Relatório Gerencial de Qualidade: .docx enviado pela Qualidade e o PDF
+    diagramado gerado a partir dele. Guardamos o .docx para permitir regerar o
+    PDF quando o layout evoluir, sem pedir o arquivo de novo."""
+
+    __tablename__ = "relatorio_qualidade"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    arquivo: Mapped[str] = mapped_column(String(260), default="")
+    # executivo | completo
+    tipo: Mapped[str] = mapped_column(String(20), default="executivo", index=True)
+    titulo: Mapped[str] = mapped_column(String(200), default="")
+    periodo: Mapped[str] = mapped_column(String(120), default="", index=True)
+    paginas: Mapped[int] = mapped_column(Integer, default=0)
+    setores: Mapped[int] = mapped_column(Integer, default=0)
+    pontos_atencao: Mapped[int] = mapped_column(Integer, default=0)
+
+    docx: Mapped[bytes] = mapped_column(LargeBinary)
+    pdf: Mapped[bytes] = mapped_column(LargeBinary)
+    tamanho_pdf: Mapped[int] = mapped_column(Integer, default=0)
+
+    enviado_por_id: Mapped[str | None] = mapped_column(
+        ForeignKey("usuario.id"), nullable=True
+    )
+    enviado_por: Mapped["Usuario | None"] = relationship()
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
