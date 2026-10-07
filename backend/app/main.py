@@ -1,4 +1,6 @@
 """Painel Convênio API — aplicação FastAPI."""
+import logging
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, select, text
@@ -20,6 +22,14 @@ from .routers import (
     manutencao,
 )
 from .security import hash_senha, usuario_atual
+
+log = logging.getLogger("painel.startup")
+
+# As migrações de dados percorrem a tabela de pendências (dezenas de milhares
+# de linhas). Processar em lotes, confirmando cada um, mantém a memória baixa
+# e torna a migração retomável: se o processo cair no meio, o próximo boot
+# continua de onde parou em vez de recomeçar.
+LOTE_MIGRACAO = 500
 
 app = FastAPI(title=settings.APP_NAME, version="2.0.0")
 
@@ -98,9 +108,14 @@ def _recarimba_chaves(db) -> None:
     esperado = _chave(amostra.modulo, amostra.aba, amostra.guia, amostra.paciente, amostra.informacao_necessaria)
     if amostra.chave == esperado:
         return  # já no formato novo
-    for p in db.scalars(select(Pendencia)):
-        p.chave = _chave(p.modulo, p.aba, p.guia, p.paciente, p.informacao_necessaria)
-    db.commit()
+    total = 0
+    for lote in db.scalars(select(Pendencia).execution_options(yield_per=LOTE_MIGRACAO)).partitions():
+        for p in lote:
+            p.chave = _chave(p.modulo, p.aba, p.guia, p.paciente, p.informacao_necessaria)
+        db.commit()
+        total += len(lote)
+    if total:
+        log.info("Chaves recarimbadas: %s pendência(s).", total)
 
 
 def _migracao_dados(db) -> None:
@@ -109,28 +124,50 @@ def _migracao_dados(db) -> None:
     - pendências sem motivo ganham motivo/observação a partir do texto legado;
     - status da planilha passa a acompanhar a gestão (resolvido → concluído)."""
     from .models import Pendencia
-    from .motivos import classificar_motivo
+    from .motivos import MOTIVO_OBSERVACAO, classificar_motivo
 
     db.execute(text("UPDATE pendencia SET modulo = 'particular' WHERE modulo = 'triagem'"))
     db.execute(text("UPDATE pendencia SET status = 'concluido' WHERE gestao = 'resolvido' AND status <> 'concluido'"))
     db.execute(text("UPDATE pendencia SET status = 'tratativa' WHERE gestao = 'andamento' AND status <> 'tratativa'"))
     db.commit()
-    pendentes = db.scalars(
-        select(Pendencia).where(Pendencia.motivo == "", Pendencia.informacao_necessaria != "")
-    ).all()
-    for p in pendentes:
-        p.motivo, p.observacao = classificar_motivo(p.informacao_necessaria)
-    if pendentes:
+
+    # Classificação do texto legado em lotes. Cada lote confirmado sai do
+    # filtro (motivo deixa de ser vazio), então o laço sempre termina e um
+    # boot interrompido retoma o trabalho restante.
+    total = 0
+    while True:
+        pendentes = db.scalars(
+            select(Pendencia)
+            .where(Pendencia.motivo == "", Pendencia.informacao_necessaria != "")
+            .limit(LOTE_MIGRACAO)
+        ).all()
+        if not pendentes:
+            break
+        for p in pendentes:
+            motivo, observacao = classificar_motivo(p.informacao_necessaria)
+            # Texto só com espaços não casa com nenhum motivo; sem este
+            # fallback a linha continuaria no filtro e o laço não terminaria.
+            p.motivo = motivo or MOTIVO_OBSERVACAO
+            p.observacao = observacao
         db.commit()
+        total += len(pendentes)
+        db.expunge_all()  # não acumula objetos entre os lotes
+    if total:
+        log.info("Motivos classificados: %s pendência(s).", total)
 
 
 @app.on_event("startup")
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
     _migracao_leve()
-    with SessionLocal() as db:
-        _recarimba_chaves(db)
-        _migracao_dados(db)
+    # Uma migração de dados que falhe não pode derrubar a API inteira: o erro
+    # é registrado e o serviço sobe, permitindo investigar pelo painel.
+    try:
+        with SessionLocal() as db:
+            _recarimba_chaves(db)
+            _migracao_dados(db)
+    except Exception:  # noqa: BLE001
+        log.exception("Falha na migração de dados; a API segue no ar.")
     # Garante um admin inicial (idempotente) a partir das variáveis de ambiente.
     with SessionLocal() as db:
         email = settings.ADMIN_EMAIL.strip().lower()
