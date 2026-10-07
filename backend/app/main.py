@@ -31,6 +31,9 @@ log = logging.getLogger("painel.startup")
 # continua de onde parou em vez de recomeçar.
 LOTE_MIGRACAO = 500
 
+# Nome do registro em `migracao` que marca o realinhamento das chaves naturais.
+MIG_CHAVES = "pendencia-chave-natural"
+
 app = FastAPI(title=settings.APP_NAME, version="2.0.0")
 
 app.add_middleware(
@@ -97,25 +100,54 @@ def _migracao_leve() -> None:
 
 
 def _recarimba_chaves(db) -> None:
-    """A chave natural passou a incluir o módulo. Recalcula uma vez as chaves
-    das pendências existentes para a reimportação continuar idempotente."""
-    from .importer import _chave
-    from .models import Pendencia
+    """Realinha a chave natural das pendências, que inclui o módulo (renomeado
+    de "triagem" para "particular"). Roda uma única vez: o controle fica na
+    tabela `migracao`.
 
-    amostra = db.scalar(select(Pendencia).limit(1))
-    if not amostra:
+    Duas pendências podem compartilhar a mesma chave natural — lançamentos
+    manuais repetidos, ou a mesma linha vinda de abas diferentes. Como a coluna
+    é única, a linha que colidiria mantém a chave antiga: perder a idempotência
+    de importação de um registro é muito melhor que derrubar a API.
+    """
+    from .importer import _chave
+    from .models import Migracao, Pendencia
+
+    if db.get(Migracao, MIG_CHAVES):
         return
-    esperado = _chave(amostra.modulo, amostra.aba, amostra.guia, amostra.paciente, amostra.informacao_necessaria)
-    if amostra.chave == esperado:
-        return  # já no formato novo
-    total = 0
-    for lote in db.scalars(select(Pendencia).execution_options(yield_per=LOTE_MIGRACAO)).partitions():
+
+    ocupadas = set(db.scalars(select(Pendencia.chave)))
+    alteradas = colisoes = 0
+    ultimo = ""
+    while True:
+        lote = db.scalars(
+            select(Pendencia)
+            .where(Pendencia.id > ultimo)
+            .order_by(Pendencia.id)
+            .limit(LOTE_MIGRACAO)
+        ).all()
+        if not lote:
+            break
+        ultimo = lote[-1].id  # antes do commit, que expira os objetos
         for p in lote:
-            p.chave = _chave(p.modulo, p.aba, p.guia, p.paciente, p.informacao_necessaria)
+            nova = _chave(p.modulo, p.aba, p.guia, p.paciente, p.informacao_necessaria)
+            if nova == p.chave:
+                continue
+            if nova in ocupadas:
+                colisoes += 1
+                continue
+            ocupadas.discard(p.chave)
+            ocupadas.add(nova)
+            p.chave = nova
+            alteradas += 1
         db.commit()
-        total += len(lote)
-    if total:
-        log.info("Chaves recarimbadas: %s pendência(s).", total)
+        db.expunge_all()
+
+    db.add(Migracao(chave=MIG_CHAVES))
+    db.commit()
+    if alteradas or colisoes:
+        log.info(
+            "Chaves realinhadas: %s; mantidas por colisão: %s.", alteradas, colisoes
+        )
 
 
 def _migracao_dados(db) -> None:
@@ -160,14 +192,16 @@ def _migracao_dados(db) -> None:
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
     _migracao_leve()
-    # Uma migração de dados que falhe não pode derrubar a API inteira: o erro
-    # é registrado e o serviço sobe, permitindo investigar pelo painel.
-    try:
-        with SessionLocal() as db:
-            _recarimba_chaves(db)
-            _migracao_dados(db)
-    except Exception:  # noqa: BLE001
-        log.exception("Falha na migração de dados; a API segue no ar.")
+    # Ordem importa: o módulo é renomeado antes de as chaves (que o incluem)
+    # serem realinhadas. Cada migração roda isolada, para que uma falha não
+    # impeça a outra nem derrube a API — o erro é registrado e o serviço sobe.
+    for nome, migracao in (("ajustes de dados", _migracao_dados),
+                           ("chaves naturais", _recarimba_chaves)):
+        try:
+            with SessionLocal() as db:
+                migracao(db)
+        except Exception:  # noqa: BLE001
+            log.exception("Falha na migração (%s); a API segue no ar.", nome)
     # Garante um admin inicial (idempotente) a partir das variáveis de ambiente.
     with SessionLocal() as db:
         email = settings.ADMIN_EMAIL.strip().lower()
