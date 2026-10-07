@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 import type { Gestao, Pendencia, Tratativa } from '@/lib/types';
-import { formatData } from '@/lib/format';
+import { formatDataHora } from '@/lib/format';
 
 interface Props {
   pendencia: Pendencia;
@@ -18,14 +18,6 @@ const GESTAO_OPCOES: { value: '' | Gestao; label: string }[] = [
   { value: 'andamento', label: 'Andamento' },
   { value: 'resolvido', label: 'Resolvido' },
 ];
-
-function dataHora(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return formatData(iso);
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mm = String(d.getMinutes()).padStart(2, '0');
-  return `${formatData(iso)} ${hh}:${mm}`;
-}
 
 export default function TratativasModal({ pendencia, onClose, onSaved }: Props) {
   const [lista, setLista] = useState<Tratativa[]>([]);
@@ -140,7 +132,7 @@ export default function TratativasModal({ pendencia, onClose, onSaved }: Props) 
                       <span className="agente"> · agente</span>
                     ) : null}
                   </span>
-                  <span className="trat-when">{dataHora(t.created_at)}</span>
+                  <span className="trat-when">{formatDataHora(t.created_at)}</span>
                 </div>
                 <div className="trat-acao">{t.acao}</div>
                 {t.gestao ? (
