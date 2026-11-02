@@ -185,10 +185,10 @@ N8N**. Toda mudança de status passa pela API, que publica o evento para a torre
 | P-S3 | Lista oficial de status: a tela de OS mostra 7, a Triagem mostra outra legenda | Máquina de estados |
 | P-S4 | Portador é pago por coleta? Se sim, o repasse entra no financeiro | E11/E14 — pode virar escopo novo |
 | P-S5 | Gasometria e emergência têm fluxo próprio ou só fila separada no monitor? | E19 e prioridade no LIS |
-| P-S6 | O cadastro de Produtos (exames) do Pocket é usado ou está parado? | Catálogo único (E3) |
+| P-S6 | O cadastro de Produtos (exames) do Pocket é usado ou está parado? | **Respondida (§10)**: parado — 3 itens, todos com preço 0. O catálogo nasce em E3 |
 | P-S7 | O laudo fica em outro LIS? Integração no escopo? | **Já respondida pelo Integrado**: o LIS é construído (E16/E21); o Pocket não precisa integrar com laudo |
-| P-S8 | O fornecedor do Pocket libera exportação do banco ou será por planilhas dos grids? | Esforço do E22 |
-| P-S9 | Quantas clínicas e portadores usam a interface do Pocket, quanto já passa pelo WhatsApp? | Prioridade PWA × agente |
+| P-S8 | O fornecedor do Pocket libera exportação do banco ou será por planilhas dos grids? | Esforço do E22. As exportações dos grids já funcionam (§10), mas a de OS para em 10.000 linhas e não traz datas nem status |
+| P-S9 | Quantas clínicas e portadores usam a interface do Pocket, quanto já passa pelo WhatsApp? | **Respondida em parte (§10)**: 3.758 logins de clínica e 81 de portador; falta saber quantos entram de fato e o volume no WhatsApp |
 | P-S10 | Em que sistema a fatura mensal é emitida hoje (ERP, planilha)? | Encaixe com E14 e pendência §9.1 #5 do mapeamento |
 
 ### 7.2 Novas, da integração
@@ -197,7 +197,7 @@ N8N**. Toda mudança de status passa pela API, que publica o evento para a torre
 |---|---|---|---|
 | P-I1 | **Stack**: seguir a do Integrado (FastAPI) ou a da SPEC (NestJS)? | Duas stacks = dois backends, dois logins, custo dobrado de manutenção | FastAPI (§5) |
 | P-I2 | **WhatsApp**: API oficial (via Chatwoot) ou Evolution/Z-API? | Custo por conversa × risco de bloqueio do número; o Pocket hoje usa conexão por QR | Oficial para o agente; avaliar se o canal operacional pode ser só push |
-| P-I3 | O **código da clínica** é o mesmo no Pocket, no software de gestão e nas planilhas de pendência? | É a chave da conta única e da migração | Conferir com uma amostra de 50 clínicas |
+| P-I3 | O **código da clínica** é o mesmo no Pocket, no software de gestão e nas planilhas de pendência? | É a chave da conta única e da migração | Dentro do Pocket confirmado (§10.3); falta comparar com o software de gestão e as planilhas |
 | P-I4 | **Ordem do contrato**: Coletas continua na onda 4 (meses 9–12) ou sobe? | O Pocket é crítico no dia a dia; manter dois sistemas por 9 meses tem custo | Ver §8.2 |
 | P-I5 | **Orçamento fechado** (R$ 220.000 em 24 parcelas) absorve o acréscimo de §8.1 ou vira aditivo? | A SPEC aumenta E18/E19 e cria E22 | Decisão comercial |
 | P-I6 | Quem escreve a **base de conhecimento** do agente (hoje vazia)? | Sem conteúdo o agente não responde dúvidas de exames e prazos | Carga assistida por IA a partir de POPs (módulo POP já existe) + revisão técnica |
@@ -246,6 +246,9 @@ Financeiro**, com piloto de 2 semanas numa região antes do corte.
 
 ## 9. Próximos passos
 
+> Atualizado com as exportações de §10: o importador do E22 pode começar pelos cadastros
+> (clínicas, usuários, regiões, laboratórios e leads); OS e coletas dependem de P-D1.
+
 1. Decidir **P-I1 (stack)**, **P-I2 (WhatsApp)**, **P-I4 (ordem)** e **P-I5 (orçamento)** com a
    diretoria — são as que mudam número e prazo.
 2. Levar as pendências P-S1 a P-S10 para uma conversa com a supervisão de logística e a triagem.
@@ -255,3 +258,82 @@ Financeiro**, com piloto de 2 semanas numa região antes do corte.
    página `/integrado` depois das decisões acima (os números de §8 ainda não foram aplicados lá).
 5. Preparar o terreno técnico antes do primeiro épico: Alembic, Redis/worker e o esqueleto de
    PWA no `frontend/`.
+
+---
+
+## 10. Retrato dos dados do Pocket (exportações de 02/11/2026)
+
+Exportações dos grids enviadas pela Alchemypet: Clínicas, Clínicas em Utilização (com e sem
+uso), Leads, Usuários, Portadores, Regiões, Produtos, Laboratórios, OS e Transferência de
+Portadores. Os arquivos têm dados pessoais (nomes, telefones, e-mails) e **não foram copiados
+para este repositório**; abaixo só números agregados.
+
+### 10.1 Volumes
+
+| Cadastro | Registros | Observação |
+|---|---|---|
+| Clínicas | **3.740** | Código de 3 a 4306; 3.737 com WhatsApp; só 2 com responsável preenchido |
+| Clínicas com uso | **1.873** | Somam 148.667 OS no período do relatório; mediana de 20 por clínica; as 100 maiores concentram 36% |
+| Clínicas sem uso | **1.867** | Exatamente o restante do cadastro: metade da base não usa o serviço |
+| Leads | **4.402** | Vendedor em quase todos; captação vazia em 47%, cidade vazia em 28%, e-mail vazio em 31% |
+| Usuários | **3.860** | 3.758 de clínica (login = código da clínica), 81 portadores, ~21 internos (vendas, triagem, logística, financeiro, TI, diretoria e o usuário do agente de IA) |
+| Transportadoras | 2 | ALCHEMYPET e MONTANA, com e-mail e telefone de exemplo (`supervisor@…`, mesmo número) |
+| Regiões | **24** | A tabela de taxa de emergência da SPEC tem só 7 faixas: é preciso um de-para região → faixa |
+| Produtos | 3 | Todos com preço 0 — cadastro sem uso (fecha P-S6) |
+| Laboratórios concorrentes | 51 | No lead, o laboratório é texto livre (162 grafias diferentes); precisa normalizar contra esta lista |
+| OS | 10.000 (amostra) | Números 666.153 a 676.152; o Pocket já emitiu ~676 mil etiquetas |
+| Transferências | 282 pedidos | Em 209 coletas, de 2024-07 a 2026-10, envolvendo 52 portadores |
+
+A SPEC falava em "~100 usuários": o número real é 3.860, porque **cada clínica tem login
+próprio**. Isso reforça a PWA da Clínica e mostra que a migração de acesso é em massa (convite
+por WhatsApp, já que quase nenhuma clínica tem e-mail no cadastro de usuário).
+
+### 10.2 O que os dados dizem sobre a operação
+
+- **Transferência com aprovação existe só no papel.** Das 282 solicitações, 54 têm aprovação;
+  desde fev/2025 foram 14 em 239. 80 pedidos não têm portador de destino, 51 são cliques
+  repetidos e 5 transferem para o próprio portador. O fluxo novo deve ser simples (pedido →
+  aceite do outro portador ou do supervisor) e impedir esses casos na tela.
+- **Improdutiva não tem motivo estruturado.** Na amostra de OS, 130 improdutivas; o campo de
+  observação traz números de bags e textos como "Coletado". O prazo vem como `nao_urgente` ou
+  `emergencia` (são os códigos atuais). Motivo de improdutiva vira lista fechada.
+- **Metade das clínicas está parada.** 1.867 clínicas cadastradas sem nenhuma OS no período:
+  é a primeira fila do alerta de saúde da carteira (E18) e da régua de reativação do agente.
+- **O funil não veio no export de leads.** A planilha não traz a etapa (Lead, Onboarding, Cliente
+  Ativo…), só 171 datas de onboarding. Sem a etapa, o kanban não pode ser migrado (P-D2).
+
+### 10.3 Chaves para a migração
+
+| Ligação | Resultado | Consequência |
+|---|---|---|
+| Usuário de clínica → Clínica | 3.737 de 3.758 logins são códigos de clínica | Usuário da clínica migra junto com a conta; 21 sobras para revisar |
+| OS → Clínica | 228 de 228 códigos da amostra existem no cadastro | O código da clínica é confiável dentro do Pocket |
+| Clínicas com uso → Clínica | 1.873 de 1.878 pelo código | OK |
+| Clínicas **sem** uso → Clínica | 0 pelo código; 1.864 de 1.867 pelo **nome** | Esse relatório usa outro identificador (7963 a 11719). Importar casando por nome, ou pedir o código (P-D3) |
+| Lead → Clínica | 1.156 casam pelo telefone, 304 pelo nome | ~1.200 leads já são clínicas: unificar em uma conta; 266 telefones repetidos entre leads |
+| Vendedor | "Roberta Ianelli" e "Roberta Lanelli" | Mesma pessoa com grafia diferente: tabela de de-para de vendedores |
+
+### 10.4 De-para de campos (Pocket → Integrado)
+
+| Pocket | Campo novo |
+|---|---|
+| Clínicas: Código, Nome da clínica, Região, Responsável, Whatsapp | `clinica.codigo_legado`, `nome`, `regiao_id`, `Contact` (responsável), `Contact.telefone` |
+| Leads: Nome, Telefone, Email, Cidade, UF | `clinica` (etapa = lead quando não casar) + `Contact` + `Address` |
+| Leads: Captação, Vendedor, Decisor, Atend. Mês, Exames Mês, Divide Lab, Nota Lab, Atende Convênio, Convênio | `captacao`, `vendedor_id`, `decisor`, `atendimentos_mes`, `exames_mes`, `divide_laboratorio`, `nota_laboratorio`, `atende_convenio`, `convenios` |
+| Leads: Laboratorio / Laboratórios (texto) | `Competitor` (N:N), normalizado pela lista de 51 |
+| Leads: Onboarding (data) | `Activity` de onboarding ou data da etapa |
+| Usuários: Login, Departamento, Cargo, E-mail, Telefone | `usuario` com perfil por departamento (CLINICA → clinica, PORTADOR → portador, VENDAS → comercial, TRIAGEM → triagem, LOGISTICA → supervisor_logistica) |
+| Portadores: Empresa, E-mail, Telefone | `CourierCompany` |
+| OS: Os, Clínica, Região, Nome portador, Prazo, Improdutiva, Obs improdutiva | `Label`, `PickupRequest.urgencia`, `UnproductiveVisit` |
+| Transferência: Coleta, Dt solicitação, Portador, Destino, Aprovado por, Data aprovação | `Transfer` |
+
+### 10.5 Pendências novas, vindas dos dados
+
+| # | Pendência | Por quê |
+|---|---|---|
+| P-D1 | Exportar **OS com data, status e logs** (o grid exportou 10.000 linhas sem datas) e as **coletas** | Sem isso não há histórico de 12 meses nem OS abertas para migrar |
+| P-D2 | Exportar leads **com a etapa do funil** e o motivo de encerramento | Sem a etapa o kanban começa vazio |
+| P-D3 | O que é o código 7963–11719 do relatório de clínicas sem uso? | Evita casar por nome |
+| P-D4 | Período do relatório "Clínicas em Utilização" (as 148.667 OS cobrem qual intervalo?) | Dá o volume mensal real de OS para dimensionar torre, filas e custo de WhatsApp |
+| P-D5 | Cadastro de portadores com região e transportadora (o export veio só com as 2 empresas) | Despacho por região depende disso |
+| P-D6 | Contatos das clínicas: só WhatsApp, quase sem e-mail e responsável | Definir quem é o contato autorizado para o agente em cada clínica |
