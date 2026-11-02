@@ -128,3 +128,15 @@ export function iconeModulo(key: string, className?: string) {
   if (key === 'particular') return <IconeTriagem className={className} />;
   return <IconeConvenio className={className} />;
 }
+
+// CRM — pessoas com alvo (carteira de clínicas e leads)
+export function IconeCrm({ className, size = 18 }: IconeProps) {
+  return (
+    <svg className={className} {...base(size)}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+      <circle cx="18" cy="9" r="2.5" />
+      <path d="M17 14.2A5 5 0 0 1 21.5 19" />
+    </svg>
+  );
+}

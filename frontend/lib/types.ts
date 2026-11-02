@@ -376,3 +376,94 @@ export interface RelatoriosResponse {
   per_page: number;
   items: RelatorioQualidade[];
 }
+
+// ===== CRM (contas vindas do Pocket) =====
+
+export type EtapaConta = 'lead' | 'cliente';
+export type UsoConta = 'com' | 'sem' | 'sem_info';
+
+export interface Conta {
+  id: string;
+  nome: string;
+  codigo_pocket: string | null;
+  origem: string;
+  etapa: EtapaConta | string;
+  regiao: string;
+  whatsapp: string;
+  email: string;
+  cidade: string;
+  uf: string;
+  vendedor: string;
+  captacao: string;
+  decisor: boolean | null;
+  atendimentos_mes: number | null;
+  exames_mes: number | null;
+  divide_laboratorio: boolean | null;
+  nota_laboratorio: string;
+  laboratorios: string[];
+  atende_convenio: boolean;
+  em_uso: boolean | null;
+  qtd_os_periodo: number;
+  tem_login_pocket: boolean;
+}
+
+export type FiltrosContas = {
+  busca?: string;
+  etapa?: EtapaConta | '';
+  uso?: UsoConta | '';
+  regiao?: string;
+  vendedor?: string;
+  ordem?: 'nome' | 'os';
+  page?: number;
+  per_page?: number;
+};
+
+export interface ContasResponse {
+  total: number;
+  page: number;
+  per_page: number;
+  items: Conta[];
+}
+
+export interface CrmContagem {
+  label: string;
+  total: number;
+}
+
+export interface CrmResumo {
+  contas: number;
+  clientes: number;
+  leads: number;
+  com_uso: number;
+  sem_uso: number;
+  uso_sem_info: number;
+  clientes_com_dados_de_lead: number;
+  os_no_periodo: number;
+  portadores: number;
+  transferencias: number;
+  transferencias_aprovadas: number;
+  por_regiao: CrmContagem[];
+  por_vendedor: CrmContagem[];
+  por_captacao: CrmContagem[];
+  concorrentes: CrmContagem[];
+}
+
+export interface CrmFiltros {
+  regioes: string[];
+  vendedores: string[];
+}
+
+export interface CrmImportArquivo {
+  arquivo: string;
+  tipo: string;
+  rotulo: string;
+  linhas: number;
+  criados: number;
+  atualizados: number;
+  ignorados: number;
+  avisos: string[];
+}
+
+export interface CrmImportResponse {
+  arquivos: CrmImportArquivo[];
+}

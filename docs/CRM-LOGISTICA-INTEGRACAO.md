@@ -337,3 +337,29 @@ por WhatsApp, já que quase nenhuma clínica tem e-mail no cadastro de usuário)
 | P-D4 | Período do relatório "Clínicas em Utilização" (as 148.667 OS cobrem qual intervalo?) | Dá o volume mensal real de OS para dimensionar torre, filas e custo de WhatsApp |
 | P-D5 | Cadastro de portadores com região e transportadora (o export veio só com as 2 empresas) | Despacho por região depende disso |
 | P-D6 | Contatos das clínicas: só WhatsApp, quase sem e-mail e responsável | Definir quem é o contato autorizado para o agente em cada clínica |
+
+---
+
+## 11. Já implementado (primeira entrega do E18/E22)
+
+Com as exportações recebidas, o Integrado já tem a base do CRM:
+
+- **Conta única**: a tabela `clinica` ganhou os campos do CRM (etapa, região, vendedor,
+  captação, qualificação, uso no período, código do Pocket). Clínicas das pendências com o mesmo
+  código e nome são reaproveitadas, não duplicadas.
+- **Cadastros novos**: regiões, laboratórios concorrentes (com vínculo N:N à conta),
+  transportadoras, portadores e histórico de transferências de portador.
+- **Importador do Pocket** (`backend/app/pocket_importer.py`, rota `POST /crm/importar-pocket`):
+  recebe vários arquivos de uma vez, reconhece cada exportação pelo cabeçalho, processa na ordem
+  certa e devolve um relatório por arquivo. Reimportar não duplica. Lead casa com clínica pelo
+  telefone e depois pelo nome; dados de lead só preenchem campos vazios; "Roberta Lanelli" vira
+  "Roberta Ianelli"; células com erro de fórmula (`#N/A`) são ignoradas. Nenhum login é criado a
+  partir dos usuários do Pocket.
+- **Tela CRM › Contas** (`/crm`): indicadores da carteira, gráficos por região, vendedor,
+  captação e concorrentes, lista filtrável e o botão de importação (só admin).
+
+Resultado com os arquivos de 02/11/2026: **6.488 contas** — 3.740 clientes (1.873 com uso,
+1.861 sem uso, 6 sem informação) e 2.748 leads; 1.390 leads unificados com clínicas; 52
+portadores e 282 transferências.
+
+Ainda não entram: OS e coletas (P-D1), etapa fina do funil (P-D2) e tabela de preço por região.

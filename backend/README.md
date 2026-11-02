@@ -28,6 +28,15 @@ Ver `.env.example`. Em produção, aponte `DATABASE_URL` para o Postgres.
 | GET | `/clinicas` | Lista de clínicas (filtro) |
 | GET | `/usuarios` | Usuários (placeholder até auth do ecossistema) |
 | POST | `/importar` | Importa `.xlsx` (todas as abas, idempotente) |
+| POST | `/crm/importar-pocket` | Admin. Importa vários arquivos exportados dos grids do Pocket (.csv/.xlsx), reconhecidos pelo cabeçalho; idempotente |
+| GET | `/crm/contas` | Contas do CRM (clínicas e leads) com filtros: busca, etapa, uso, região, vendedor |
+| GET | `/crm/resumo` | Indicadores da carteira (clientes, uso, leads, região, vendedor, captação, concorrentes) |
+| GET | `/crm/filtros` | Regiões e vendedores para os filtros |
+
+## Testes
+```bash
+cd backend && python -m unittest discover -s tests
+```
 
 ## Estrutura
 ```

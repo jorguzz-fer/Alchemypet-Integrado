@@ -35,7 +35,8 @@ class Usuario(Base):
 
 
 class Clinica(Base):
-    """Master data de clínicas (consolidado na importação, usado em filtros)."""
+    """Conta (clínica ou lead). Nasceu como master data das pendências e passa
+    a ser a conta do CRM: lead e clínica são o mesmo registro (muda a etapa)."""
 
     __tablename__ = "clinica"
 
@@ -44,6 +45,109 @@ class Clinica(Base):
     nome: Mapped[str] = mapped_column(String(200), index=True)
     atende_convenio: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+    # ----- CRM (importado do Pocket) -----
+    # Origem do registro: pendencia | pocket | lead
+    origem: Mapped[str] = mapped_column(String(20), default="pendencia", index=True)
+    codigo_pocket: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    # Chave do lead que não casou com nenhuma clínica (idempotência).
+    lead_chave: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    # lead | cliente. A etapa fina do funil depende de exportação do Pocket.
+    etapa: Mapped[str] = mapped_column(String(30), default="", index=True)
+    regiao_id: Mapped[str | None] = mapped_column(ForeignKey("regiao.id"), nullable=True, index=True)
+    whatsapp: Mapped[str] = mapped_column(String(40), default="")
+    telefone_norm: Mapped[str] = mapped_column(String(20), default="", index=True)
+    responsavel: Mapped[str] = mapped_column(String(160), default="")
+    email: Mapped[str] = mapped_column(String(200), default="")
+    cidade: Mapped[str] = mapped_column(String(120), default="")
+    uf: Mapped[str] = mapped_column(String(2), default="")
+    vendedor: Mapped[str] = mapped_column(String(120), default="", index=True)
+    captacao: Mapped[str] = mapped_column(String(60), default="")
+    decisor: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    atendimentos_mes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    exames_mes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    divide_laboratorio: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    nota_laboratorio: Mapped[str] = mapped_column(String(20), default="")
+    laboratorios_texto: Mapped[str] = mapped_column(Text, default="")
+    convenios: Mapped[str] = mapped_column(Text, default="")
+    onboarding_em: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # Uso no período do relatório "Clínicas em Utilização": None = sem informação.
+    em_uso: Mapped[bool | None] = mapped_column(Boolean, nullable=True, index=True)
+    qtd_os_periodo: Mapped[int] = mapped_column(Integer, default=0)
+    tem_login_pocket: Mapped[bool] = mapped_column(Boolean, default=False)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, onupdate=_now)
+
+    regiao: Mapped["Regiao | None"] = relationship()
+    laboratorios: Mapped[list["Laboratorio"]] = relationship(secondary="clinica_laboratorio")
+
+
+# ===== CRM e logística (base vinda do Pocket) =====
+
+class Regiao(Base):
+    __tablename__ = "regiao"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    nome: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    ativa: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class Laboratorio(Base):
+    """Laboratório concorrente (qualificação de leads)."""
+
+    __tablename__ = "laboratorio"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    nome: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+
+
+class ClinicaLaboratorio(Base):
+    __tablename__ = "clinica_laboratorio"
+
+    clinica_id: Mapped[str] = mapped_column(
+        ForeignKey("clinica.id", ondelete="CASCADE"), primary_key=True
+    )
+    laboratorio_id: Mapped[str] = mapped_column(
+        ForeignKey("laboratorio.id", ondelete="CASCADE"), primary_key=True
+    )
+
+
+class Transportadora(Base):
+    __tablename__ = "transportadora"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    nome: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    email: Mapped[str] = mapped_column(String(160), default="")
+    telefone: Mapped[str] = mapped_column(String(40), default="")
+
+
+class Portador(Base):
+    __tablename__ = "portador"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    codigo_pocket: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True)
+    nome: Mapped[str] = mapped_column(String(160), default="")
+    transportadora_id: Mapped[str | None] = mapped_column(
+        ForeignKey("transportadora.id"), nullable=True
+    )
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class TransferenciaPortador(Base):
+    """Pedido de troca de portador numa coleta (histórico do Pocket)."""
+
+    __tablename__ = "transferencia_portador"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    chave: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    coleta: Mapped[str] = mapped_column(String(20), index=True)
+    solicitado_em: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
+    de_portador_id: Mapped[str | None] = mapped_column(ForeignKey("portador.id"), nullable=True)
+    para_portador_id: Mapped[str | None] = mapped_column(ForeignKey("portador.id"), nullable=True)
+    aprovado_por: Mapped[str] = mapped_column(String(80), default="")
+    aprovado_em: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    de_portador: Mapped["Portador | None"] = relationship(foreign_keys=[de_portador_id])
+    para_portador: Mapped["Portador | None"] = relationship(foreign_keys=[para_portador_id])
 
 
 class Pendencia(Base):

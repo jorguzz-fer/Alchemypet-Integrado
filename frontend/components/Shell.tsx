@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 import {
   IconeChamados,
   IconeConvenio,
+  IconeCrm,
   IconeDashboard,
   IconeFila,
   IconePop,
@@ -104,6 +105,20 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               className={`side-link${linkAtivo('/convenio/pendencias') ? ' ativo' : ''}`}
             >
               Convênio
+            </Link>
+          </div>
+
+          {/* CRM — contas (clínicas e leads) vindas do Pocket. */}
+          <div className="side-group">
+            <Link
+              href="/crm"
+              className={`side-group-title link${linkAtivo('/crm') ? ' ativo' : ''}`}
+            >
+              <IconeCrm className="side-ic" />
+              CRM
+            </Link>
+            <Link href="/crm" className={`side-link${linkAtivo('/crm') ? ' ativo' : ''}`}>
+              Contas
             </Link>
           </div>
 

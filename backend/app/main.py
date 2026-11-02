@@ -12,6 +12,7 @@ from .routers import (
     auth,
     catalogos,
     chamado,
+    crm,
     dashboard,
     importacao,
     pendencias,
@@ -60,14 +61,49 @@ app.include_router(importacao.router, dependencies=protegido)
 app.include_router(pop.router, dependencies=protegido)
 app.include_router(chamado.router, dependencies=protegido)
 app.include_router(relatorio_qualidade.router, dependencies=protegido)
+app.include_router(crm.router, dependencies=protegido)
 app.include_router(usuarios.router)  # protege internamente (usuario_atual/exige_admin)
 app.include_router(manutencao.router)  # exige_admin no próprio router
+
+
+# Colunas de CRM acrescentadas à tabela de clínicas (conta única do CRM).
+_COLUNAS_CLINICA_CRM = [
+    ("origem", "VARCHAR(20) DEFAULT 'pendencia'"),
+    ("codigo_pocket", "VARCHAR(20)"),
+    ("lead_chave", "VARCHAR(64)"),
+    ("etapa", "VARCHAR(30) DEFAULT ''"),
+    ("regiao_id", "VARCHAR(36) REFERENCES regiao(id)"),
+    ("whatsapp", "VARCHAR(40) DEFAULT ''"),
+    ("telefone_norm", "VARCHAR(20) DEFAULT ''"),
+    ("responsavel", "VARCHAR(160) DEFAULT ''"),
+    ("email", "VARCHAR(200) DEFAULT ''"),
+    ("cidade", "VARCHAR(120) DEFAULT ''"),
+    ("uf", "VARCHAR(2) DEFAULT ''"),
+    ("vendedor", "VARCHAR(120) DEFAULT ''"),
+    ("captacao", "VARCHAR(60) DEFAULT ''"),
+    ("decisor", "BOOLEAN"),
+    ("atendimentos_mes", "INTEGER"),
+    ("exames_mes", "INTEGER"),
+    ("divide_laboratorio", "BOOLEAN"),
+    ("nota_laboratorio", "VARCHAR(20) DEFAULT ''"),
+    ("laboratorios_texto", "TEXT DEFAULT ''"),
+    ("convenios", "TEXT DEFAULT ''"),
+    ("onboarding_em", "DATE"),
+    ("em_uso", "BOOLEAN"),
+    ("qtd_os_periodo", "INTEGER DEFAULT 0"),
+    ("tem_login_pocket", "BOOLEAN DEFAULT FALSE"),
+    ("updated_at", "TIMESTAMP"),
+]
+_INDICES_CLINICA_CRM = [
+    "origem", "codigo_pocket", "lead_chave", "etapa", "regiao_id",
+    "telefone_norm", "vendedor", "em_uso",
+]
 
 
 def _migracao_leve() -> None:
     """Adiciona colunas a bancos já existentes (idempotente).
     create_all não altera tabelas; no Postgres usamos ADD COLUMN IF NOT EXISTS.
-    Em SQLite (dev) só acrescentamos as colunas novas da pendência."""
+    Em SQLite (dev) só acrescentamos as colunas novas da pendência e do CRM."""
     if not engine.url.get_backend_name().startswith("postgresql"):
         with engine.begin() as conn:
             cols = {r[1] for r in conn.execute(text("PRAGMA table_info(pendencia)"))}
@@ -75,6 +111,12 @@ def _migracao_leve() -> None:
                 conn.execute(text("ALTER TABLE pendencia ADD COLUMN motivo VARCHAR(80) DEFAULT ''"))
             if cols and "observacao" not in cols:
                 conn.execute(text("ALTER TABLE pendencia ADD COLUMN observacao TEXT DEFAULT ''"))
+            cols = {r[1] for r in conn.execute(text("PRAGMA table_info(clinica)"))}
+            for nome, tipo in _COLUNAS_CLINICA_CRM:
+                if cols and nome not in cols:
+                    conn.execute(text(f"ALTER TABLE clinica ADD COLUMN {nome} {tipo}"))
+            for nome in _INDICES_CLINICA_CRM:
+                conn.execute(text(f"CREATE INDEX IF NOT EXISTS ix_clinica_{nome} ON clinica ({nome})"))
         return
     ddl = [
         "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS email VARCHAR(160)",
@@ -94,6 +136,8 @@ def _migracao_leve() -> None:
         "ALTER TABLE pendencia ADD COLUMN IF NOT EXISTS observacao TEXT DEFAULT ''",
         "CREATE INDEX IF NOT EXISTS ix_pendencia_motivo ON pendencia (motivo)",
     ]
+    ddl += [f"ALTER TABLE clinica ADD COLUMN IF NOT EXISTS {nome} {tipo}" for nome, tipo in _COLUNAS_CLINICA_CRM]
+    ddl += [f"CREATE INDEX IF NOT EXISTS ix_clinica_{nome} ON clinica ({nome})" for nome in _INDICES_CLINICA_CRM]
     with engine.begin() as conn:
         for stmt in ddl:
             conn.execute(text(stmt))

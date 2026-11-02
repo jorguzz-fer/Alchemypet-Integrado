@@ -331,3 +331,82 @@ class RelatorioQualidadePage(BaseModel):
     page: int
     per_page: int
     items: list[RelatorioQualidadeOut]
+
+
+# ===== CRM (contas vindas do Pocket) =====
+
+class CrmImportArquivo(BaseModel):
+    arquivo: str
+    tipo: str
+    rotulo: str
+    linhas: int
+    criados: int
+    atualizados: int
+    ignorados: int
+    avisos: list[str]
+
+
+class CrmImportResult(BaseModel):
+    arquivos: list[CrmImportArquivo]
+
+
+class ContaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    nome: str
+    codigo_pocket: str | None
+    origem: str
+    etapa: str
+    regiao: str = ""
+    whatsapp: str
+    email: str
+    cidade: str
+    uf: str
+    vendedor: str
+    captacao: str
+    decisor: bool | None
+    atendimentos_mes: int | None
+    exames_mes: int | None
+    divide_laboratorio: bool | None
+    nota_laboratorio: str
+    laboratorios: list[str] = Field(default_factory=list)
+    atende_convenio: bool
+    em_uso: bool | None
+    qtd_os_periodo: int
+    tem_login_pocket: bool
+
+
+class ContaPage(BaseModel):
+    total: int
+    page: int
+    per_page: int
+    items: list[ContaOut]
+
+
+class CrmContagem(BaseModel):
+    label: str
+    total: int
+
+
+class CrmResumoOut(BaseModel):
+    contas: int
+    clientes: int
+    leads: int
+    com_uso: int
+    sem_uso: int
+    uso_sem_info: int
+    clientes_com_dados_de_lead: int
+    os_no_periodo: int
+    portadores: int
+    transferencias: int
+    transferencias_aprovadas: int
+    por_regiao: list[CrmContagem]
+    por_vendedor: list[CrmContagem]
+    por_captacao: list[CrmContagem]
+    concorrentes: list[CrmContagem]
+
+
+class CrmFiltrosOut(BaseModel):
+    regioes: list[str]
+    vendedores: list[str]
