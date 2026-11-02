@@ -3,6 +3,11 @@
 
 import type {
   ClinicasResponse,
+  ContasResponse,
+  CrmFiltros,
+  CrmImportResponse,
+  CrmResumo,
+  FiltrosContas,
   DashboardResponse,
   FiltrosPendencias,
   HealthResponse,
@@ -430,5 +435,24 @@ export const api = {
       `/relatorios-qualidade/${encodeURIComponent(id)}.${formato}`,
       `relatorio-qualidade.${formato}`,
     );
+  },
+
+  // ===== CRM =====
+  crmResumo(signal?: AbortSignal): Promise<CrmResumo> {
+    return request<CrmResumo>('/crm/resumo', { signal });
+  },
+
+  crmFiltros(signal?: AbortSignal): Promise<CrmFiltros> {
+    return request<CrmFiltros>('/crm/filtros', { signal });
+  },
+
+  listContas(filtros: FiltrosContas = {}, signal?: AbortSignal): Promise<ContasResponse> {
+    return request<ContasResponse>('/crm/contas', { query: filtros, signal });
+  },
+
+  importarPocket(files: File[]): Promise<CrmImportResponse> {
+    const fd = new FormData();
+    files.forEach((f) => fd.append('files', f));
+    return request<CrmImportResponse>('/crm/importar-pocket', { method: 'POST', formData: fd });
   },
 };
