@@ -23,6 +23,10 @@ um laboratório de análises clínicas veterinárias.
   analisadores (AU480 e Ac·T 10), CRM, rastreio/logística e agente de atendimento com Chatwoot;
   escopo da Fase 1, modelo de dados, estimativa de esforço, faseamento em contrato de 24 meses,
   premissas fechadas e pendências.
+- [CRM, Coletas e Relacionamento — Integração](docs/CRM-LOGISTICA-INTEGRACAO.md) — como a SPEC de
+  substituição do **Sistema Pocket** (logística de coleta, CRM comercial e agente de WhatsApp) entra
+  no Integrado: encaixe nos épicos E18/E19/E20, conta de clínica única, ciclo da amostra da clínica
+  ao laudo, stack, pendências consolidadas e impacto no orçamento.
 
 ## Módulos
 - [Painel Convênio](painel-convenio/README.md) — tela de gestão das pendências de convênio.
