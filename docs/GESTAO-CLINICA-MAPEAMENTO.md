@@ -649,9 +649,13 @@ Respostas dadas em 2026-09-02 às perguntas em aberto da primeira versão deste 
    (AU480: ASTM serial ou TCP/IP; Ac·T 10: serial), se já estão ligados a algum software hoje e
    onde ficará o gateway. Um exemplo de transmissão real de cada um acelera o driver.
 9. **CRM**: construir o módulo (premissa atual) ou integrar o CRM já em produção?
+   → **Fechada em 2026-11-02**: o CRM em produção é o Sistema Pocket e será substituído (construir).
+   Ver [CRM, Coletas e Relacionamento — Integração](CRM-LOGISTICA-INTEGRACAO.md).
 10. **Agente atual**: em que plataforma roda hoje e o que migra para o Chatwoot; canais a ativar
     (WhatsApp já homologado?, Instagram, e-mail).
 11. **Logística**: quantidade de clínicas, coletas por dia e coletores, para dimensionar rotas.
+   → Respondida em parte pela SPEC do Pocket (~4.400 contas, 1.807 clientes ativos, 942 OS em
+   trânsito no dia observado); detalhes e novas pendências em [CRM-LOGISTICA-INTEGRACAO.md](CRM-LOGISTICA-INTEGRACAO.md).
 
 ---
 
