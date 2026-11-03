@@ -333,7 +333,7 @@ class RelatorioQualidadePage(BaseModel):
     items: list[RelatorioQualidadeOut]
 
 
-# ===== CRM (contas vindas do Pocket) =====
+# ===== CRM (contas, funil e atividades) =====
 
 class CrmImportArquivo(BaseModel):
     arquivo: str
@@ -358,6 +358,8 @@ class ContaOut(BaseModel):
     codigo_pocket: str | None
     origem: str
     etapa: str
+    etapa_derivada: bool
+    temperatura: str
     regiao: str = ""
     whatsapp: str
     email: str
@@ -375,6 +377,16 @@ class ContaOut(BaseModel):
     em_uso: bool | None
     qtd_os_periodo: int
     tem_login_pocket: bool
+    motivo_encerramento: str
+    ultima_atividade_em: datetime | None
+
+
+class ContaDetalheOut(ContaOut):
+    responsavel: str
+    convenios: str
+    laboratorios_texto: str
+    onboarding_em: date | None
+    created_at: datetime | None
 
 
 class ContaPage(BaseModel):
@@ -384,15 +396,77 @@ class ContaPage(BaseModel):
     items: list[ContaOut]
 
 
+class ContaCreate(BaseModel):
+    nome: str = Field(min_length=1, max_length=200)
+    whatsapp: str = Field("", max_length=40)
+    email: str = Field("", max_length=200)
+    cidade: str = Field("", max_length=120)
+    uf: str = Field("", max_length=2)
+    vendedor: str = Field("", max_length=120)
+    captacao: str = Field("", max_length=60)
+    temperatura: str = ""
+    etapa: str = "lead"
+    regiao: str = ""
+    observacao: str = Field("", max_length=2000)
+
+
+class ContaUpdate(BaseModel):
+    nome: str | None = Field(None, min_length=1, max_length=200)
+    etapa: str | None = None
+    motivo_encerramento: str | None = Field(None, max_length=1000)
+    temperatura: str | None = None
+    vendedor: str | None = Field(None, max_length=120)
+    whatsapp: str | None = Field(None, max_length=40)
+    email: str | None = Field(None, max_length=200)
+    cidade: str | None = Field(None, max_length=120)
+    uf: str | None = Field(None, max_length=2)
+    captacao: str | None = Field(None, max_length=60)
+    decisor: bool | None = None
+    atendimentos_mes: int | None = Field(None, ge=0)
+    exames_mes: int | None = Field(None, ge=0)
+    regiao: str | None = None
+
+
+class AtividadeIn(BaseModel):
+    tipo: str
+    descricao: str = Field("", max_length=4000)
+    data: date | None = None
+    hora: str = Field("", pattern=r"^$|^([01]\d|2[0-3]):[0-5]\d$")
+
+
+class AtividadeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    clinica_id: str
+    tipo: str
+    descricao: str
+    data: date
+    hora: str
+    usuario_id: str | None
+    usuario_nome: str
+    created_at: datetime
+
+
 class CrmContagem(BaseModel):
     label: str
     total: int
 
 
+class EtapaContagem(BaseModel):
+    etapa: str
+    label: str
+    total: int
+
+
+class CrmFunilOut(BaseModel):
+    total: int
+    etapas: list[EtapaContagem]
+
+
 class CrmResumoOut(BaseModel):
     contas: int
-    clientes: int
-    leads: int
+    clientes_pocket: int
     com_uso: int
     sem_uso: int
     uso_sem_info: int
@@ -407,6 +481,28 @@ class CrmResumoOut(BaseModel):
     concorrentes: list[CrmContagem]
 
 
+class CrmOpcao(BaseModel):
+    valor: str
+    label: str
+
+
 class CrmFiltrosOut(BaseModel):
     regioes: list[str]
     vendedores: list[str]
+    etapas: list[CrmOpcao]
+    temperaturas: list[CrmOpcao]
+    tipos_atividade: list[str]
+
+
+class RankingLinha(BaseModel):
+    usuario: str
+    total: int
+    por_tipo: dict[str, int]
+
+
+class RankingOut(BaseModel):
+    data_de: date
+    data_ate: date
+    total: int
+    tipos: list[str]
+    linhas: list[RankingLinha]

@@ -34,6 +34,7 @@ LOTE_MIGRACAO = 500
 
 # Nome do registro em `migracao` que marca o realinhamento das chaves naturais.
 MIG_CHAVES = "pendencia-chave-natural"
+MIG_CRM_ETAPAS = "crm-etapas-funil"
 
 app = FastAPI(title=settings.APP_NAME, version="2.0.0")
 
@@ -93,6 +94,10 @@ _COLUNAS_CLINICA_CRM = [
     ("qtd_os_periodo", "INTEGER DEFAULT 0"),
     ("tem_login_pocket", "BOOLEAN DEFAULT FALSE"),
     ("updated_at", "TIMESTAMP"),
+    ("etapa_derivada", "BOOLEAN DEFAULT FALSE"),
+    ("motivo_encerramento", "TEXT DEFAULT ''"),
+    ("temperatura", "VARCHAR(10) DEFAULT ''"),
+    ("ultima_atividade_em", "TIMESTAMP"),
 ]
 _INDICES_CLINICA_CRM = [
     "origem", "codigo_pocket", "lead_chave", "etapa", "regiao_id",
@@ -232,6 +237,27 @@ def _migracao_dados(db) -> None:
         log.info("Motivos classificados: %s pendência(s).", total)
 
 
+def _migracao_etapas_crm(db) -> None:
+    """A primeira versão do CRM só tinha as etapas "lead" e "cliente". Passa
+    para o funil completo, marcando a etapa como deduzida (a importação pode
+    refiná-la até alguém alterá-la à mão). Roda uma única vez."""
+    from .models import Migracao
+
+    if db.get(Migracao, MIG_CRM_ETAPAS):
+        return
+    db.execute(text(
+        "UPDATE clinica SET etapa = 'cliente_ativo', etapa_derivada = TRUE "
+        "WHERE etapa = 'cliente' AND (em_uso IS NULL OR em_uso = TRUE)"
+    ))
+    db.execute(text(
+        "UPDATE clinica SET etapa = 'inativo', etapa_derivada = TRUE "
+        "WHERE etapa = 'cliente' AND em_uso = FALSE"
+    ))
+    db.execute(text("UPDATE clinica SET etapa_derivada = TRUE WHERE etapa = 'lead' AND origem = 'lead'"))
+    db.add(Migracao(chave=MIG_CRM_ETAPAS))
+    db.commit()
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
@@ -240,7 +266,8 @@ def on_startup() -> None:
     # serem realinhadas. Cada migração roda isolada, para que uma falha não
     # impeça a outra nem derrube a API — o erro é registrado e o serviço sobe.
     for nome, migracao in (("ajustes de dados", _migracao_dados),
-                           ("chaves naturais", _recarimba_chaves)):
+                           ("chaves naturais", _recarimba_chaves),
+                           ("etapas do CRM", _migracao_etapas_crm)):
         try:
             with SessionLocal() as db:
                 migracao(db)

@@ -121,7 +121,8 @@ class PocketImporterTest(unittest.TestCase):
         self.assertEqual(len(contas), 4)
 
         alfa = contas["Clínica Alfa"]
-        self.assertEqual(alfa.etapa, "cliente")
+        self.assertEqual(alfa.etapa, "cliente_ativo")  # com uso
+        self.assertTrue(alfa.etapa_derivada)
         self.assertEqual(alfa.vendedor, "Roberta Ianelli")  # grafia corrigida
         self.assertEqual(alfa.email, "alfa@x.com")
         self.assertTrue(alfa.decisor)
@@ -132,6 +133,8 @@ class PocketImporterTest(unittest.TestCase):
         self.assertEqual([lab.nome for lab in alfa.laboratorios], ["TECSA"])
 
         self.assertIs(contas["Clínica Beta"].em_uso, False)  # sem uso, casado pelo nome
+        self.assertEqual(contas["Clínica Beta"].etapa, "inativo")
+        self.assertEqual(contas["Clínica Gama"].etapa, "cliente_ativo")
         self.assertIsNone(contas["Clínica Gama"].em_uso)
         self.assertEqual(contas["Clínica Gama"].captacao, "Mailing")
 
@@ -158,6 +161,24 @@ class PocketImporterTest(unittest.TestCase):
         self.assertEqual(len(alfa), 1)
         self.assertEqual(alfa[0].nome, "Clínica Alfa")
         self.assertEqual(alfa[0].vendedor, "Roberta Ianelli")
+
+    def test_etapa_alterada_a_mao_nao_e_sobrescrita(self):
+        importar_arquivos(self.db, ARQUIVOS)
+        beta = self.db.scalar(select(Clinica).where(Clinica.codigo_pocket == "11"))
+        beta.etapa, beta.etapa_derivada = "onboarding", False
+        self.db.commit()
+        importar_arquivos(self.db, ARQUIVOS)
+        self.db.refresh(beta)
+        self.assertEqual(beta.etapa, "onboarding")
+
+    def test_coluna_de_etapa_do_pocket(self):
+        leads = xlsx_pocket(
+            ["Nome", "Telefone", "Vendedor", "Captação", "Etapa", "Temperatura"],
+            [["Pet Contrato", "(11)96666-6666", "Ana", "Google", "Contratos", "Quente"]],
+        )
+        importar_arquivos(self.db, [("leads.xlsx", leads)])
+        c = self.db.scalar(select(Clinica).where(Clinica.nome == "Pet Contrato"))
+        self.assertEqual((c.etapa, c.etapa_derivada, c.temperatura), ("contratos", False, "quente"))
 
     def test_arquivo_desconhecido(self):
         res = importar_arquivos(self.db, [("x.csv", b"a,b\n1,2\n")])
