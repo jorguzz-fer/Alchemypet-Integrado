@@ -52,8 +52,14 @@ class Clinica(Base):
     codigo_pocket: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
     # Chave do lead que não casou com nenhuma clínica (idempotência).
     lead_chave: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    # lead | cliente. A etapa fina do funil depende de exportação do Pocket.
+    # Etapa do funil (ver crm_constantes.ETAPAS). "" = fora do CRM.
     etapa: Mapped[str] = mapped_column(String(30), default="", index=True)
+    # True quando a etapa foi deduzida pela importação; a importação só mexe
+    # nela enquanto ninguém a tiver alterado à mão.
+    etapa_derivada: Mapped[bool] = mapped_column(Boolean, default=False)
+    motivo_encerramento: Mapped[str] = mapped_column(Text, default="")
+    temperatura: Mapped[str] = mapped_column(String(10), default="")  # fria|morna|quente
+    ultima_atividade_em: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     regiao_id: Mapped[str | None] = mapped_column(ForeignKey("regiao.id"), nullable=True, index=True)
     whatsapp: Mapped[str] = mapped_column(String(40), default="")
     telefone_norm: Mapped[str] = mapped_column(String(20), default="", index=True)
@@ -314,3 +320,22 @@ class RelatorioQualidade(Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
+
+
+class Atividade(Base):
+    """Atividade comercial registrada numa conta (ligação, visita, proposta…)."""
+
+    __tablename__ = "atividade"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    clinica_id: Mapped[str] = mapped_column(
+        ForeignKey("clinica.id", ondelete="CASCADE"), index=True
+    )
+    tipo: Mapped[str] = mapped_column(String(30), index=True)
+    descricao: Mapped[str] = mapped_column(Text, default="")
+    # Data e hora informadas por quem registrou (horário de Brasília).
+    data: Mapped[date] = mapped_column(Date, index=True)
+    hora: Mapped[str] = mapped_column(String(5), default="")
+    usuario_id: Mapped[str | None] = mapped_column(ForeignKey("usuario.id"), nullable=True)
+    usuario_nome: Mapped[str] = mapped_column(String(120), default="", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)

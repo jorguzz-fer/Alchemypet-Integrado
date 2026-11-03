@@ -25,6 +25,7 @@ from openpyxl import load_workbook
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .crm_constantes import TEMPERATURAS, etapa_por_rotulo
 from .models import (
     Clinica,
     ClinicaLaboratorio,
@@ -159,6 +160,14 @@ def _hash(*partes: object) -> str:
 def _vendedor(v: object) -> str:
     nome = _txt(v, 120)
     return VENDEDOR_ALIAS.get(norm_texto(nome), nome)
+
+
+def _etapa_deduzida(c: Clinica, etapa: str) -> None:
+    """Aplica uma etapa deduzida pela importação, sem sobrescrever a etapa
+    que alguém já tenha definido à mão (ou que veio do próprio Pocket)."""
+    if not c.etapa or c.etapa_derivada:
+        c.etapa = etapa
+        c.etapa_derivada = True
 
 
 def _preencher(obj, campo: str, valor) -> bool:
@@ -366,7 +375,8 @@ class ImportadorPocket:
             c.codigo_pocket = codigo
             if not c.codigo:
                 c.codigo = codigo
-            c.etapa = "cliente"
+            if not c.etapa or c.etapa_derivada and c.etapa in ("lead", ""):
+                _etapa_deduzida(c, "inativo" if c.em_uso is False else "cliente_ativo")
             c.regiao = regiao or c.regiao
             if whats:
                 c.whatsapp, c.telefone_norm = whats, tel
@@ -384,6 +394,7 @@ class ImportadorPocket:
                 continue
             c.em_uso = True
             c.qtd_os_periodo = _inteiro(linha[idx["qtd"]]) or 0
+            _etapa_deduzida(c, "cliente_ativo")
             res.atualizados += 1
         if res.ignorados:
             res.avisos.append(
@@ -402,6 +413,7 @@ class ImportadorPocket:
                 continue
             c.em_uso = False
             c.qtd_os_periodo = 0
+            _etapa_deduzida(c, "inativo")
             res.atualizados += 1
         res.avisos.append("Relatório sem código da clínica: casamento feito pelo nome.")
 
@@ -436,7 +448,8 @@ class ImportadorPocket:
                 chave = _hash("lead", tel or norm_texto(nome))
                 c = self.por_lead.get(chave)
             if c is None:
-                c = Clinica(nome=nome or tel_bruto, origem="lead", etapa="lead", lead_chave=chave)
+                c = Clinica(nome=nome or tel_bruto, origem="lead", etapa="lead",
+                            etapa_derivada=True, lead_chave=chave)
                 self.db.add(c)
                 res.criados += 1
             else:
@@ -445,8 +458,17 @@ class ImportadorPocket:
                     com_lead += 1
                 else:
                     com_clinica += 1
-            if not c.etapa:
-                c.etapa = "lead"
+            # Etapa e temperatura, quando a exportação trouxer essas colunas,
+            # são a verdade do Pocket e prevalecem sobre a dedução.
+            etapa_pocket = etapa_por_rotulo(g(linha, "etapa") or g(linha, "status") or "")
+            if etapa_pocket:
+                c.etapa, c.etapa_derivada = etapa_pocket, False
+            elif not c.etapa:
+                _etapa_deduzida(c, "lead")
+            temp = norm_texto(g(linha, "temperatura"))[:5]
+            temp = {"fri": "fria", "mor": "morna", "que": "quente"}.get(temp[:3], "")
+            if temp in TEMPERATURAS:
+                c.temperatura = temp
             if tel and not c.telefone_norm:
                 c.whatsapp, c.telefone_norm = tel_bruto, tel
             _preencher(c, "email", _txt(g(linha, "email"), 200))
@@ -477,9 +499,11 @@ class ImportadorPocket:
         )
         if labs_casados:
             res.avisos.append(f"{labs_casados} vínculo(s) com laboratórios concorrentes do cadastro.")
-        res.avisos.append(
-            "A etapa do funil não vem nesta exportação: leads entram como 'lead' e clínicas como 'cliente'."
-        )
+        if "etapa" not in idx and "status" not in idx:
+            res.avisos.append(
+                "Sem a coluna de etapa, ela é deduzida: lead novo = Lead; clínica com uso = "
+                "Cliente Ativo; sem uso = Inativo. Etapas alteradas à mão nunca são sobrescritas."
+            )
 
     def _vincular_labs(self, c: Clinica, texto: str) -> int:
         novos = 0

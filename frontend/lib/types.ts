@@ -377,9 +377,17 @@ export interface RelatoriosResponse {
   items: RelatorioQualidade[];
 }
 
-// ===== CRM (contas vindas do Pocket) =====
+// ===== CRM (contas, funil e atividades) =====
 
-export type EtapaConta = 'lead' | 'cliente';
+export type EtapaConta =
+  | 'lead'
+  | 'distribuicao'
+  | 'contratos'
+  | 'onboarding'
+  | 'cliente_ativo'
+  | 'inativo'
+  | 'bloqueado';
+export type Temperatura = 'fria' | 'morna' | 'quente' | '';
 export type UsoConta = 'com' | 'sem' | 'sem_info';
 
 export interface Conta {
@@ -387,7 +395,9 @@ export interface Conta {
   nome: string;
   codigo_pocket: string | null;
   origem: string;
-  etapa: EtapaConta | string;
+  etapa: EtapaConta;
+  etapa_derivada: boolean;
+  temperatura: Temperatura;
   regiao: string;
   whatsapp: string;
   email: string;
@@ -405,7 +415,45 @@ export interface Conta {
   em_uso: boolean | null;
   qtd_os_periodo: number;
   tem_login_pocket: boolean;
+  motivo_encerramento: string;
+  ultima_atividade_em: string | null;
 }
+
+export interface ContaDetalhe extends Conta {
+  responsavel: string;
+  convenios: string;
+  laboratorios_texto: string;
+  onboarding_em: string | null;
+  created_at: string | null;
+}
+
+export interface ContaInput {
+  nome: string;
+  whatsapp?: string;
+  email?: string;
+  cidade?: string;
+  uf?: string;
+  vendedor?: string;
+  captacao?: string;
+  temperatura?: Temperatura;
+  etapa?: EtapaConta;
+  regiao?: string;
+  observacao?: string;
+}
+
+export type ContaPatch = Partial<{
+  nome: string;
+  etapa: EtapaConta;
+  motivo_encerramento: string;
+  temperatura: Temperatura;
+  vendedor: string;
+  whatsapp: string;
+  email: string;
+  cidade: string;
+  uf: string;
+  captacao: string;
+  regiao: string;
+}>;
 
 export type FiltrosContas = {
   busca?: string;
@@ -413,7 +461,8 @@ export type FiltrosContas = {
   uso?: UsoConta | '';
   regiao?: string;
   vendedor?: string;
-  ordem?: 'nome' | 'os';
+  temperatura?: Temperatura;
+  ordem?: 'nome' | 'os' | 'atividade' | 'recentes';
   page?: number;
   per_page?: number;
 };
@@ -425,6 +474,44 @@ export interface ContasResponse {
   items: Conta[];
 }
 
+export interface EtapaContagem {
+  etapa: EtapaConta;
+  label: string;
+  total: number;
+}
+
+export interface CrmFunil {
+  total: number;
+  etapas: EtapaContagem[];
+}
+
+export interface Atividade {
+  id: string;
+  clinica_id: string;
+  tipo: string;
+  descricao: string;
+  data: string;
+  hora: string;
+  usuario_id: string | null;
+  usuario_nome: string;
+  created_at: string;
+}
+
+export interface AtividadeInput {
+  tipo: string;
+  descricao?: string;
+  data?: string;
+  hora?: string;
+}
+
+export interface RankingAtividades {
+  data_de: string;
+  data_ate: string;
+  total: number;
+  tipos: string[];
+  linhas: { usuario: string; total: number; por_tipo: Record<string, number> }[];
+}
+
 export interface CrmContagem {
   label: string;
   total: number;
@@ -432,8 +519,7 @@ export interface CrmContagem {
 
 export interface CrmResumo {
   contas: number;
-  clientes: number;
-  leads: number;
+  clientes_pocket: number;
   com_uso: number;
   sem_uso: number;
   uso_sem_info: number;
@@ -448,9 +534,17 @@ export interface CrmResumo {
   concorrentes: CrmContagem[];
 }
 
+export interface CrmOpcao {
+  valor: string;
+  label: string;
+}
+
 export interface CrmFiltros {
   regioes: string[];
   vendedores: string[];
+  etapas: CrmOpcao[];
+  temperaturas: CrmOpcao[];
+  tipos_atividade: string[];
 }
 
 export interface CrmImportArquivo {

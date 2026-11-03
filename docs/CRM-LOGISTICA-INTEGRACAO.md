@@ -363,3 +363,22 @@ Resultado com os arquivos de 02/11/2026: **6.488 contas** — 3.740 clientes (1.
 portadores e 282 transferências.
 
 Ainda não entram: OS e coletas (P-D1), etapa fina do funil (P-D2) e tabela de preço por região.
+
+### 11.1 Segunda entrega: funil, atividades e novo lead
+
+- **Funil completo**: Lead → Distribuição → Contratos → Onboarding → Cliente Ativo, com as saídas
+  Inativo e Bloqueado (exigem motivo). A faixa do funil no topo da lista conta as contas por
+  etapa e filtra com um clique.
+- **Etapa deduzida × etapa real**: sem a coluna de etapa na exportação, a importação deduz
+  (lead novo = Lead; clínica com uso = Cliente Ativo; sem uso = Inativo) e marca como deduzida.
+  Quem mudar a etapa no Integrado manda nela: a importação não sobrescreve. Se a exportação de
+  leads trouxer as colunas "Etapa" ou "Temperatura", elas são usadas.
+- **Painel da conta**: WhatsApp e e-mail, etapa, temperatura (fria/morna/quente), vendedor,
+  registro de atividade e histórico com data, hora e quem registrou; mudança de etapa e criação
+  do lead entram no histórico automaticamente.
+- **Atividades**: os 13 tipos do Pocket; aba com o ranking por pessoa e tipo no período.
+- **Lista**: último contato por conta (vermelho a partir de 30 dias sem contato) e ordenação
+  "sem contato há mais tempo".
+
+Pendente: importar o histórico de atividades do Pocket (exportar o "Ranking de Atividades") e
+restringir a carteira por vendedor (hoje todos os usuários veem todas as contas).

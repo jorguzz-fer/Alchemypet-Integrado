@@ -3,7 +3,14 @@
 
 import type {
   ClinicasResponse,
+  Atividade,
+  AtividadeInput,
+  ContaDetalhe,
+  ContaInput,
+  ContaPatch,
   ContasResponse,
+  CrmFunil,
+  RankingAtividades,
   CrmFiltros,
   CrmImportResponse,
   CrmResumo,
@@ -448,6 +455,53 @@ export const api = {
 
   listContas(filtros: FiltrosContas = {}, signal?: AbortSignal): Promise<ContasResponse> {
     return request<ContasResponse>('/crm/contas', { query: filtros, signal });
+  },
+
+  crmFunil(filtros: FiltrosContas = {}, signal?: AbortSignal): Promise<CrmFunil> {
+    const { busca, uso, regiao, vendedor, temperatura } = filtros;
+    return request<CrmFunil>('/crm/funil', {
+      query: { busca, uso, regiao, vendedor, temperatura },
+      signal,
+    });
+  },
+
+  getConta(id: string, signal?: AbortSignal): Promise<ContaDetalhe> {
+    return request<ContaDetalhe>(`/crm/contas/${encodeURIComponent(id)}`, { signal });
+  },
+
+  createConta(body: ContaInput): Promise<ContaDetalhe> {
+    return request<ContaDetalhe>('/crm/contas', { method: 'POST', body });
+  },
+
+  patchConta(id: string, body: ContaPatch): Promise<ContaDetalhe> {
+    return request<ContaDetalhe>(`/crm/contas/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body,
+    });
+  },
+
+  listAtividades(contaId: string, signal?: AbortSignal): Promise<Atividade[]> {
+    return request<Atividade[]>(`/crm/contas/${encodeURIComponent(contaId)}/atividades`, {
+      signal,
+    });
+  },
+
+  createAtividade(contaId: string, body: AtividadeInput): Promise<Atividade> {
+    return request<Atividade>(`/crm/contas/${encodeURIComponent(contaId)}/atividades`, {
+      method: 'POST',
+      body,
+    });
+  },
+
+  deleteAtividade(id: string): Promise<void> {
+    return request<void>(`/crm/atividades/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  },
+
+  rankingAtividades(
+    periodo: { data_de?: string; data_ate?: string } = {},
+    signal?: AbortSignal,
+  ): Promise<RankingAtividades> {
+    return request<RankingAtividades>('/crm/atividades/ranking', { query: periodo, signal });
   },
 
   importarPocket(files: File[]): Promise<CrmImportResponse> {

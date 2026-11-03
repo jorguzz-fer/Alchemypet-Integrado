@@ -65,6 +65,28 @@ export function formatDataHora(iso: string | null | undefined): string {
   return `${dia}/${mes}/${d.getFullYear()} ${hh}:${mm}`;
 }
 
+// Tempo decorrido desde um instante: "hoje", "ontem", "há 5 dias", "há 2 meses".
+export function tempoDesde(iso: string | null | undefined): string {
+  if (!iso) return 'nunca';
+  const d = paraInstante(iso);
+  if (!d) return '—';
+  const dias = Math.floor((Date.now() - d.getTime()) / 86_400_000);
+  if (dias <= 0) return 'hoje';
+  if (dias === 1) return 'ontem';
+  if (dias < 30) return `há ${dias} dias`;
+  const meses = Math.floor(dias / 30);
+  if (meses < 12) return meses === 1 ? 'há 1 mês' : `há ${meses} meses`;
+  const anos = Math.floor(meses / 12);
+  return anos === 1 ? 'há 1 ano' : `há ${anos} anos`;
+}
+
+// Dias desde um instante (null quando não há data).
+export function diasDesde(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const d = paraInstante(iso);
+  return d ? Math.floor((Date.now() - d.getTime()) / 86_400_000) : null;
+}
+
 // Numero -> string pt-BR.
 export function formatNumero(n: number | null | undefined): string {
   if (n === null || n === undefined || Number.isNaN(n)) return '—';
