@@ -147,7 +147,8 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
     porPagina: { valor: perPage, onChange: (n) => setFiltros((f) => ({ ...f, per_page: n, page: 1 })) },
     onExcluidos: (n) => {
       setAviso(n === 1 ? '1 pendência excluída.' : `${formatNumero(n)} pendências excluídas.`);
-      carregar(filtros);
+      // Objeto novo: recarrega a lista e as contagens de ano do filtro.
+      setFiltros((f) => ({ ...f }));
     },
   });
 
@@ -334,6 +335,7 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
       <Filtros
         value={filtros}
         onApply={setFiltros}
+        modulo={modulo}
         clinicas={clinicas}
         showTipo={!modulo}
         showClinica
