@@ -228,6 +228,7 @@ export default function FilaTriagemPage() {
       <Filtros
         value={filtros}
         onApply={setFiltros}
+        modulo={modulo}
         clinicas={clinicas}
         showClinica
         showResponsavel

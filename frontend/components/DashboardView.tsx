@@ -142,6 +142,7 @@ export default function DashboardView({ modulo }: { modulo?: Modulo }) {
       <Filtros
         value={filtros}
         onApply={setFiltros}
+        modulo={modulo}
         showTipo={!modulo}
         resumo={
           dados ? (

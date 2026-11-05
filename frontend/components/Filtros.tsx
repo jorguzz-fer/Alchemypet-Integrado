@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
 import type { FiltrosPendencias } from '@/lib/types';
 import { MOTIVOS_PENDENCIA } from '@/lib/types';
 import { nomeMes } from '@/lib/format';
@@ -17,10 +18,12 @@ interface FiltrosProps {
   showBusca?: boolean;
   // Texto/resumo exibido na barra de acoes (direita).
   resumo?: React.ReactNode;
+  // Módulo fixo da tela (sem ele, vale o "Tipo" escolhido no filtro).
+  modulo?: string;
 }
 
-// Anos disponiveis: ano atual ate 4 anos atras.
-function anosDisponiveis(): number[] {
+// Reserva enquanto a lista real não chega: ano atual até 4 anos atrás.
+function anosPadrao(): number[] {
   const atual = new Date().getFullYear();
   const anos: number[] = [];
   for (let a = atual; a >= atual - 4; a--) anos.push(a);
@@ -38,6 +41,7 @@ export default function Filtros({
   showResponsavel = false,
   showBusca = false,
   resumo,
+  modulo,
 }: FiltrosProps) {
   const [draft, setDraft] = useState<FiltrosPendencias>(value);
 
@@ -46,7 +50,23 @@ export default function Filtros({
     setDraft(value);
   }, [value]);
 
-  const anos = anosDisponiveis();
+  // Anos que existem nos dados (com a quantidade), para não esconder
+  // registros antigos ou com data digitada errada.
+  const [anosDados, setAnosDados] = useState<{ ano: number; total: number }[] | null>(null);
+  const moduloAnos = modulo || value.modulo || '';
+  useEffect(() => {
+    const ctrl = new AbortController();
+    api
+      .anos(moduloAnos || undefined, ctrl.signal)
+      .then(setAnosDados)
+      .catch(() => {
+        /* fica a lista padrão */
+      });
+    return () => ctrl.abort();
+  }, [moduloAnos, value]);
+  const anos = anosDados
+    ? anosDados
+    : anosPadrao().map((ano) => ({ ano, total: -1 }));
 
   function set<K extends keyof FiltrosPendencias>(
     key: K,
@@ -107,10 +127,13 @@ export default function Filtros({
         >
           <option value="">Todos</option>
           {anos.map((a) => (
-            <option key={a} value={a}>
-              {a}
+            <option key={a.ano} value={a.ano}>
+              {a.total >= 0 ? `${a.ano} (${a.total.toLocaleString('pt-BR')})` : a.ano}
             </option>
           ))}
+          {draft.ano && !anos.some((a) => String(a.ano) === String(draft.ano)) ? (
+            <option value={draft.ano}>{draft.ano}</option>
+          ) : null}
         </select>
       </div>
 

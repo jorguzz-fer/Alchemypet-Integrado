@@ -260,6 +260,10 @@ export const api = {
     });
   },
 
+  anos(modulo?: string, signal?: AbortSignal): Promise<{ ano: number; total: number }[]> {
+    return request<{ ano: number; total: number }[]>('/anos', { query: { modulo }, signal });
+  },
+
   clinicas(modulo?: string, signal?: AbortSignal): Promise<ClinicasResponse> {
     return request<ClinicasResponse>('/clinicas', {
       query: { modulo },
