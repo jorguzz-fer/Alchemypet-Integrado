@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
+import { useSelecaoLote } from '@/components/useSelecaoLote';
 import type {
   ChamadosResponse,
   Chamado,
@@ -82,6 +83,22 @@ export default function ChamadosListaPage() {
   const page = resp?.page ?? filtros.page ?? 1;
   const perPage = resp?.per_page ?? PER_PAGE;
   const totalPaginas = Math.max(1, Math.ceil(total / perPage));
+
+  // Seleção e exclusão em lote (filtros sem página/ordem).
+  const { page: _pg, per_page: _pp, ordem: _o, ...filtrosLote } = filtros;
+  const sel = useSelecaoLote<Chamado>({
+    recurso: 'chamados',
+    items,
+    total,
+    filtros: filtrosLote,
+    singular: 'chamado',
+    plural: 'chamados',
+    descrever: (c) => c.assunto || 'sem assunto',
+    onExcluidos: (n) => {
+      setAviso(n === 1 ? '1 chamado excluído.' : `${formatNumero(n)} chamados excluídos.`);
+      carregar(filtros);
+    },
+  });
 
   function aplicar(patch: Partial<FiltrosChamado>) {
     setFiltros((f) => ({ ...f, ...patch, page: 1 }));
@@ -321,10 +338,13 @@ export default function ChamadosListaPage() {
           </div>
         </div>
 
+        {sel.barra}
+
         <div className="scroll">
           <table>
             <thead>
               <tr>
+                <th className="sel-col">{sel.cabecalho}</th>
                 <th>Data</th>
                 <th>Assunto</th>
                 <th>Complexidade</th>
@@ -336,14 +356,14 @@ export default function ChamadosListaPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="empty-row" colSpan={6}>
+                  <td className="empty-row" colSpan={7}>
                     <div className="spinner" />
                     Carregando chamados…
                   </td>
                 </tr>
               ) : erro ? (
                 <tr>
-                  <td className="empty-row" colSpan={6}>
+                  <td className="empty-row" colSpan={7}>
                     <div style={{ color: 'var(--erro)', fontWeight: 700 }}>{erro}</div>
                     <button
                       className="btn primary sm"
@@ -356,13 +376,14 @@ export default function ChamadosListaPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td className="empty-row" colSpan={6}>
+                  <td className="empty-row" colSpan={7}>
                     Nenhum chamado para os filtros selecionados.
                   </td>
                 </tr>
               ) : (
                 items.map((c) => (
                   <tr key={c.id}>
+                    <td className="sel-col">{sel.caixa(c)}</td>
                     <td className="nowrap">{formatData(c.data)}</td>
                     <td className="wrap">{c.assunto || '—'}</td>
                     <td>
@@ -448,6 +469,8 @@ export default function ChamadosListaPage() {
           onSaved={aposSalvar}
         />
       ) : null}
+
+      {sel.modal}
     </div>
   );
 }

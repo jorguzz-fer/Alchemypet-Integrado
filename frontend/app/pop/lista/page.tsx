@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
+import { useSelecaoLote } from '@/components/useSelecaoLote';
 import type {
   FiltrosPop,
   Pop,
@@ -95,6 +96,22 @@ export default function PopListaPage() {
   const page = resp?.page ?? filtros.page ?? 1;
   const perPage = resp?.per_page ?? PER_PAGE;
   const totalPaginas = Math.max(1, Math.ceil(total / perPage));
+
+  // Seleção e exclusão em lote (filtros sem página/ordem).
+  const { page: _pg, per_page: _pp, ordem: _o, ...filtrosLote } = filtros;
+  const sel = useSelecaoLote<Pop>({
+    recurso: 'pops',
+    items,
+    total,
+    filtros: filtrosLote,
+    singular: 'POP',
+    plural: 'POPs',
+    descrever: (p) => `POP ${p.numero} ${p.nome}`.trim(),
+    onExcluidos: (n) => {
+      setAviso(n === 1 ? '1 POP excluído.' : `${formatNumero(n)} POPs excluídos.`);
+      carregar(filtros);
+    },
+  });
 
   function aplicar(patch: Partial<FiltrosPop>) {
     setFiltros((f) => ({ ...f, ...patch, page: 1 }));
@@ -305,10 +322,13 @@ export default function PopListaPage() {
           </div>
         </div>
 
+        {sel.barra}
+
         <div className="scroll">
           <table>
             <thead>
               <tr>
+                <th className="sel-col">{sel.cabecalho}</th>
                 <th>Nº POP</th>
                 <th>Nome</th>
                 <th>Ano</th>
@@ -320,14 +340,14 @@ export default function PopListaPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="empty-row" colSpan={6}>
+                  <td className="empty-row" colSpan={7}>
                     <div className="spinner" />
                     Carregando POPs…
                   </td>
                 </tr>
               ) : erro ? (
                 <tr>
-                  <td className="empty-row" colSpan={6}>
+                  <td className="empty-row" colSpan={7}>
                     <div style={{ color: 'var(--erro)', fontWeight: 700 }}>{erro}</div>
                     <button
                       className="btn primary sm"
@@ -340,13 +360,14 @@ export default function PopListaPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td className="empty-row" colSpan={6}>
+                  <td className="empty-row" colSpan={7}>
                     Nenhum POP para os filtros selecionados.
                   </td>
                 </tr>
               ) : (
                 items.map((p) => (
                   <tr key={p.id}>
+                    <td className="sel-col">{sel.caixa(p)}</td>
                     <td className="nowrap">{p.numero || '—'}</td>
                     <td className="wrap">{p.nome || '—'}</td>
                     <td className="nowrap">{p.ano ?? '—'}</td>
@@ -411,6 +432,8 @@ export default function PopListaPage() {
           onSaved={aposSalvar}
         />
       ) : null}
+
+      {sel.modal}
     </div>
   );
 }

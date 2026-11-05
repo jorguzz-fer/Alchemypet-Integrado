@@ -6,9 +6,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..exclusao_lote import ExclusaoFiltroIn, ExclusaoLoteIn, ExclusaoOut, excluir_filtro, excluir_ids
 from ..models import Pop
 from ..pop_importer import classificar_area, importar_pops_xlsx
 from ..reports import pops_pdf, pops_xlsx
+from ..security import exige_admin
 from ..schemas import (
     PopAno,
     PopCreate,
@@ -149,6 +151,25 @@ def atualizar(pop_id: str, dados: PopUpdate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(p)
     return p
+
+
+@router.post("/excluir-lote", response_model=ExclusaoOut)
+def excluir_lote(body: ExclusaoLoteIn, db: Session = Depends(get_db)):
+    """Exclui os POPs selecionados na tela (até 500)."""
+    return excluir_ids(db, Pop, body)
+
+
+@router.post("/excluir-filtro", response_model=ExclusaoOut, dependencies=[Depends(exige_admin)])
+def excluir_por_filtro(
+    body: ExclusaoFiltroIn,
+    ano: int | None = None,
+    tipo: str | None = None,
+    area: str | None = None,
+    busca: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Exclui todos os POPs do filtro atual (só admin)."""
+    return excluir_filtro(db, Pop, _filtrar(select(Pop), ano, tipo, area, busca), body)
 
 
 @router.delete("/{pop_id}", status_code=204)

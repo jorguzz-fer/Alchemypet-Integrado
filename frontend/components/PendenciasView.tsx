@@ -16,6 +16,7 @@ import StatusBadge from '@/components/StatusBadge';
 import TratativasModal from '@/components/TratativasModal';
 import PendenciaFormModal from '@/components/PendenciaFormModal';
 import OrdenarSelect from '@/components/OrdenarSelect';
+import { useSelecaoLote } from '@/components/useSelecaoLote';
 import type { Ordem } from '@/lib/types';
 
 const PER_PAGE = 25;
@@ -124,6 +125,30 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
   const page = resp?.page ?? filtros.page ?? 1;
   const perPage = resp?.per_page ?? PER_PAGE;
   const totalPaginas = Math.max(1, Math.ceil(total / perPage));
+
+  // Filtros que a exclusão "todas do filtro" repete no servidor.
+  const { page: _p, per_page: _pp, ...filtrosLote } = { ...filtros, modulo: modulo ?? filtros.modulo };
+  const sel = useSelecaoLote<Pendencia>({
+    recurso: 'pendencias',
+    items,
+    total,
+    filtros: filtrosLote,
+    singular: 'pendência',
+    plural: 'pendências',
+    feminino: true,
+    descrever: (p) => `guia ${p.guia || '—'} (${p.paciente || 'sem paciente'})`,
+    alerta: (sels) => {
+      const abertas = sels.filter((p) => p.status !== 'concluido').length;
+      if (!abertas) return null;
+      return abertas === 1
+        ? 'Atenção: 1 delas ainda não foi concluída.'
+        : `Atenção: ${formatNumero(abertas)} delas ainda não foram concluídas.`;
+    },
+    onExcluidos: (n) => {
+      setAviso(n === 1 ? '1 pendência excluída.' : `${formatNumero(n)} pendências excluídas.`);
+      carregar(filtros);
+    },
+  });
 
   function irPara(p: number) {
     setFiltros((f) => ({ ...f, page: Math.min(Math.max(1, p), totalPaginas) }));
@@ -351,10 +376,13 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
           </div>
         </div>
 
+        {sel.barra}
+
         <div className="scroll">
           <table>
             <thead>
               <tr>
+                <th className="sel-col">{sel.cabecalho}</th>
                 {!modulo ? <th>Tipo</th> : null}
                 <th>Data</th>
                 <th>Guia</th>
@@ -371,14 +399,14 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="empty-row" colSpan={11}>
+                  <td className="empty-row" colSpan={12}>
                     <div className="spinner" />
                     Carregando pendências…
                   </td>
                 </tr>
               ) : erro ? (
                 <tr>
-                  <td className="empty-row" colSpan={11}>
+                  <td className="empty-row" colSpan={12}>
                     <div style={{ color: 'var(--erro)', fontWeight: 700 }}>
                       {erro}
                     </div>
@@ -393,13 +421,14 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td className="empty-row" colSpan={11}>
+                  <td className="empty-row" colSpan={12}>
                     Nenhuma pendência para os filtros selecionados.
                   </td>
                 </tr>
               ) : (
                 items.map((p) => (
                   <tr key={p.id}>
+                    <td className="sel-col">{sel.caixa(p)}</td>
                     {!modulo ? (
                       <td className="nowrap">
                         <span className={`tipo-tag ${p.modulo}`}>{nomeModulo(p.modulo)}</span>
@@ -503,6 +532,8 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
           </div>
         </div>
       </div>
+
+      {sel.modal}
 
       {modal ? (
         <TratativasModal

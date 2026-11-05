@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
+import { useSelecaoLote } from '@/components/useSelecaoLote';
 import type {
   FiltrosRelatorio,
   Ordem,
@@ -71,6 +72,22 @@ export default function RelatoriosPage() {
   const page = resp?.page ?? filtros.page ?? 1;
   const perPage = resp?.per_page ?? PER_PAGE;
   const totalPaginas = Math.max(1, Math.ceil(total / perPage));
+
+  // Seleção e exclusão em lote (filtros sem página/ordem).
+  const { page: _pg, per_page: _pp, ordem: _o, ...filtrosLote } = filtros;
+  const sel = useSelecaoLote<RelatorioQualidade>({
+    recurso: 'relatorios-qualidade',
+    items,
+    total,
+    filtros: filtrosLote,
+    singular: 'relatório',
+    plural: 'relatórios',
+    descrever: (r) => r.titulo || r.arquivo,
+    onExcluidos: (n) => {
+      setAviso(n === 1 ? '1 relatório excluído.' : `${formatNumero(n)} relatórios excluídos.`);
+      carregar(filtros);
+    },
+  });
 
   function aplicar(patch: Partial<FiltrosRelatorio>) {
     setFiltros((f) => ({ ...f, ...patch, page: 1 }));
@@ -278,10 +295,13 @@ export default function RelatoriosPage() {
           </div>
         </div>
 
+        {sel.barra}
+
         <div className="scroll">
           <table>
             <thead>
               <tr>
+                <th className="sel-col">{sel.cabecalho}</th>
                 <th>Gerado em</th>
                 <th>Relatório</th>
                 <th>Período</th>
@@ -294,14 +314,14 @@ export default function RelatoriosPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="empty-row" colSpan={7}>
+                  <td className="empty-row" colSpan={8}>
                     <div className="spinner" />
                     Carregando relatórios…
                   </td>
                 </tr>
               ) : erro ? (
                 <tr>
-                  <td className="empty-row" colSpan={7}>
+                  <td className="empty-row" colSpan={8}>
                     <div style={{ color: 'var(--erro)', fontWeight: 700 }}>{erro}</div>
                     <button
                       className="btn primary sm"
@@ -314,13 +334,14 @@ export default function RelatoriosPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td className="empty-row" colSpan={7}>
+                  <td className="empty-row" colSpan={8}>
                     Nenhum relatório gerado ainda.
                   </td>
                 </tr>
               ) : (
                 items.map((r) => (
                   <tr key={r.id}>
+                    <td className="sel-col">{sel.caixa(r)}</td>
                     <td className="nowrap">{formatData(r.created_at)}</td>
                     <td className="wrap">
                       {r.titulo || r.arquivo}
@@ -406,6 +427,8 @@ export default function RelatoriosPage() {
           </div>
         </div>
       </div>
+
+      {sel.modal}
     </div>
   );
 }

@@ -198,6 +198,8 @@ async function baixarArquivo(path: string, nomePadrao: string): Promise<void> {
 
 // ===== Endpoints =====
 
+export type RecursoLote = 'pendencias' | 'chamados' | 'pops' | 'relatorios-qualidade';
+
 export const api = {
   health(signal?: AbortSignal): Promise<HealthResponse> {
     return request<HealthResponse>('/health', { signal });
@@ -508,5 +510,25 @@ export const api = {
     const fd = new FormData();
     files.forEach((f) => fd.append('files', f));
     return request<CrmImportResponse>('/crm/importar-pocket', { method: 'POST', formData: fd });
+  },
+  // ===== Exclusão em lote (pendências, chamados, POPs, relatórios) =====
+  excluirLote(recurso: RecursoLote, ids: string[]): Promise<{ excluidas: number }> {
+    return request<{ excluidas: number }>(`/${recurso}/excluir-lote`, {
+      method: 'POST',
+      body: { ids },
+    });
+  },
+
+  excluirFiltro(
+    recurso: RecursoLote,
+    filtros: Record<string, string | number | boolean | null | undefined>,
+    total_esperado: number,
+    confirmacao: string,
+  ): Promise<{ excluidas: number }> {
+    return request<{ excluidas: number }>(`/${recurso}/excluir-filtro`, {
+      method: 'POST',
+      query: filtros,
+      body: { total_esperado, confirmacao },
+    });
   },
 };
