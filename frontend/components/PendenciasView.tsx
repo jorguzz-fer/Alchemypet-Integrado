@@ -144,6 +144,7 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
         ? 'Atenção: 1 delas ainda não foi concluída.'
         : `Atenção: ${formatNumero(abertas)} delas ainda não foram concluídas.`;
     },
+    porPagina: { valor: perPage, onChange: (n) => setFiltros((f) => ({ ...f, per_page: n, page: 1 })) },
     onExcluidos: (n) => {
       setAviso(n === 1 ? '1 pendência excluída.' : `${formatNumero(n)} pendências excluídas.`);
       carregar(filtros);
