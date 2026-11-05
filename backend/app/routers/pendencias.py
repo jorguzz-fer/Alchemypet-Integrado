@@ -3,14 +3,15 @@ from datetime import date
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..exclusao_lote import ExclusaoFiltroIn, ExclusaoLoteIn, ExclusaoOut, excluir_filtro, excluir_ids
 from ..filters import Filtros, aplicar
 from ..models import Pendencia, Tratativa, Usuario
 from ..motivos import MODULOS, MOTIVO_OBSERVACAO, normalizar_modulo, status_por_gestao
-from ..security import usuario_atual
+from ..security import exige_admin, usuario_atual
 from ..schemas import PendenciaCreate, PendenciaOut, PendenciaPage, PendenciaUpdate
 
 router = APIRouter(prefix="/pendencias", tags=["pendencias"])
@@ -164,3 +165,25 @@ def excluir(pendencia_id: str, db: Session = Depends(get_db)):
     db.delete(p)
     db.commit()
     return Response(status_code=204)
+
+
+# ----------------------------------------------------------- exclusão em lote
+
+def _tratativas(db: Session):
+    return lambda ids: db.execute(delete(Tratativa).where(Tratativa.pendencia_id.in_(ids)))
+
+
+@router.post("/excluir-lote", response_model=ExclusaoOut)
+def excluir_lote(body: ExclusaoLoteIn, db: Session = Depends(get_db)):
+    """Exclui as pendências selecionadas na tela (até 500), com as tratativas."""
+    return excluir_ids(db, Pendencia, body, _tratativas(db))
+
+
+@router.post("/excluir-filtro", response_model=ExclusaoOut, dependencies=[Depends(exige_admin)])
+def excluir_por_filtro(
+    body: ExclusaoFiltroIn,
+    f: Filtros = Depends(_filtros),
+    db: Session = Depends(get_db),
+):
+    """Exclui todas as pendências do filtro atual (só admin)."""
+    return excluir_filtro(db, Pendencia, aplicar(select(Pendencia), f), body, _tratativas(db))

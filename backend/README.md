@@ -28,6 +28,8 @@ Ver `.env.example`. Em produção, aponte `DATABASE_URL` para o Postgres.
 | GET | `/clinicas` | Lista de clínicas (filtro) |
 | GET | `/usuarios` | Usuários (placeholder até auth do ecossistema) |
 | POST | `/importar` | Importa `.xlsx` (todas as abas, idempotente) |
+| POST | `/{pendencias,chamados,pops,relatorios-qualidade}/excluir-lote` | Exclui os ids selecionados na tela (até 500) |
+| POST | `/{…}/excluir-filtro` | Admin. Exclui todo o filtro atual; exige digitar EXCLUIR e o total visto na tela (se mudou, recusa com 409) |
 | POST | `/crm/importar-pocket` | Admin. Importa vários arquivos exportados dos grids do Pocket (.csv/.xlsx), reconhecidos pelo cabeçalho; idempotente |
 | GET | `/crm/contas` | Contas do CRM (clínicas e leads) com filtros: busca, etapa, uso, região, vendedor |
 | GET | `/crm/resumo` | Indicadores da carteira (clientes, uso, leads, região, vendedor, captação, concorrentes) |

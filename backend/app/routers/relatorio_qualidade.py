@@ -9,10 +9,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..exclusao_lote import ExclusaoFiltroIn, ExclusaoLoteIn, ExclusaoOut, excluir_filtro, excluir_ids
 from ..models import RelatorioQualidade, Usuario
 from ..relatorios import gerar_pdf, ler_docx
 from ..schemas import RelatorioQualidadeOut, RelatorioQualidadePage
-from ..security import usuario_atual
+from ..security import exige_admin, usuario_atual
 
 router = APIRouter(prefix="/relatorios-qualidade", tags=["relatorios-qualidade"])
 
@@ -63,16 +64,7 @@ def _processar(conteudo: bytes) -> tuple[dict, bytes]:
     return meta, pdf
 
 
-@router.get("", response_model=RelatorioQualidadePage)
-def listar(
-    busca: str | None = None,
-    tipo: str | None = None,
-    ordem: str | None = None,
-    page: int = Query(1, ge=1),
-    per_page: int = Query(25, ge=1, le=200),
-    db: Session = Depends(get_db),
-):
-    stmt = select(RelatorioQualidade)
+def _filtrar(stmt, tipo: str | None, busca: str | None):
     if tipo:
         stmt = stmt.where(RelatorioQualidade.tipo == tipo)
     if busca:
@@ -82,6 +74,19 @@ def listar(
             | func.lower(RelatorioQualidade.periodo).like(termo)
             | func.lower(RelatorioQualidade.arquivo).like(termo)
         )
+    return stmt
+
+
+@router.get("", response_model=RelatorioQualidadePage)
+def listar(
+    busca: str | None = None,
+    tipo: str | None = None,
+    ordem: str | None = None,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(25, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    stmt = _filtrar(select(RelatorioQualidade), tipo, busca)
     total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
     if ordem == "antigos":
         stmt = stmt.order_by(RelatorioQualidade.created_at.asc())
@@ -155,6 +160,23 @@ def baixar_docx(relatorio_id: str, db: Session = Depends(get_db)):
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f'attachment; filename="{_nome_base(r)}.docx"'},
     )
+
+
+@router.post("/excluir-lote", response_model=ExclusaoOut)
+def excluir_lote(body: ExclusaoLoteIn, db: Session = Depends(get_db)):
+    """Exclui os relatórios selecionados na tela (até 500)."""
+    return excluir_ids(db, RelatorioQualidade, body)
+
+
+@router.post("/excluir-filtro", response_model=ExclusaoOut, dependencies=[Depends(exige_admin)])
+def excluir_por_filtro(
+    body: ExclusaoFiltroIn,
+    tipo: str | None = None,
+    busca: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Exclui todos os relatórios do filtro atual (só admin)."""
+    return excluir_filtro(db, RelatorioQualidade, _filtrar(select(RelatorioQualidade), tipo, busca), body)
 
 
 @router.delete("/{relatorio_id}", status_code=204)

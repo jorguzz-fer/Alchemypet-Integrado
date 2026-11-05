@@ -9,8 +9,10 @@ from sqlalchemy.orm import Session
 from ..chamado_classifier import classificar, normalizar_complexidade, normalizar_motivo
 from ..chamado_importer import importar_chamados_xlsx
 from ..database import get_db
+from ..exclusao_lote import ExclusaoFiltroIn, ExclusaoLoteIn, ExclusaoOut, excluir_filtro, excluir_ids
 from ..models import Chamado
 from ..reports import chamados_pdf, chamados_xlsx
+from ..security import exige_admin
 from ..schemas import (
     ChamadoCreate,
     ChamadoDashboardOut,
@@ -166,6 +168,28 @@ def atualizar(chamado_id: str, dados: ChamadoUpdate, db: Session = Depends(get_d
     db.commit()
     db.refresh(c)
     return c
+
+
+@router.post("/excluir-lote", response_model=ExclusaoOut)
+def excluir_lote(body: ExclusaoLoteIn, db: Session = Depends(get_db)):
+    """Exclui os chamados selecionados na tela (até 500)."""
+    return excluir_ids(db, Chamado, body)
+
+
+@router.post("/excluir-filtro", response_model=ExclusaoOut, dependencies=[Depends(exige_admin)])
+def excluir_por_filtro(
+    body: ExclusaoFiltroIn,
+    complexidade: str | None = None,
+    motivo: str | None = None,
+    status: str | None = None,
+    busca: str | None = None,
+    data_de: date | None = None,
+    data_ate: date | None = None,
+    db: Session = Depends(get_db),
+):
+    """Exclui todos os chamados do filtro atual (só admin)."""
+    base = _filtrar(select(Chamado), complexidade, motivo, status, busca, data_de, data_ate)
+    return excluir_filtro(db, Chamado, base, body)
 
 
 @router.delete("/{chamado_id}", status_code=204)
