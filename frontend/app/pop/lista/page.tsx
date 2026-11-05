@@ -107,6 +107,7 @@ export default function PopListaPage() {
     singular: 'POP',
     plural: 'POPs',
     descrever: (p) => `POP ${p.numero} ${p.nome}`.trim(),
+    porPagina: { valor: perPage, onChange: (n) => setFiltros((f) => ({ ...f, per_page: n, page: 1 })) },
     onExcluidos: (n) => {
       setAviso(n === 1 ? '1 POP excluído.' : `${formatNumero(n)} POPs excluídos.`);
       carregar(filtros);

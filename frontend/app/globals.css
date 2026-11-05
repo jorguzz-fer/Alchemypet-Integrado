@@ -2271,3 +2271,22 @@ td.sel-col {
   font-weight: 700;
   color: var(--erro);
 }
+
+.sel-barra.neutra {
+  background: var(--bg-soft);
+}
+.sel-porpagina {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+}
+.sel-porpagina select {
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  font-family: inherit;
+  background: #fff;
+}

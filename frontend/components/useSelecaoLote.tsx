@@ -29,7 +29,11 @@ interface Opcoes<T extends { id: string }> {
   // Como citar um item no aviso e na caixa (ex.: "guia 782342").
   descrever: (item: T) => string;
   onExcluidos: (n: number) => void;
+  // Quantos por página (seletor na barra). Sem isso, o seletor não aparece.
+  porPagina?: { valor: number; onChange: (n: number) => void };
 }
+
+export const OPCOES_POR_PAGINA = [25, 50, 100, 200];
 
 const PALAVRA = 'EXCLUIR';
 
@@ -42,6 +46,9 @@ export function useSelecaoLote<T extends { id: string }>(o: Opcoes<T>) {
   const [palavra, setPalavra] = useState('');
   const [excluindo, setExcluindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // Exclusão do filtro inteiro aberta pelo atalho (sem seleção prévia):
+  // cancelar desfaz a seleção que o atalho criou.
+  const [viaAtalho, setViaAtalho] = useState(false);
 
   const chaveFiltro = JSON.stringify(o.filtros);
   useEffect(() => {
@@ -96,6 +103,20 @@ export function useSelecaoLote<T extends { id: string }>(o: Opcoes<T>) {
     setIds(new Set());
   }
 
+  function excluirTudoDoFiltro() {
+    setTodos(true);
+    setViaAtalho(true);
+    setErro(null);
+    setPalavra('');
+    setConfirmando(true);
+  }
+
+  function cancelar() {
+    setConfirmando(false);
+    if (viaAtalho) limpar();
+    setViaAtalho(false);
+  }
+
   async function confirmar() {
     setExcluindo(true);
     setErro(null);
@@ -104,6 +125,7 @@ export function useSelecaoLote<T extends { id: string }>(o: Opcoes<T>) {
         ? await api.excluirFiltro(o.recurso, o.filtros, o.total, palavra)
         : await api.excluirLote(o.recurso, [...ids]);
       setConfirmando(false);
+      setViaAtalho(false);
       setPalavra('');
       limpar();
       o.onExcluidos(r.excluidas);
@@ -135,15 +157,61 @@ export function useSelecaoLote<T extends { id: string }>(o: Opcoes<T>) {
     />
   );
 
+  const seletorPorPagina = o.porPagina ? (
+    <label className="sel-porpagina">
+      Mostrar
+      <select
+        value={o.porPagina.valor}
+        onChange={(e) => o.porPagina?.onChange(Number(e.target.value))}
+        aria-label="Registros por página"
+      >
+        {OPCOES_POR_PAGINA.map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))}
+      </select>
+      por página
+    </label>
+  ) : null;
+
+  // Atalho direto para o filtro inteiro, sem precisar marcar a página antes:
+  // é o caminho de quem precisa limpar centenas ou milhares de registros.
+  const botaoTodos =
+    admin && o.total > o.items.length ? (
+      <button type="button" className="btn ghost sm" onClick={() => setTodos(true)}>
+        {g('Selecionar todas as', 'Selecionar todos os')} {formatNumero(o.total)} do filtro
+      </button>
+    ) : null;
+  const botaoExcluirTudo =
+    admin && o.total > 0 ? (
+      <button type="button" className="btn danger sm" onClick={excluirTudoDoFiltro}>
+        {g('Excluir todas as', 'Excluir todos os')} {formatNumero(o.total)} do filtro
+      </button>
+    ) : null;
+
   const barra =
-    quantidade > 0 ? (
+    quantidade === 0 ? (
+      o.items.length > 0 ? (
+        <div className="sel-barra neutra" role="region" aria-label="Seleção">
+          <span className="muted">
+            {formatNumero(o.total)} {nome(o.total)} no filtro
+            {o.total > o.items.length ? ` · ${formatNumero(o.items.length)} nesta página` : ''}
+          </span>
+          {botaoTodos}
+          <span className="sel-espaco" />
+          {seletorPorPagina}
+          {botaoExcluirTudo}
+        </div>
+      ) : null
+    ) : (
       <div className="sel-barra" role="region" aria-label="Seleção">
         <span>
           <b>{formatNumero(quantidade)}</b> {nome(quantidade)}{' '}
           {quantidade === 1 ? g('selecionada', 'selecionado') : g('selecionadas', 'selecionados')}
           {todos ? g(' (todas do filtro)', ' (todos do filtro)') : ''}
         </span>
-        {!todos && paginaToda && o.total > o.items.length && admin ? (
+        {!todos && o.total > quantidade && admin ? (
           <button type="button" className="link-btn" onClick={() => setTodos(true)}>
             {g('Selecionar todas as', 'Selecionar todos os')} {formatNumero(o.total)} do filtro
           </button>
@@ -163,8 +231,9 @@ export function useSelecaoLote<T extends { id: string }>(o: Opcoes<T>) {
         >
           Excluir {formatNumero(quantidade)}
         </button>
+        {seletorPorPagina}
       </div>
-    ) : null;
+    );
 
   const alertaPagina = !todos && o.alerta ? o.alerta(daPagina) : null;
   const exemplos = useMemo(() => daPagina.slice(0, 5), [daPagina]);
@@ -173,7 +242,7 @@ export function useSelecaoLote<T extends { id: string }>(o: Opcoes<T>) {
     <div
       className="modal-bg"
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget && !excluindo) setConfirmando(false);
+        if (e.target === e.currentTarget && !excluindo) cancelar();
       }}
     >
       <div className="modal" role="alertdialog" aria-modal="true" aria-labelledby="exc-titulo">
@@ -209,7 +278,7 @@ export function useSelecaoLote<T extends { id: string }>(o: Opcoes<T>) {
         {erro ? <div className="form-erro">{erro}</div> : null}
         <div className="modal-acoes">
           <button type="button" className="btn ghost" autoFocus={!todos} disabled={excluindo}
-            onClick={() => setConfirmando(false)}>
+            onClick={cancelar}>
             Cancelar
           </button>
           <button

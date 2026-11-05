@@ -94,6 +94,7 @@ export default function ChamadosListaPage() {
     singular: 'chamado',
     plural: 'chamados',
     descrever: (c) => c.assunto || 'sem assunto',
+    porPagina: { valor: perPage, onChange: (n) => setFiltros((f) => ({ ...f, per_page: n, page: 1 })) },
     onExcluidos: (n) => {
       setAviso(n === 1 ? '1 chamado excluído.' : `${formatNumero(n)} chamados excluídos.`);
       carregar(filtros);

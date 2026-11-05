@@ -83,6 +83,7 @@ export default function RelatoriosPage() {
     singular: 'relatório',
     plural: 'relatórios',
     descrever: (r) => r.titulo || r.arquivo,
+    porPagina: { valor: perPage, onChange: (n) => setFiltros((f) => ({ ...f, per_page: n, page: 1 })) },
     onExcluidos: (n) => {
       setAviso(n === 1 ? '1 relatório excluído.' : `${formatNumero(n)} relatórios excluídos.`);
       carregar(filtros);
