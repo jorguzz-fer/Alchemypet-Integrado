@@ -535,4 +535,12 @@ export const api = {
       body: { total_esperado, confirmacao },
     });
   },
+  // Lista do filtro inteiro em planilha (na ordem da tela).
+  exportarLista(
+    recurso: RecursoLote,
+    filtros: Record<string, string | number | boolean | null | undefined>,
+    nomePadrao: string,
+  ): Promise<void> {
+    return baixarArquivo(`/${recurso}/lista.xlsx${buildQuery(filtros)}`, nomePadrao);
+  },
 };

@@ -7,6 +7,9 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..ordenacao import MAX_EXPORTACAO, ordenar
+from ..reports import descrever_filtros, lista_xlsx
+from ..xlsx_resposta import _xlsx
 from ..exclusao_lote import ExclusaoFiltroIn, ExclusaoLoteIn, ExclusaoOut, excluir_filtro, excluir_ids
 from ..filters import Filtros, aplicar
 from ..models import Pendencia, Tratativa, Usuario
@@ -49,33 +52,80 @@ def _filtros(
     )
 
 
+# Colunas ordenáveis pelo título (chave da tela → colunas SQL, com desempate).
+ORDENAVEIS = {
+    "modulo": [Pendencia.modulo],
+    "data": [Pendencia.ano, Pendencia.mes, Pendencia.data_pedido],
+    "guia": [Pendencia.guia],
+    "paciente": [Pendencia.paciente],
+    "clinica": [Pendencia.clinica],
+    "motivo": [Pendencia.motivo],
+    "responsavel": [Pendencia.responsavel],
+    "status": [Pendencia.status],
+    "gestao": [Pendencia.gestao],
+}
+
+
+def _ordenada(base, ordem: str | None, sort: str | None, direcao: str | None):
+    if sort:
+        return ordenar(base, sort, direcao, ORDENAVEIS, ("data", "desc"))
+    if ordem == "prioridade":
+        # Fila de triagem: mais antigas primeiro (nulos por último).
+        return base.order_by(Pendencia.data_pedido.is_(None), Pendencia.data_pedido.asc())
+    if ordem == "antigos":
+        return base.order_by(Pendencia.ano.asc(), Pendencia.mes.asc(), Pendencia.data_pedido.asc())
+    return base.order_by(Pendencia.ano.desc(), Pendencia.mes.desc(), Pendencia.data_pedido.desc())
+
+
 @router.get("", response_model=PendenciaPage)
 def listar(
     f: Filtros = Depends(_filtros),
     ordem: str | None = None,
+    sort: str | None = None,
+    dir: str | None = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
     base = aplicar(select(Pendencia), f)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    if ordem == "prioridade":
-        # Fila de triagem: mais antigas primeiro (nulos por último).
-        stmt = base.order_by(
-            Pendencia.data_pedido.is_(None),
-            Pendencia.data_pedido.asc(),
-        )
-    elif ordem == "antigos":
-        stmt = base.order_by(
-            Pendencia.ano.asc(), Pendencia.mes.asc(), Pendencia.data_pedido.asc()
-        )
-    else:  # "recentes" (padrão)
-        stmt = base.order_by(
-            Pendencia.ano.desc(), Pendencia.mes.desc(), Pendencia.data_pedido.desc()
-        )
-    stmt = stmt.offset((page - 1) * per_page).limit(per_page)
+    stmt = _ordenada(base, ordem, sort, dir).offset((page - 1) * per_page).limit(per_page)
     items = list(db.scalars(stmt))
     return PendenciaPage(total=total, page=page, per_page=per_page, items=items)
+
+
+@router.get("/lista.xlsx")
+def exportar_lista(
+    f: Filtros = Depends(_filtros),
+    ordem: str | None = None,
+    sort: str | None = None,
+    dir: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Todas as pendências do filtro, na ordem da tela, em planilha."""
+    stmt = _ordenada(aplicar(select(Pendencia), f), ordem, sort, dir).limit(MAX_EXPORTACAO)
+    nomes = {"convenio": "Convênio", "particular": "Particular"}
+    linhas = (
+        [
+            nomes.get(p.modulo, p.modulo), p.data_pedido, p.ano, p.mes, p.guia, p.paciente,
+            p.clinica, p.motivo, p.observacao, p.responsavel, p.status, p.gestao,
+            p.dias_em_aberto, p.resposta_cliente,
+        ]
+        for p in db.scalars(stmt)
+    )
+    conteudo = lista_xlsx(
+        "Pendências — lista",
+        [("Tipo", 12), ("Data do pedido", 14), ("Ano", 7), ("Mês", 6), ("Guia", 12),
+         ("Paciente", 22), ("Clínica", 30), ("Motivo", 30), ("Observação", 40),
+         ("Responsável", 16), ("Status planilha", 15), ("Gestão", 12),
+         ("Dias em aberto", 13), ("Resposta do cliente", 40)],
+        linhas,
+        descrever_filtros(tipo=f.modulo, ano=f.ano, mes_de=f.mes_de, mes_ate=f.mes_ate,
+                          dia_de=f.data_de, dia_ate=f.data_ate, motivo=f.motivo,
+                          status=f.status, gestao=f.gestao, clinica=f.clinica,
+                          responsavel=f.responsavel, busca=f.busca),
+    )
+    return _xlsx(conteudo, f"pendencias-{f.modulo or 'todas'}")
 
 
 @router.post("", response_model=PendenciaOut, status_code=201)

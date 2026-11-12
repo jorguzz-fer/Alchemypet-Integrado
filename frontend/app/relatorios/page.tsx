@@ -10,7 +10,7 @@ import type {
   RelatoriosResponse,
 } from '@/lib/types';
 import { formatData, formatNumero } from '@/lib/format';
-import OrdenarSelect from '@/components/OrdenarSelect';
+import ColunaOrdenavel from '@/components/ColunaOrdenavel';
 
 const PER_PAGE = 25;
 
@@ -74,7 +74,28 @@ export default function RelatoriosPage() {
   const totalPaginas = Math.max(1, Math.ceil(total / perPage));
 
   // Seleção e exclusão em lote (filtros sem página/ordem).
-  const { page: _pg, per_page: _pp, ordem: _o, ...filtrosLote } = filtros;
+  const { page: _pg, per_page: _pp, ordem: _o, sort: _s, dir: _d, ...filtrosLote } = filtros;
+
+  // Ordenação pelo título da coluna (no servidor: vale para todas as páginas).
+  const ordProps = {
+    sort: filtros.sort,
+    dir: filtros.dir,
+    padrao: { sort: 'created_at', dir: 'desc' as const },
+    onChange: (sort: string, dir: 'asc' | 'desc') => aplicar({ sort, dir }),
+  };
+
+  const [exportando, setExportando] = useState(false);
+  async function exportarPlanilha() {
+    setExportando(true);
+    try {
+      const { page: _a, per_page: _b, ...q } = filtros;
+      await api.exportarLista('relatorios-qualidade', q, 'relatorios-gerenciais.xlsx');
+    } catch (e) {
+      setAviso(e instanceof ApiError ? e.message : 'Não foi possível gerar a planilha.');
+    } finally {
+      setExportando(false);
+    }
+  }
   const sel = useSelecaoLote<RelatorioQualidade>({
     recurso: 'relatorios-qualidade',
     items,
@@ -286,10 +307,14 @@ export default function RelatoriosPage() {
             <span className="count">{formatNumero(total)}</span>
           </div>
           <div className="t-right">
-            <OrdenarSelect
-              value={filtros.ordem ?? 'recentes'}
-              onChange={(v) => aplicar({ ordem: v as Ordem })}
-            />
+            <button
+              className="btn ghost sm"
+              onClick={exportarPlanilha}
+              disabled={exportando || total === 0}
+              title="Baixa todos os relatórios do filtro, na ordem da lista"
+            >
+              {exportando ? 'Gerando…' : 'Exportar planilha'}
+            </button>
             <span className="muted">
               Página {page} de {totalPaginas}
             </span>
@@ -303,12 +328,12 @@ export default function RelatoriosPage() {
             <thead>
               <tr>
                 <th className="sel-col">{sel.cabecalho}</th>
-                <th>Gerado em</th>
-                <th>Relatório</th>
-                <th>Período</th>
-                <th>Versão</th>
-                <th>Páginas</th>
-                <th>Enviado por</th>
+                <ColunaOrdenavel campo="created_at" label="Gerado em" inicial="desc" {...ordProps} />
+                <ColunaOrdenavel campo="titulo" label="Relatório" {...ordProps} />
+                <ColunaOrdenavel campo="periodo" label="Período" {...ordProps} />
+                <ColunaOrdenavel campo="tipo" label="Versão" {...ordProps} />
+                <ColunaOrdenavel campo="paginas" label="Páginas" inicial="desc" {...ordProps} />
+                <ColunaOrdenavel campo="enviado_por" label="Enviado por" {...ordProps} />
                 <th>Ações</th>
               </tr>
             </thead>

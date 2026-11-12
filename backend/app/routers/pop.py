@@ -6,6 +6,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..ordenacao import MAX_EXPORTACAO, ordenar
+from ..reports import descrever_filtros, lista_xlsx
+from ..xlsx_resposta import _xlsx
 from ..exclusao_lote import ExclusaoFiltroIn, ExclusaoLoteIn, ExclusaoOut, excluir_filtro, excluir_ids
 from ..models import Pop
 from ..pop_importer import classificar_area, importar_pops_xlsx
@@ -40,6 +43,23 @@ def _filtrar(stmt, ano, tipo, area, busca):
     return stmt
 
 
+ORDENAVEIS = {
+    "numero": [Pop.numero],
+    "nome": [Pop.nome],
+    "ano": [Pop.ano, Pop.numero],
+    "tipo": [Pop.tipo],
+    "area": [Pop.area],
+}
+
+
+def _ordenada(base, ordem, sort, direcao):
+    if sort:
+        return ordenar(base, sort, direcao, ORDENAVEIS, ("ano", "desc"))
+    if ordem == "antigos":
+        return base.order_by(Pop.ano.asc(), Pop.numero)
+    return base.order_by(Pop.ano.desc(), Pop.numero)
+
+
 @router.get("", response_model=PopPage)
 def listar(
     ano: int | None = None,
@@ -47,19 +67,43 @@ def listar(
     area: str | None = None,
     busca: str | None = None,
     ordem: str | None = None,
+    sort: str | None = None,
+    dir: str | None = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
     base = _filtrar(select(Pop), ano, tipo, area, busca)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    if ordem == "antigos":
-        base = base.order_by(Pop.ano.asc(), Pop.numero)
-    else:  # "recentes" (padrão)
-        base = base.order_by(Pop.ano.desc(), Pop.numero)
-    stmt = base.offset((page - 1) * per_page).limit(per_page)
+    stmt = _ordenada(base, ordem, sort, dir).offset((page - 1) * per_page).limit(per_page)
     items = list(db.scalars(stmt))
     return PopPage(total=total, page=page, per_page=per_page, items=items)
+
+
+@router.get("/lista.xlsx")
+def exportar_lista(
+    ano: int | None = None,
+    tipo: str | None = None,
+    area: str | None = None,
+    busca: str | None = None,
+    ordem: str | None = None,
+    sort: str | None = None,
+    dir: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Todos os POPs do filtro, na ordem da tela, em planilha."""
+    stmt = _ordenada(_filtrar(select(Pop), ano, tipo, area, busca), ordem, sort, dir).limit(MAX_EXPORTACAO)
+    linhas = (
+        [p.numero, p.nome, p.ano, "Novo" if p.tipo == "novo" else "Atualizado", p.area]
+        for p in db.scalars(stmt)
+    )
+    conteudo = lista_xlsx(
+        "Controle de POPs — lista",
+        [("Nº POP", 10), ("Nome", 60), ("Ano", 8), ("Tipo", 13), ("Área", 30)],
+        linhas,
+        descrever_filtros(ano=ano, tipo=tipo, area=area, busca=busca),
+    )
+    return _xlsx(conteudo, "pops")
 
 
 @router.get("/dashboard", response_model=PopDashboardOut)

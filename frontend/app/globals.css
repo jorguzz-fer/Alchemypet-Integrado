@@ -2290,3 +2290,40 @@ td.sel-col {
   font-family: inherit;
   background: #fff;
 }
+
+/* ===== Títulos de coluna ordenáveis ===== */
+th.th-ord {
+  padding: 0;
+}
+th.th-ord button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 40px;
+  padding: 11px 12px;
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  font-weight: inherit;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+}
+th.th-ord button:hover {
+  color: var(--marinho);
+  background: rgba(30, 58, 95, 0.05);
+}
+th.th-ord.ativo {
+  color: var(--marinho);
+}
+.th-seta {
+  font-size: 0.7rem;
+  opacity: 0.45;
+}
+th.th-ord.ativo .th-seta {
+  opacity: 1;
+}
