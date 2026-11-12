@@ -12,7 +12,7 @@ import type {
 import { formatNumero } from '@/lib/format';
 import Kpi from '@/components/Kpi';
 import PopFormModal from '@/components/PopFormModal';
-import OrdenarSelect from '@/components/OrdenarSelect';
+import ColunaOrdenavel from '@/components/ColunaOrdenavel';
 
 const PER_PAGE = 25;
 
@@ -98,7 +98,28 @@ export default function PopListaPage() {
   const totalPaginas = Math.max(1, Math.ceil(total / perPage));
 
   // Seleção e exclusão em lote (filtros sem página/ordem).
-  const { page: _pg, per_page: _pp, ordem: _o, ...filtrosLote } = filtros;
+  const { page: _pg, per_page: _pp, ordem: _o, sort: _s, dir: _d, ...filtrosLote } = filtros;
+
+  // Ordenação pelo título da coluna (no servidor: vale para todas as páginas).
+  const ordProps = {
+    sort: filtros.sort,
+    dir: filtros.dir,
+    padrao: { sort: 'ano', dir: 'desc' as const },
+    onChange: (sort: string, dir: 'asc' | 'desc') => aplicar({ sort, dir }),
+  };
+
+  const [exportando, setExportando] = useState(false);
+  async function exportarPlanilha() {
+    setExportando(true);
+    try {
+      const { page: _a, per_page: _b, ...q } = filtros;
+      await api.exportarLista('pops', q, 'pops.xlsx');
+    } catch (e) {
+      setAviso(e instanceof ApiError ? e.message : 'Não foi possível gerar a planilha.');
+    } finally {
+      setExportando(false);
+    }
+  }
   const sel = useSelecaoLote<Pop>({
     recurso: 'pops',
     items,
@@ -181,6 +202,14 @@ export default function PopListaPage() {
           <div className="lead">Cadastro e manutenção dos POPs elaborados e atualizados.</div>
         </div>
         <div className="actions">
+          <button
+            className="btn ghost"
+            onClick={exportarPlanilha}
+            disabled={exportando || total === 0}
+            title="Baixa todos os POPs do filtro, na ordem da lista"
+          >
+            {exportando ? 'Gerando…' : 'Exportar planilha'}
+          </button>
           <button
             className="btn ghost"
             onClick={() => fileRef.current?.click()}
@@ -313,10 +342,6 @@ export default function PopListaPage() {
             <span className="count">{formatNumero(total)}</span>
           </div>
           <div className="t-right">
-            <OrdenarSelect
-              value={filtros.ordem ?? 'recentes'}
-              onChange={(v) => aplicar({ ordem: v as FiltrosPop['ordem'] })}
-            />
             <span className="muted">
               Página {page} de {totalPaginas}
             </span>
@@ -330,11 +355,11 @@ export default function PopListaPage() {
             <thead>
               <tr>
                 <th className="sel-col">{sel.cabecalho}</th>
-                <th>Nº POP</th>
-                <th>Nome</th>
-                <th>Ano</th>
-                <th>Tipo</th>
-                <th>Área</th>
+                <ColunaOrdenavel campo="numero" label="Nº POP" {...ordProps} />
+                <ColunaOrdenavel campo="nome" label="Nome" {...ordProps} />
+                <ColunaOrdenavel campo="ano" label="Ano" inicial="desc" {...ordProps} />
+                <ColunaOrdenavel campo="tipo" label="Tipo" {...ordProps} />
+                <ColunaOrdenavel campo="area" label="Área" {...ordProps} />
                 <th>Ações</th>
               </tr>
             </thead>

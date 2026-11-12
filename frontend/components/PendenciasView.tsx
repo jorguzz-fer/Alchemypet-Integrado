@@ -15,9 +15,8 @@ import Filtros from '@/components/Filtros';
 import StatusBadge from '@/components/StatusBadge';
 import TratativasModal from '@/components/TratativasModal';
 import PendenciaFormModal from '@/components/PendenciaFormModal';
-import OrdenarSelect from '@/components/OrdenarSelect';
+import ColunaOrdenavel from '@/components/ColunaOrdenavel';
 import { useSelecaoLote } from '@/components/useSelecaoLote';
-import type { Ordem } from '@/lib/types';
 
 const PER_PAGE = 25;
 
@@ -44,12 +43,6 @@ const GESTAO_CLASSE: Record<Gestao, string> = {
   resolvido: 'g-resolvido',
 };
 
-function csvEscape(v: unknown): string {
-  const s = v === null || v === undefined ? '' : String(v);
-  if (/[";\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
 // Lista de pendências. Sem `modulo`, mostra todas (particular + convênio)
 // com seletor de tipo nos filtros; a importação exige um módulo fixo.
 export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
@@ -60,7 +53,7 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  const [ordem, setOrdem] = useState<Ordem>('recentes');
+  const [exportando, setExportando] = useState(false);
   const [clinicas, setClinicas] = useState<string[]>([]);
   const [salvandoGestao, setSalvandoGestao] = useState<Record<string, boolean>>(
     {},
@@ -97,7 +90,7 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
       setErro(null);
       try {
         const r = await api.listPendencias(
-          { ...f, modulo: modulo ?? f.modulo, ordem, per_page: f.per_page ?? PER_PAGE },
+          { ...f, modulo: modulo ?? f.modulo, per_page: f.per_page ?? PER_PAGE },
           signal,
         );
         setResp(r);
@@ -111,7 +104,7 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
         setLoading(false);
       }
     },
-    [modulo, ordem],
+    [modulo],
   );
 
   useEffect(() => {
@@ -127,7 +120,30 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
   const totalPaginas = Math.max(1, Math.ceil(total / perPage));
 
   // Filtros que a exclusão "todas do filtro" repete no servidor.
-  const { page: _p, per_page: _pp, ...filtrosLote } = { ...filtros, modulo: modulo ?? filtros.modulo };
+  const { page: _p, per_page: _pp, sort: _s, dir: _d, ...filtrosLote } = {
+    ...filtros,
+    modulo: modulo ?? filtros.modulo,
+  };
+
+  // Ordenação pelo título da coluna (no servidor: vale para todas as páginas).
+  const ordProps = {
+    sort: filtros.sort,
+    dir: filtros.dir,
+    padrao: { sort: 'data', dir: 'desc' as const },
+    onChange: (sort: string, dir: 'asc' | 'desc') => setFiltros((f) => ({ ...f, sort, dir, page: 1 })),
+  };
+
+  async function exportarPlanilha() {
+    setExportando(true);
+    try {
+      const { page: _a, per_page: _b, ...q } = { ...filtros, modulo: modulo ?? filtros.modulo };
+      await api.exportarLista('pendencias', q, `pendencias-${modulo ?? 'todas'}.xlsx`);
+    } catch (e) {
+      setAviso(e instanceof ApiError ? e.message : 'Não foi possível gerar a planilha.');
+    } finally {
+      setExportando(false);
+    }
+  }
   const sel = useSelecaoLote<Pendencia>({
     recurso: 'pendencias',
     items,
@@ -261,37 +277,6 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
     await carregar(criacao ? { ...filtros, page: 1 } : filtros);
   }
 
-  function exportarCSV() {
-    if (items.length === 0) return;
-    const cols: { key: keyof Pendencia; label: string }[] = [
-      { key: 'modulo', label: 'Tipo' },
-      { key: 'data_pedido', label: 'Data do pedido' },
-      { key: 'ano', label: 'Ano' },
-      { key: 'mes', label: 'Mes' },
-      { key: 'guia', label: 'Guia' },
-      { key: 'paciente', label: 'Paciente' },
-      { key: 'clinica', label: 'Clinica' },
-      { key: 'motivo', label: 'Motivo' },
-      { key: 'observacao', label: 'Observacao' },
-      { key: 'responsavel', label: 'Responsavel' },
-      { key: 'status', label: 'Status planilha' },
-      { key: 'gestao', label: 'Gestao' },
-    ];
-    const linhas = [
-      cols.map((c) => csvEscape(c.label)).join(';'),
-      ...items.map((it) => cols.map((c) => csvEscape(it[c.key])).join(';')),
-    ];
-    const blob = new Blob(['﻿' + linhas.join('\n')], {
-      type: 'text/csv;charset=utf-8;',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${modulo ?? 'todas'}-pendencias-pagina-${page}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
     <div className="page">
       <div className="page-head">
@@ -302,10 +287,11 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
         <div className="actions">
           <button
             className="btn ghost"
-            onClick={exportarCSV}
-            disabled={items.length === 0}
+            onClick={exportarPlanilha}
+            disabled={exportando || total === 0}
+            title="Baixa todas as pendências do filtro, na ordem da lista"
           >
-            Exportar CSV
+            {exportando ? 'Gerando…' : 'Exportar planilha'}
           </button>
           {modulo ? (
             <button
@@ -366,13 +352,6 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
             <span className="count">{formatNumero(total)}</span>
           </div>
           <div className="t-right">
-            <OrdenarSelect
-              value={ordem}
-              onChange={(v) => {
-                setOrdem(v as Ordem);
-                setFiltros((f) => ({ ...f, page: 1 }));
-              }}
-            />
             <span className="muted">
               Página {page} de {totalPaginas}
             </span>
@@ -386,15 +365,15 @@ export default function PendenciasView({ modulo }: { modulo?: Modulo }) {
             <thead>
               <tr>
                 <th className="sel-col">{sel.cabecalho}</th>
-                {!modulo ? <th>Tipo</th> : null}
-                <th>Data</th>
-                <th>Guia</th>
-                <th>Paciente</th>
-                <th>Clínica</th>
-                <th>Motivo</th>
-                <th>Responsável</th>
-                <th>Status planilha</th>
-                <th>Gestão</th>
+                {!modulo ? <ColunaOrdenavel campo="modulo" label="Tipo" {...ordProps} /> : null}
+                <ColunaOrdenavel campo="data" label="Data" inicial="desc" {...ordProps} />
+                <ColunaOrdenavel campo="guia" label="Guia" {...ordProps} />
+                <ColunaOrdenavel campo="paciente" label="Paciente" {...ordProps} />
+                <ColunaOrdenavel campo="clinica" label="Clínica" {...ordProps} />
+                <ColunaOrdenavel campo="motivo" label="Motivo" {...ordProps} />
+                <ColunaOrdenavel campo="responsavel" label="Responsável" {...ordProps} />
+                <ColunaOrdenavel campo="status" label="Status planilha" {...ordProps} />
+                <ColunaOrdenavel campo="gestao" label="Gestão" {...ordProps} />
                 <th>Tratativas</th>
                 <th>Ações</th>
               </tr>

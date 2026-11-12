@@ -9,6 +9,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..ordenacao import MAX_EXPORTACAO, ordenar
+from ..reports import descrever_filtros, lista_xlsx
+from ..xlsx_resposta import _xlsx
 from ..exclusao_lote import ExclusaoFiltroIn, ExclusaoLoteIn, ExclusaoOut, excluir_filtro, excluir_ids
 from ..models import RelatorioQualidade, Usuario
 from ..relatorios import gerar_pdf, ler_docx
@@ -77,25 +80,71 @@ def _filtrar(stmt, tipo: str | None, busca: str | None):
     return stmt
 
 
+ORDENAVEIS = {
+    "created_at": [RelatorioQualidade.created_at],
+    "titulo": [RelatorioQualidade.titulo],
+    "periodo": [RelatorioQualidade.periodo],
+    "tipo": [RelatorioQualidade.tipo],
+    "paginas": [RelatorioQualidade.paginas],
+    "enviado_por": [Usuario.nome],
+}
+
+
+def _ordenada(stmt, ordem, sort, direcao):
+    if sort == "enviado_por":
+        stmt = stmt.outerjoin(Usuario, RelatorioQualidade.enviado_por_id == Usuario.id)
+    if sort:
+        return ordenar(stmt, sort, direcao, ORDENAVEIS, ("created_at", "desc"))
+    if ordem == "antigos":
+        return stmt.order_by(RelatorioQualidade.created_at.asc())
+    return stmt.order_by(RelatorioQualidade.created_at.desc())
+
+
 @router.get("", response_model=RelatorioQualidadePage)
 def listar(
     busca: str | None = None,
     tipo: str | None = None,
     ordem: str | None = None,
+    sort: str | None = None,
+    dir: str | None = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
     stmt = _filtrar(select(RelatorioQualidade), tipo, busca)
     total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
-    if ordem == "antigos":
-        stmt = stmt.order_by(RelatorioQualidade.created_at.asc())
-    else:
-        stmt = stmt.order_by(RelatorioQualidade.created_at.desc())
+    stmt = _ordenada(stmt, ordem, sort, dir)
     itens = list(db.scalars(stmt.offset((page - 1) * per_page).limit(per_page)))
     return RelatorioQualidadePage(
         total=total, page=page, per_page=per_page, items=[_saida(r) for r in itens]
     )
+
+
+@router.get("/lista.xlsx")
+def exportar_lista(
+    busca: str | None = None,
+    tipo: str | None = None,
+    ordem: str | None = None,
+    sort: str | None = None,
+    dir: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Lista dos relatórios gerados (sem os arquivos), em planilha."""
+    stmt = _ordenada(_filtrar(select(RelatorioQualidade), tipo, busca), ordem, sort, dir)
+    linhas = (
+        [r.created_at, r.titulo or r.arquivo, r.arquivo, r.periodo,
+         "Executivo" if r.tipo == "executivo" else "Completo", r.paginas, r.setores,
+         r.pontos_atencao, r.enviado_por.nome if r.enviado_por else ""]
+        for r in db.scalars(stmt.limit(MAX_EXPORTACAO))
+    )
+    conteudo = lista_xlsx(
+        "Relatórios gerenciais — lista",
+        [("Gerado em", 18), ("Relatório", 40), ("Arquivo", 34), ("Período", 18), ("Versão", 11),
+         ("Páginas", 9), ("Setores", 9), ("Pontos de atenção", 16), ("Enviado por", 20)],
+        linhas,
+        descrever_filtros(tipo=tipo, busca=busca),
+    )
+    return _xlsx(conteudo, "relatorios-gerenciais")
 
 
 @router.post("/importar", response_model=RelatorioQualidadeOut, status_code=201)

@@ -10,7 +10,7 @@ import type {
 } from '@/lib/types';
 import { formatData, formatNumero } from '@/lib/format';
 import ChamadoFormModal from '@/components/ChamadoFormModal';
-import OrdenarSelect from '@/components/OrdenarSelect';
+import ColunaOrdenavel from '@/components/ColunaOrdenavel';
 
 const PER_PAGE = 25;
 
@@ -85,7 +85,28 @@ export default function ChamadosListaPage() {
   const totalPaginas = Math.max(1, Math.ceil(total / perPage));
 
   // Seleção e exclusão em lote (filtros sem página/ordem).
-  const { page: _pg, per_page: _pp, ordem: _o, ...filtrosLote } = filtros;
+  const { page: _pg, per_page: _pp, ordem: _o, sort: _s, dir: _d, ...filtrosLote } = filtros;
+
+  // Ordenação pelo título da coluna (no servidor: vale para todas as páginas).
+  const ordProps = {
+    sort: filtros.sort,
+    dir: filtros.dir,
+    padrao: { sort: 'data', dir: 'desc' as const },
+    onChange: (sort: string, dir: 'asc' | 'desc') => aplicar({ sort, dir }),
+  };
+
+  const [exportando, setExportando] = useState(false);
+  async function exportarPlanilha() {
+    setExportando(true);
+    try {
+      const { page: _a, per_page: _b, ...q } = filtros;
+      await api.exportarLista('chamados', q, 'chamados.xlsx');
+    } catch (e) {
+      setAviso(e instanceof ApiError ? e.message : 'Não foi possível gerar a planilha.');
+    } finally {
+      setExportando(false);
+    }
+  }
   const sel = useSelecaoLote<Chamado>({
     recurso: 'chamados',
     items,
@@ -189,6 +210,14 @@ export default function ChamadosListaPage() {
           </div>
         </div>
         <div className="actions">
+          <button
+            className="btn ghost"
+            onClick={exportarPlanilha}
+            disabled={exportando || total === 0}
+            title="Baixa todos os chamados do filtro, na ordem da lista"
+          >
+            {exportando ? 'Gerando…' : 'Exportar planilha'}
+          </button>
           <button
             className="btn ghost"
             onClick={() => fileRef.current?.click()}
@@ -329,10 +358,6 @@ export default function ChamadosListaPage() {
             <span className="count">{formatNumero(total)}</span>
           </div>
           <div className="t-right">
-            <OrdenarSelect
-              value={filtros.ordem ?? 'recentes'}
-              onChange={(v) => aplicar({ ordem: v as FiltrosChamado['ordem'] })}
-            />
             <span className="muted">
               Página {page} de {totalPaginas}
             </span>
@@ -346,11 +371,11 @@ export default function ChamadosListaPage() {
             <thead>
               <tr>
                 <th className="sel-col">{sel.cabecalho}</th>
-                <th>Data</th>
-                <th>Assunto</th>
-                <th>Complexidade</th>
-                <th>Motivo</th>
-                <th>Status</th>
+                <ColunaOrdenavel campo="data" label="Data" inicial="desc" {...ordProps} />
+                <ColunaOrdenavel campo="assunto" label="Assunto" {...ordProps} />
+                <ColunaOrdenavel campo="complexidade" label="Complexidade" inicial="desc" {...ordProps} />
+                <ColunaOrdenavel campo="motivo" label="Motivo" {...ordProps} />
+                <ColunaOrdenavel campo="status" label="Status" {...ordProps} />
                 <th>Ações</th>
               </tr>
             </thead>

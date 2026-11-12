@@ -91,6 +91,9 @@ export interface HealthResponse {
 // Definido como type alias (nao interface) para ganhar index signature
 // implicita e poder ser passado como querystring (Record<string, ...>).
 export type FiltrosPendencias = {
+  // Ordenação pelo título da coluna (feita no servidor).
+  sort?: string;
+  dir?: 'asc' | 'desc';
   // Ausente/vazio = todos os módulos (particular + convênio).
   modulo?: Modulo | '';
   ano?: number | string;
@@ -214,6 +217,9 @@ export interface PopInput {
 }
 
 export type FiltrosPop = {
+  // Ordenação pelo título da coluna (feita no servidor).
+  sort?: string;
+  dir?: 'asc' | 'desc';
   ano?: number | string;
   tipo?: TipoPop | '';
   area?: string;
@@ -283,6 +289,9 @@ export interface ChamadoInput {
 }
 
 export type FiltrosChamado = {
+  // Ordenação pelo título da coluna (feita no servidor).
+  sort?: string;
+  dir?: 'asc' | 'desc';
   complexidade?: Complexidade | '';
   motivo?: string;
   status?: StatusChamado | '';
@@ -363,6 +372,9 @@ export interface RelatorioQualidade {
 }
 
 export type FiltrosRelatorio = {
+  // Ordenação pelo título da coluna (feita no servidor).
+  sort?: string;
+  dir?: 'asc' | 'desc';
   busca?: string;
   tipo?: TipoRelatorio | '';
   ordem?: Ordem;

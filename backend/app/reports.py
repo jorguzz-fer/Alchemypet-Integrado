@@ -529,3 +529,44 @@ def chamados_pdf(db: Session) -> bytes:
                 [W * 0.5, W * 0.25, W * 0.25], ss),
     ]
     return _pdf_doc("Chamados por e-mail", el)
+
+
+# ===================================================================
+# Exportação das listas (todas as linhas do filtro, na ordem da tela)
+# ===================================================================
+
+def lista_xlsx(titulo: str, colunas: list[tuple[str, int]], linhas, descricao: str = "") -> bytes:
+    """Planilha simples: cabeçalho fixo, filtro do Excel e zebra.
+
+    `colunas`: (rótulo, largura). `linhas`: iterável de listas de valores.
+    `descricao`: resumo do filtro aplicado (vai na 4ª linha).
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Lista"
+    n = len(colunas)
+    _titulo_aba(ws, titulo, n)
+    if descricao:
+        ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=n)
+        d = ws.cell(4, 1, descricao)
+        d.font = Font(size=9, color=CINZA, italic=True)
+    cab = 6
+    _cabecalho_tabela(ws, cab, [c[0] for c in colunas])
+    total = 0
+    for i, valores in enumerate(linhas):
+        _linha_tabela(ws, cab + 1 + i, list(valores), i % 2 == 1)
+        total += 1
+    ws.freeze_panes = ws.cell(cab + 1, 1)
+    ultima = get_column_letter(n)
+    ws.auto_filter.ref = f"A{cab}:{ultima}{cab + max(total, 1)}"
+    _autolargura(ws, {j: w for j, (_, w) in enumerate(colunas, start=1)})
+    ws.cell(5, 1, f"{total} registro(s)").font = Font(size=9, bold=True, color=MARINHO)
+    out = BytesIO()
+    wb.save(out)
+    return out.getvalue()
+
+
+def descrever_filtros(**filtros) -> str:
+    """'Filtros: ano=2026 · status=pendente' (só os preenchidos)."""
+    partes = [f"{k}={v}" for k, v in filtros.items() if v not in (None, "", False)]
+    return "Filtros: " + " · ".join(partes) if partes else "Sem filtros (todos os registros)"

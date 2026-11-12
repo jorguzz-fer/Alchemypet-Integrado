@@ -3,12 +3,15 @@ from datetime import date
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
 from ..chamado_classifier import classificar, normalizar_complexidade, normalizar_motivo
 from ..chamado_importer import importar_chamados_xlsx
 from ..database import get_db
+from ..ordenacao import MAX_EXPORTACAO, ordenar
+from ..reports import descrever_filtros, lista_xlsx
+from ..xlsx_resposta import _xlsx
 from ..exclusao_lote import ExclusaoFiltroIn, ExclusaoLoteIn, ExclusaoOut, excluir_filtro, excluir_ids
 from ..models import Chamado
 from ..reports import chamados_pdf, chamados_xlsx
@@ -51,6 +54,33 @@ def _filtrar(stmt, complexidade, motivo, status, busca, data_de=None, data_ate=N
     return stmt
 
 
+# Complexidade em ordem de gravidade (não alfabética).
+_GRAVIDADE = case((Chamado.complexidade == "alta", 3), (Chamado.complexidade == "media", 2),
+                  (Chamado.complexidade == "baixa", 1), else_=0)
+ORDENAVEIS = {
+    "data": [Chamado.data, Chamado.created_at],
+    "assunto": [Chamado.assunto],
+    "remetente": [Chamado.remetente],
+    "complexidade": [_GRAVIDADE],
+    "motivo": [Chamado.motivo],
+    "status": [Chamado.status],
+}
+
+
+def _ordenada(base, ordem, sort, direcao):
+    if sort:
+        return ordenar(base, sort, direcao, ORDENAVEIS, ("data", "desc"))
+    if ordem == "antigos":
+        return base.order_by(Chamado.data.asc().nullsfirst(), Chamado.created_at.asc())
+    return base.order_by(Chamado.data.desc().nullslast(), Chamado.created_at.desc())
+
+
+def _base(complexidade, motivo, status, busca, data_de, data_ate):
+    if data_de and data_ate and data_de > data_ate:
+        raise HTTPException(422, "A data inicial não pode ser maior que a data final")
+    return _filtrar(select(Chamado), complexidade, motivo, status, busca, data_de, data_ate)
+
+
 @router.get("", response_model=ChamadoPage)
 def listar(
     complexidade: str | None = None,
@@ -60,21 +90,50 @@ def listar(
     data_de: date | None = None,
     data_ate: date | None = None,
     ordem: str | None = None,
+    sort: str | None = None,
+    dir: str | None = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
-    if data_de and data_ate and data_de > data_ate:
-        raise HTTPException(422, "A data inicial não pode ser maior que a data final")
-    base = _filtrar(select(Chamado), complexidade, motivo, status, busca, data_de, data_ate)
+    base = _base(complexidade, motivo, status, busca, data_de, data_ate)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    if ordem == "antigos":
-        base = base.order_by(Chamado.data.asc().nullsfirst(), Chamado.created_at.asc())
-    else:  # "recentes" (padrão)
-        base = base.order_by(Chamado.data.desc().nullslast(), Chamado.created_at.desc())
-    stmt = base.offset((page - 1) * per_page).limit(per_page)
+    stmt = _ordenada(base, ordem, sort, dir).offset((page - 1) * per_page).limit(per_page)
     items = list(db.scalars(stmt))
     return ChamadoPage(total=total, page=page, per_page=per_page, items=items)
+
+
+@router.get("/lista.xlsx")
+def exportar_lista(
+    complexidade: str | None = None,
+    motivo: str | None = None,
+    status: str | None = None,
+    busca: str | None = None,
+    data_de: date | None = None,
+    data_ate: date | None = None,
+    ordem: str | None = None,
+    sort: str | None = None,
+    dir: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Todos os chamados do filtro, na ordem da tela, em planilha."""
+    base = _base(complexidade, motivo, status, busca, data_de, data_ate)
+    stmt = _ordenada(base, ordem, sort, dir).limit(MAX_EXPORTACAO)
+    rot = {"alta": "Alta", "media": "Média", "baixa": "Baixa"}
+    linhas = (
+        [c.data, c.assunto, c.remetente, rot.get(c.complexidade, c.complexidade), c.motivo,
+         "Resolvido" if c.status == "resolvido" else "Aberto", c.resposta, c.link_gmail]
+        for c in db.scalars(stmt)
+    )
+    conteudo = lista_xlsx(
+        "Caixa de chamados — lista",
+        [("Data", 12), ("Assunto", 46), ("Remetente", 30), ("Complexidade", 13),
+         ("Motivo", 36), ("Status", 11), ("Resposta / observação", 46), ("Link do Gmail", 40)],
+        linhas,
+        descrever_filtros(data_de=data_de, data_ate=data_ate, complexidade=complexidade,
+                          motivo=motivo, status=status, busca=busca),
+    )
+    return _xlsx(conteudo, "chamados")
 
 
 @router.get("/dashboard", response_model=ChamadoDashboardOut)
