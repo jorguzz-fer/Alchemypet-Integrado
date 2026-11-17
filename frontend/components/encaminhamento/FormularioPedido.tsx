@@ -215,6 +215,58 @@ function BuscaClinica({
 
 // ---------------------------------------------------------------- exames
 
+function IconeInfo() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden>
+      <circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="10" cy="6" r="1.2" fill="currentColor" />
+      <rect x="9" y="8.6" width="2" height="6.4" rx="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+// Composição do exame (e tubos) num ⓘ: a lista fica só com o título, e quem
+// tiver dúvida passa o mouse ou toca no ícone.
+function InfoExame({ exame, legenda }: { exame: ExameEncaminhamento; legenda: Record<string, string> }) {
+  const [aberto, setAberto] = useState(false);
+  if (!exame.descricao && !exame.tubos.length && !exame.amostra) return null;
+  return (
+    <span
+      className={`enc-info${aberto ? ' aberto' : ''}`}
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse') setAberto(false);
+      }}
+    >
+      <button
+        type="button"
+        aria-label={`Composição do exame ${exame.codigo}`}
+        aria-expanded={aberto}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setAberto((v) => !v);
+        }}
+        onBlur={() => setAberto(false)}
+      >
+        <IconeInfo />
+      </button>
+      <span className="enc-info-pop" role="tooltip">
+        <b>
+          {exame.codigo} · {exame.nome}
+        </b>
+        {exame.descricao ? <span>{exame.descricao}</span> : null}
+        {exame.tubos.length || exame.amostra ? (
+          <span className="enc-info-tubos">
+            <Tubos tubos={exame.tubos} amostra={exame.amostra} legenda={legenda} />
+            {exame.tubos.map((t) => legenda[t] ?? t).join(' · ')}
+            {exame.amostra ? `${exame.tubos.length ? ' · ' : ''}Amostra: ${exame.amostra}` : ''}
+          </span>
+        ) : null}
+      </span>
+    </span>
+  );
+}
+
 function CaixaExame({
   exame,
   marcado,
@@ -226,19 +278,21 @@ function CaixaExame({
   marcado: boolean;
   onToggle: () => void;
   legenda: Record<string, string>;
-  variante: 'linha' | 'cartao' | 'perfil' | 'destaque';
+  variante: 'linha' | 'cartao' | 'perfil';
 }) {
+  const marca = variante === 'perfil' ? ` p-${exame.marca || 'outro'}` : '';
   return (
-    <label className={`enc-exame v-${variante}${marcado ? ' marcado' : ''}${exame.destaque ? ' realce' : ''}`}>
+    <label className={`enc-exame v-${variante}${marca}${marcado ? ' marcado' : ''}`}>
       <input type="checkbox" checked={marcado} onChange={onToggle} />
-      {variante === 'perfil' || variante === 'destaque' ? <MarcaPerfil marca={exame.marca} /> : null}
       <span className="enc-ex-corpo">
         <span className="enc-ex-topo">
           <b className="enc-cod">{exame.codigo}</b>
-          {variante !== 'perfil' ? <span className="enc-ex-nome">{exame.nome}</span> : null}
+          {variante === 'perfil' ? null : <span className="enc-ex-nome">{exame.nome}</span>}
           <Selo selo={exame.selo} />
+          <InfoExame exame={exame} legenda={legenda} />
         </span>
-        {exame.inclui.length ? (
+        {variante === 'perfil' ? <span className="enc-ex-titulo">{exame.nome}</span> : null}
+        {variante === 'perfil' && exame.inclui.length ? (
           <span className="enc-ex-inclui">
             {exame.inclui.map((i) => (
               <span key={i} className="enc-item">
@@ -247,10 +301,80 @@ function CaixaExame({
             ))}
           </span>
         ) : null}
-        {exame.descricao ? <span className="enc-ex-desc">{exame.descricao}</span> : null}
+        {variante === 'cartao' && exame.descricao ? <span className="enc-ex-desc">({exame.descricao})</span> : null}
       </span>
-      <Tubos tubos={exame.tubos} amostra={exame.amostra} legenda={legenda} />
     </label>
+  );
+}
+
+// Textos do banner do perfil em destaque (iguais ao impresso novo).
+const DESTAQUE: Record<string, { imagem: string; titulo: string; texto: string }> = {
+  gold_pro: {
+    imagem: '/encaminhamento/gold-pro.webp',
+    titulo: 'Avaliação laboratorial ampliada.',
+    texto:
+      'Hemograma, bioquímica e marcadores metabólicos, incluindo β-hidroxibutirato (BHB) e ácidos biliares, ' +
+      'ampliando a investigação metabólica e hepatobiliar.',
+  },
+};
+
+function BannerDestaque({
+  exame,
+  marcado,
+  onToggle,
+  legenda,
+}: {
+  exame: ExameEncaminhamento;
+  marcado: boolean;
+  onToggle: () => void;
+  legenda: Record<string, string>;
+}) {
+  const d = DESTAQUE[exame.marca];
+  return (
+    <div className={`enc-banner${marcado ? ' marcado' : ''}`}>
+      {d ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={d.imagem} alt={`Perfil em destaque: ${exame.nome}`} className="enc-banner-img" />
+      ) : (
+        <div className="enc-banner-marca">
+          <MarcaPerfil marca={exame.marca} />
+        </div>
+      )}
+      <div className="enc-banner-txt">
+        <span className="enc-banner-cod">
+          Cód. <b>{exame.codigo}</b>
+        </span>
+        <h3>{d ? d.titulo : exame.nome}</h3>
+        <p>{d ? d.texto : exame.descricao}</p>
+        <label className="enc-banner-sol">
+          <input type="checkbox" checked={marcado} onChange={onToggle} />
+          Solicitar perfil {exame.codigo}
+          <InfoExame exame={exame} legenda={legenda} />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+// Ícones das faixas (mesmos do impresso).
+function IconeFaixa({ tipo }: { tipo: string }) {
+  const p = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  return (
+    <span className="enc-faixa-ico" aria-hidden>
+      <svg viewBox="0 0 24 24" width="18" height="18">
+        {tipo === 'laudo' ? (
+          <g {...p}><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4V3h6v1M8.5 10h7M8.5 14h7M8.5 18h4" /></g>
+        ) : tipo === 'motivo' ? (
+          <g {...p}><path d="M6 3v6a4 4 0 0 0 8 0V3" /><path d="M10 13v2a5 5 0 0 0 10 0v-2" /><circle cx="20" cy="11" r="2" /></g>
+        ) : tipo === 'fast_track' ? (
+          <g {...p}><path d="M13 2 4 14h7l-1 8 9-12h-7z" /></g>
+        ) : tipo === 'renal' ? (
+          <g {...p}><path d="M9 4c-4 0-5 4-5 8s1 8 5 8c2 0 3-2 2-4s-1-6 0-8 0-4-2-4zM15 4c4 0 5 4 5 8s-1 8-5 8" /></g>
+        ) : (
+          <g {...p}><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" /><path d="M7.5 15h9" /></g>
+        )}
+      </svg>
+    </span>
   );
 }
 
@@ -424,9 +548,18 @@ export default function FormularioPedido() {
         </div>
       </header>
 
+      <div className="enc-lab" aria-label="Para uso do laboratório">
+        <b>Para uso do laboratório:</b>
+        <span>Data de chegada</span>
+        <span>Nº de amostras</span>
+        <span>Recebido por</span>
+        <small>preenchido na chegada da amostra</small>
+      </div>
+
       {SECOES.map((s) => (
         <section key={s.id} className="enc-secao">
-          <h2 className="enc-faixa">
+          <h2 className={`enc-faixa f-${s.id}`}>
+            <IconeFaixa tipo={s.id} />
             {s.titulo} <small>(*dados obrigatórios)</small>
           </h2>
           <div className="enc-grade">
@@ -448,10 +581,8 @@ export default function FormularioPedido() {
 
       <section id="enc-exames" className="enc-secao">
         {grupo('gold_pro').map((e) => (
-          <div key={e.codigo} className="enc-gold-pro">
-            <CaixaExame exame={e} marcado={marcados.includes(e.codigo)} onToggle={() => alternar(e.codigo)}
-              legenda={form.tubos} variante="destaque" />
-          </div>
+          <BannerDestaque key={e.codigo} exame={e} marcado={marcados.includes(e.codigo)}
+            onToggle={() => alternar(e.codigo)} legenda={form.tubos} />
         ))}
 
         {grupo('mais_utilizados').length || grupo('perfis_onehealth').length ? (
@@ -480,9 +611,10 @@ export default function FormularioPedido() {
               if (!itens.length) return null;
               const n = itens.filter((e) => marcados.includes(e.codigo)).length;
               return (
-                <details key={g.id} className="enc-lista" open>
+                <details key={g.id} className={`enc-lista l-${g.id}`} open>
                   <summary className="enc-lista-tit">
-                    {g.titulo}
+                    <IconeFaixa tipo={g.id} />
+                    <span className="enc-lista-nome">{g.titulo}</span>
                     {n ? <span className="enc-cont">{n}</span> : null}
                   </summary>
                   {itens.map((e) => (
