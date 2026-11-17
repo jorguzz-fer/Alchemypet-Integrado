@@ -8,6 +8,7 @@ import {
   IconeChamados,
   IconeConvenio,
   IconeCrm,
+  IconeFormulario,
   IconeDashboard,
   IconeFila,
   IconePop,
@@ -120,6 +121,37 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <Link href="/crm" className={`side-link${linkAtivo('/crm') ? ' ativo' : ''}`}>
               Contas
             </Link>
+          </div>
+
+          {/* Pedidos de exame — formulário de encaminhamento online. */}
+          <div className="side-group">
+            <Link
+              href="/encaminhamento"
+              className={`side-group-title link${linkAtivo('/encaminhamento', true) ? ' ativo' : ''}`}
+            >
+              <IconeFormulario className="side-ic" />
+              Pedidos de exame
+            </Link>
+            <Link
+              href="/encaminhamento/novo"
+              className={`side-link${linkAtivo('/encaminhamento/novo') ? ' ativo' : ''}`}
+            >
+              Novo pedido
+            </Link>
+            <Link
+              href="/encaminhamento"
+              className={`side-link${linkAtivo('/encaminhamento', true) ? ' ativo' : ''}`}
+            >
+              Pedidos
+            </Link>
+            {usuario.perfil === 'admin' ? (
+              <Link
+                href="/encaminhamento/configurar"
+                className={`side-link${linkAtivo('/encaminhamento/configurar') ? ' ativo' : ''}`}
+              >
+                Configurar formulário
+              </Link>
+            ) : null}
           </div>
 
           {/* POP — controle de POPs elaborados e atualizados. */}

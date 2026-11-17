@@ -140,3 +140,15 @@ export function IconeCrm({ className, size = 18 }: IconeProps) {
     </svg>
   );
 }
+
+// Pedido de exame — prancheta com tubo
+export function IconeFormulario({ className, size = 18 }: IconeProps) {
+  return (
+    <svg className={className} {...base(size)}>
+      <path d="M9 3h6v3H9z" />
+      <path d="M15 4.5h2a2 2 0 0 1 2 2V20a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2" />
+      <path d="M9 11h6" />
+      <path d="M9 15h4" />
+    </svg>
+  );
+}

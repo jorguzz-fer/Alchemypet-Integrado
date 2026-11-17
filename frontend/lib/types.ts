@@ -573,3 +573,103 @@ export interface CrmImportArquivo {
 export interface CrmImportResponse {
   arquivos: CrmImportArquivo[];
 }
+
+// ===== Formulário de Encaminhamento Geral (pedidos de exame) =====
+
+export type TipoCampo = 'texto' | 'texto_longo' | 'data' | 'numero' | 'opcao' | 'marcar' | 'clinica';
+export type SecaoCampo = 'laudo' | 'motivo' | 'laboratorio';
+
+export interface OpcaoCampo {
+  valor: string;
+  rotulo: string;
+}
+
+export interface CampoEncaminhamento {
+  id: string;
+  chave: string;
+  rotulo: string;
+  secao: SecaoCampo;
+  tipo: TipoCampo;
+  opcoes: OpcaoCampo[];
+  obrigatorio: boolean;
+  mostrar_se: string;
+  largura: number;
+  ajuda: string;
+  ordem: number;
+  ativo: boolean;
+  do_papel: boolean;
+}
+
+export interface ExameEncaminhamento {
+  id: string;
+  codigo: string;
+  nome: string;
+  descricao: string;
+  grupo: string;
+  tubos: string[];
+  amostra: string;
+  selo: string;
+  destaque: boolean;
+  marca: string;
+  inclui: string[];
+  ordem: number;
+  ativo: boolean;
+  do_papel: boolean;
+}
+
+export interface GrupoExames {
+  id: string;
+  titulo: string;
+  estilo: 'destaque' | 'cartoes' | 'perfis' | 'lista';
+}
+
+export interface FormularioEncaminhamento {
+  versao: string;
+  grupos: GrupoExames[];
+  campos: CampoEncaminhamento[];
+  exames: ExameEncaminhamento[];
+  siglas: Record<string, string>;
+  tubos: Record<string, string>;
+}
+
+export type ValorCampo = string | boolean;
+
+export interface PedidoResumo {
+  id: string;
+  numero: number;
+  clinica: string;
+  paciente: string;
+  veterinario: string;
+  data_coleta: string | null;
+  urgente: boolean;
+  codigos: string[];
+  criado_por: string;
+  created_at: string;
+  recebido: boolean;
+}
+
+export interface PedidoExame extends PedidoResumo {
+  responsavel: string;
+  dados: Record<string, ValorCampo | number>;
+  campos: { chave: string; rotulo: string; secao: string; valor: unknown; texto: string }[];
+  exames: { codigo: string; nome: string; grupo: string }[];
+  versao: string;
+}
+
+export interface PedidosResponse {
+  total: number;
+  page: number;
+  per_page: number;
+  items: PedidoResumo[];
+}
+
+export type FiltrosPedidos = {
+  busca?: string;
+  data_de?: string;
+  data_ate?: string;
+  urgente?: boolean;
+  sort?: string;
+  dir?: 'asc' | 'desc';
+  page?: number;
+  per_page?: number;
+};
