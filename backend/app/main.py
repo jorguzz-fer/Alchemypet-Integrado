@@ -14,6 +14,7 @@ from .routers import (
     chamado,
     crm,
     dashboard,
+    encaminhamentos,
     importacao,
     pendencias,
     pop,
@@ -63,6 +64,7 @@ app.include_router(pop.router, dependencies=protegido)
 app.include_router(chamado.router, dependencies=protegido)
 app.include_router(relatorio_qualidade.router, dependencies=protegido)
 app.include_router(crm.router, dependencies=protegido)
+app.include_router(encaminhamentos.router, dependencies=protegido)
 app.include_router(usuarios.router)  # protege internamente (usuario_atual/exige_admin)
 app.include_router(manutencao.router)  # exige_admin no próprio router
 
@@ -267,7 +269,8 @@ def on_startup() -> None:
     # impeça a outra nem derrube a API — o erro é registrado e o serviço sobe.
     for nome, migracao in (("ajustes de dados", _migracao_dados),
                            ("chaves naturais", _recarimba_chaves),
-                           ("etapas do CRM", _migracao_etapas_crm)):
+                           ("etapas do CRM", _migracao_etapas_crm),
+                           ("formulário de encaminhamento", encaminhamentos.semear)):
         try:
             with SessionLocal() as db:
                 migracao(db)

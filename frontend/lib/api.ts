@@ -2,6 +2,12 @@
 // Base sempre em process.env.NEXT_PUBLIC_API_URL.
 
 import type {
+  CampoEncaminhamento,
+  ExameEncaminhamento,
+  FiltrosPedidos,
+  FormularioEncaminhamento,
+  PedidoExame,
+  PedidosResponse,
   ClinicasResponse,
   Atividade,
   AtividadeInput,
@@ -198,7 +204,7 @@ async function baixarArquivo(path: string, nomePadrao: string): Promise<void> {
 
 // ===== Endpoints =====
 
-export type RecursoLote = 'pendencias' | 'chamados' | 'pops' | 'relatorios-qualidade';
+export type RecursoLote = 'pendencias' | 'chamados' | 'pops' | 'relatorios-qualidade' | 'encaminhamentos';
 
 export const api = {
   health(signal?: AbortSignal): Promise<HealthResponse> {
@@ -542,5 +548,90 @@ export const api = {
     nomePadrao: string,
   ): Promise<void> {
     return baixarArquivo(`/${recurso}/lista.xlsx${buildQuery(filtros)}`, nomePadrao);
+  },
+  // ===== Formulário de Encaminhamento =====
+  formularioEncaminhamento(signal?: AbortSignal): Promise<FormularioEncaminhamento> {
+    return request<FormularioEncaminhamento>('/encaminhamentos/formulario', { signal });
+  },
+
+  criarPedido(body: {
+    dados: Record<string, string | boolean>;
+    exames: string[];
+    clinica_id?: string | null;
+  }): Promise<PedidoExame> {
+    return request<PedidoExame>('/encaminhamentos', { method: 'POST', body });
+  },
+
+  listPedidos(filtros: FiltrosPedidos = {}, signal?: AbortSignal): Promise<PedidosResponse> {
+    return request<PedidosResponse>('/encaminhamentos', { query: filtros, signal });
+  },
+
+  getPedido(id: string, signal?: AbortSignal): Promise<PedidoExame> {
+    return request<PedidoExame>(`/encaminhamentos/${encodeURIComponent(id)}`, { signal });
+  },
+
+  registrarChegada(
+    id: string,
+    body: { data_chegada?: string | null; n_amostras?: number | null; recebido_por?: string },
+  ): Promise<PedidoExame> {
+    return request<PedidoExame>(`/encaminhamentos/${encodeURIComponent(id)}/laboratorio`, {
+      method: 'PATCH',
+      body,
+    });
+  },
+
+  baixarPdfPedido(id: string, numero: number): Promise<void> {
+    return baixarArquivo(
+      `/encaminhamentos/${encodeURIComponent(id)}/pdf`,
+      `pedido-${String(numero).padStart(8, '0')}.pdf`,
+    );
+  },
+
+  // Abre o PDF numa aba (para imprimir). A aba é aberta antes do download
+  // para o navegador não bloquear como pop-up.
+  async abrirPdfPedido(id: string): Promise<void> {
+    const aba = window.open('', '_blank');
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/encaminhamentos/${encodeURIComponent(id)}/pdf`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      aba?.close();
+      throw new ApiError(`Falha ao gerar o PDF (${res.status}).`, res.status);
+    }
+    const url = URL.createObjectURL(await res.blob());
+    if (aba) aba.location.href = url;
+    else window.location.href = url;
+  },
+
+  configCampos(signal?: AbortSignal): Promise<CampoEncaminhamento[]> {
+    return request<CampoEncaminhamento[]>('/encaminhamentos/config/campos', { signal });
+  },
+  criarCampo(body: Partial<CampoEncaminhamento>): Promise<CampoEncaminhamento> {
+    return request<CampoEncaminhamento>('/encaminhamentos/config/campos', { method: 'POST', body });
+  },
+  editarCampo(id: string, body: Partial<CampoEncaminhamento>): Promise<CampoEncaminhamento> {
+    return request<CampoEncaminhamento>(`/encaminhamentos/config/campos/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body,
+    });
+  },
+  excluirCampo(id: string): Promise<void> {
+    return request<void>(`/encaminhamentos/config/campos/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  },
+  configExames(signal?: AbortSignal): Promise<ExameEncaminhamento[]> {
+    return request<ExameEncaminhamento[]>('/encaminhamentos/config/exames', { signal });
+  },
+  criarExame(body: Partial<ExameEncaminhamento>): Promise<ExameEncaminhamento> {
+    return request<ExameEncaminhamento>('/encaminhamentos/config/exames', { method: 'POST', body });
+  },
+  editarExame(id: string, body: Partial<ExameEncaminhamento>): Promise<ExameEncaminhamento> {
+    return request<ExameEncaminhamento>(`/encaminhamentos/config/exames/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body,
+    });
+  },
+  excluirExame(id: string): Promise<void> {
+    return request<void>(`/encaminhamentos/config/exames/${encodeURIComponent(id)}`, { method: 'DELETE' });
   },
 };

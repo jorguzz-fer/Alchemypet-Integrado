@@ -7,7 +7,7 @@ from datetime import date, datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy import (
-    Boolean, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text,
+    JSON, Boolean, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -339,3 +339,77 @@ class Atividade(Base):
     usuario_id: Mapped[str | None] = mapped_column(ForeignKey("usuario.id"), nullable=True)
     usuario_nome: Mapped[str] = mapped_column(String(120), default="", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+# ===== Formulário de Encaminhamento Geral (pedidos de exame) =====
+# Campos e exames ficam no banco para a equipe manter o formulário sem
+# programador; cada pedido guarda uma cópia do que foi preenchido.
+
+class CampoEncaminhamento(Base):
+    __tablename__ = "campo_encaminhamento"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    chave: Mapped[str] = mapped_column(String(60), unique=True, index=True)
+    rotulo: Mapped[str] = mapped_column(String(160))
+    # laudo | motivo | laboratorio
+    secao: Mapped[str] = mapped_column(String(20), default="laudo", index=True)
+    # texto | texto_longo | data | numero | opcao | marcar | clinica
+    tipo: Mapped[str] = mapped_column(String(20), default="texto")
+    opcoes: Mapped[list] = mapped_column(JSON, default=list)  # [{"valor","rotulo"}]
+    obrigatorio: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Mostra só quando outro campo tem um valor: "especie=outros" ou "recoleta".
+    mostrar_se: Mapped[str] = mapped_column(String(80), default="")
+    # Largura no computador: 1 (linha inteira), 2 (metade), 3 (um terço), 4 (um quarto).
+    largura: Mapped[int] = mapped_column(Integer, default=1)
+    ajuda: Mapped[str] = mapped_column(String(200), default="")
+    ordem: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Campo do papel original (tem lugar no PDF; não pode ser excluído, só desativado).
+    do_papel: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ExameEncaminhamento(Base):
+    __tablename__ = "exame_encaminhamento"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    codigo: Mapped[str] = mapped_column(String(10), unique=True, index=True)
+    nome: Mapped[str] = mapped_column(String(200))
+    descricao: Mapped[str] = mapped_column(Text, default="")
+    grupo: Mapped[str] = mapped_column(String(30), default="outros", index=True)
+    tubos: Mapped[list] = mapped_column(JSON, default=list)
+    amostra: Mapped[str] = mapped_column(String(40), default="")
+    selo: Mapped[str] = mapped_column(String(20), default="")
+    destaque: Mapped[bool] = mapped_column(Boolean, default=False)
+    marca: Mapped[str] = mapped_column(String(30), default="")
+    inclui: Mapped[list] = mapped_column(JSON, default=list)
+    ordem: Mapped[int] = mapped_column(Integer, default=0, index=True)
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+    do_papel: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class Encaminhamento(Base):
+    """Pedido de exames feito pelo formulário de encaminhamento."""
+
+    __tablename__ = "encaminhamento"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    numero: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    # Campos de busca/ordenação; o conteúdo completo fica em `dados`.
+    clinica: Mapped[str] = mapped_column(String(200), default="", index=True)
+    clinica_id: Mapped[str | None] = mapped_column(ForeignKey("clinica.id"), nullable=True)
+    paciente: Mapped[str] = mapped_column(String(160), default="", index=True)
+    responsavel: Mapped[str] = mapped_column(String(160), default="")
+    veterinario: Mapped[str] = mapped_column(String(160), default="", index=True)
+    data_coleta: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
+    urgente: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    # Valores preenchidos, por chave de campo.
+    dados: Mapped[dict] = mapped_column(JSON, default=dict)
+    # Cópia de como cada campo e exame era no envio (para ler e reimprimir
+    # o pedido mesmo depois que o formulário mudar).
+    campos: Mapped[list] = mapped_column(JSON, default=list)   # [{chave, rotulo, secao, valor, texto}]
+    exames: Mapped[list] = mapped_column(JSON, default=list)   # [{codigo, nome, grupo}]
+    versao: Mapped[str] = mapped_column(String(60), default="")
+    criado_por_id: Mapped[str | None] = mapped_column(ForeignKey("usuario.id"), nullable=True)
+    criado_por: Mapped[str] = mapped_column(String(120), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now, index=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, onupdate=_now)
