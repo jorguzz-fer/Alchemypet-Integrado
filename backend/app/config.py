@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     ADMIN_SENHA: str = "alchemypet"
     ADMIN_NOME: str = "Administrador"
 
+    # Domínio dos e-mails da Alchemypet: separa a nossa resposta da mensagem
+    # da clínica ao ler a exportação do Gmail (revisão de resultado).
+    CHAMADOS_DOMINIO: str = "alchemypet.com.br"
+
     # Metadados
     ENV: str = "production"
     APP_NAME: str = "Painel Convênio API"

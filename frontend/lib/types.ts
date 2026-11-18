@@ -272,8 +272,35 @@ export interface Chamado {
   motivo: string;
   status: StatusChamado;
   resposta: string;
+  conclusao: ConclusaoRevisao;
+  conclusao_origem: '' | 'manual' | 'email';
+  conclusao_trecho: string;
   data: string | null;
   updated_at: string;
+}
+
+// Revisão de resultado: o que a nossa resposta à clínica concluiu.
+export type ConclusaoRevisao = '' | 'erro_nosso' | 'correto' | 'nao_identificado';
+
+export interface PlacarRevisao {
+  total: number;
+  erro_nosso: number;
+  correto: number;
+  nao_identificado: number;
+  pendente: number;
+}
+
+export interface ImportacaoEmailsResponse {
+  emails: number;
+  conversas: number;
+  revisoes: number;
+  ligados: number;
+  erro_nosso: number;
+  correto: number;
+  nao_identificado: number;
+  sem_email: number;
+  sem_resposta: number;
+  manuais: number;
 }
 
 export interface ChamadoInput {
@@ -285,6 +312,7 @@ export interface ChamadoInput {
   motivo?: string;
   status?: StatusChamado;
   resposta?: string;
+  conclusao?: ConclusaoRevisao;
   data?: string | null;
 }
 
@@ -295,6 +323,7 @@ export type FiltrosChamado = {
   complexidade?: Complexidade | '';
   motivo?: string;
   status?: StatusChamado | '';
+  conclusao?: ConclusaoRevisao | 'pendente';
   busca?: string;
   // Período pela data do chamado (YYYY-MM-DD), ambos opcionais.
   data_de?: string;

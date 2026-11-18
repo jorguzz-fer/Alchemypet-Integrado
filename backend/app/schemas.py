@@ -260,8 +260,35 @@ class ChamadoOut(BaseModel):
     motivo: str
     status: StatusChamado
     resposta: str
+    conclusao: str = ""
+    conclusao_origem: str = ""
+    conclusao_trecho: str = ""
     data: date | None
     updated_at: datetime
+
+
+ConclusaoRevisao = Literal["", "erro_nosso", "correto", "nao_identificado"]
+
+
+class PlacarRevisaoOut(BaseModel):
+    total: int
+    erro_nosso: int
+    correto: int
+    nao_identificado: int
+    pendente: int
+
+
+class ImportacaoEmailsOut(BaseModel):
+    emails: int
+    conversas: int
+    revisoes: int
+    ligados: int
+    erro_nosso: int
+    correto: int
+    nao_identificado: int
+    sem_email: int
+    sem_resposta: int
+    manuais: int
 
 
 class ChamadoCreate(BaseModel):
@@ -283,6 +310,7 @@ class ChamadoUpdate(BaseModel):
     motivo: str | None = None
     status: StatusChamado | None = None
     resposta: str | None = None
+    conclusao: ConclusaoRevisao | None = None
     data: date | None = None
 
 

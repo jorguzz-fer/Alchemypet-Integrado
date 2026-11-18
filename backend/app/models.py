@@ -258,6 +258,14 @@ class Chamado(Base):
     status: Mapped[str] = mapped_column(String(20), default="aberto", index=True)
     resposta: Mapped[str] = mapped_column(Text, default="")
 
+    # Revisão de resultado: o que a resposta à clínica concluiu.
+    # "" (pendente) | erro_nosso | correto | nao_identificado
+    conclusao: Mapped[str] = mapped_column(String(20), default="", index=True)
+    # manual (marcado na tela) | email (lido do e-mail exportado do Gmail)
+    conclusao_origem: Mapped[str] = mapped_column(String(20), default="")
+    # Trecho da nossa resposta que justificou a classificação automática.
+    conclusao_trecho: Mapped[str] = mapped_column(Text, default="")
+
     data: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
