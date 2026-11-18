@@ -87,6 +87,9 @@ _ERRO = [
     r"\bajustad[oa]s?\b|ajustes? (ja )?(foram|foi) (realizad|feit)\w*",
     r"guia \d+ (ja )?(foi|foram) atualizad",
     r"perdao pela liberacao|liberad[oa] (por engano|errad)",
+    r"(iremos|vamos) (atualizar|corrigir|retificar) o laudo",
+    r"\bequivoquei\b|\bnos equivocamos\b",
+    r"o outro sera excluido",
 ]
 # Erros "fortes": quando a mesma mensagem também confirma algo (ex.: "retificamos
 # o laudo, porém o hematócrito continua baixo"), a correção prevalece.
@@ -113,6 +116,9 @@ _CORRETO = [
     r"resultado originalmente liberado",
     r"\b(revisamos|verificamos|reavaliamos|reanalisamos)[^.]{0,80}(realmente|nao ha presenca|nao foram identificad)",
     r"\breavaliamos e realmente\b",
+    r"fizemos a confirmacao|liberad[oa]s? (corretamente|de acordo com)|(encontra-se|encontram-se) corret",
+    r"\b(deu|foi|foram|houve) realmente\b|\brealmente,? (houve|foram|foi|deu)\b",
+    r"nao identificaram intercorrencias|dentro (dos|do) (padroes|parametros|limites|valores)",
     r"#{6,}",
 ]
 _RE_ERRO = [re.compile(p) for p in _ERRO]
@@ -366,7 +372,9 @@ def abrir_mboxes(arquivo: Path):
     if nome.endswith(".zip"):
         with zipfile.ZipFile(arquivo) as z:
             for info in z.infolist():
-                if info.filename.lower().endswith(".mbox") and not info.is_dir():
+                nome_int = info.filename.replace("\\", "/")
+                if (nome_int.lower().endswith(".mbox") and not info.is_dir()
+                        and "__MACOSX/" not in nome_int and not nome_int.split("/")[-1].startswith("._")):
                     with z.open(info) as f:
                         yield f, info.file_size
     elif nome.endswith((".tgz", ".tar.gz", ".tar")):
