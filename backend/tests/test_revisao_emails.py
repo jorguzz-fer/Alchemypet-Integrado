@@ -44,6 +44,14 @@ class ClassificarTest(unittest.TestCase):
         for texto, esperado in casos.items():
             self.assertEqual(classificar_resposta(texto)[0], esperado, texto)
 
+    def test_linha_quebrada_pelo_gmail(self):
+        self.assertEqual(classificar_resposta("Fizemos a verificação, o laudo foi\natualizado.")[0], "erro_nosso")
+        self.assertEqual(
+            classificar_resposta("Reavaliamos as lâminas e o resultado para as amostras\nenviadas permanece para"
+                                 " sugestivo de lipoma.")[0],
+            "correto",
+        )
+
     def test_trecho_mantem_acentos(self):
         _, trecho = classificar_resposta("Bom dia.\nO resultado está correto conforme liberado. Abraços")
         self.assertEqual(trecho, "O resultado está correto conforme liberado.")
