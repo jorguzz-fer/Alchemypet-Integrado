@@ -131,8 +131,12 @@ _RUIDO = re.compile(r"\(\s*\d{10,13}\s*\)|\[image[^\]]*\]")
 
 
 def _frases(texto: str) -> list[str]:
-    texto = _CITADO.sub(" ", texto or "")
-    partes = re.split(r"(?<=[.!?])\s+|\n+", texto)
+    # O texto puro do Gmail quebra a linha no meio da frase (~76 colunas):
+    # junta as linhas e só separa em parágrafo (linha em branco) ou pontuação.
+    texto = (texto or "").replace("\r\n", "\n")
+    texto = re.sub(r"(?<!\n)\n(?!\n)", " ", texto)
+    texto = _CITADO.sub(" ", texto)
+    partes = re.split(r"(?<=[.!?])\s+|\n\s*\n+", texto)
     out = []
     for p in partes:
         p = re.sub(r"\s+", " ", p).strip()
