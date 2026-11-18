@@ -50,6 +50,8 @@ import type {
   ChamadoInput,
   ChamadosResponse,
   FiltrosChamado,
+  ImportacaoEmailsResponse,
+  PlacarRevisao,
   Tratativa,
   Usuario,
   UsuarioUpdate,
@@ -393,6 +395,20 @@ export const api = {
     const fd = new FormData();
     fd.append('file', file);
     return request<ChamadoImportResponse>('/chamados/importar', {
+      method: 'POST',
+      formData: fd,
+    });
+  },
+
+  placarRevisao(filtros: FiltrosChamado = {}, signal?: AbortSignal): Promise<PlacarRevisao> {
+    const { page: _p, per_page: _pp, ordem: _o, sort: _s, dir: _d, conclusao: _c, ...q } = filtros;
+    return request<PlacarRevisao>('/chamados/placar-revisao', { query: q, signal });
+  },
+
+  importarEmailsRevisao(file: File): Promise<ImportacaoEmailsResponse> {
+    const fd = new FormData();
+    fd.append('file', file);
+    return request<ImportacaoEmailsResponse>('/chamados/importar-emails', {
       method: 'POST',
       formData: fd,
     });

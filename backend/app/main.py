@@ -70,6 +70,12 @@ app.include_router(manutencao.router)  # exige_admin no próprio router
 
 
 # Colunas de CRM acrescentadas à tabela de clínicas (conta única do CRM).
+_COLUNAS_CHAMADO = [
+    ("conclusao", "VARCHAR(20) DEFAULT ''"),
+    ("conclusao_origem", "VARCHAR(20) DEFAULT ''"),
+    ("conclusao_trecho", "TEXT DEFAULT ''"),
+]
+
 _COLUNAS_CLINICA_CRM = [
     ("origem", "VARCHAR(20) DEFAULT 'pendencia'"),
     ("codigo_pocket", "VARCHAR(20)"),
@@ -124,6 +130,11 @@ def _migracao_leve() -> None:
                     conn.execute(text(f"ALTER TABLE clinica ADD COLUMN {nome} {tipo}"))
             for nome in _INDICES_CLINICA_CRM:
                 conn.execute(text(f"CREATE INDEX IF NOT EXISTS ix_clinica_{nome} ON clinica ({nome})"))
+            cols = {r[1] for r in conn.execute(text("PRAGMA table_info(chamado)"))}
+            for nome, tipo in _COLUNAS_CHAMADO:
+                if cols and nome not in cols:
+                    conn.execute(text(f"ALTER TABLE chamado ADD COLUMN {nome} {tipo}"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_chamado_conclusao ON chamado (conclusao)"))
         return
     ddl = [
         "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS email VARCHAR(160)",
@@ -145,6 +156,8 @@ def _migracao_leve() -> None:
     ]
     ddl += [f"ALTER TABLE clinica ADD COLUMN IF NOT EXISTS {nome} {tipo}" for nome, tipo in _COLUNAS_CLINICA_CRM]
     ddl += [f"CREATE INDEX IF NOT EXISTS ix_clinica_{nome} ON clinica ({nome})" for nome in _INDICES_CLINICA_CRM]
+    ddl += [f"ALTER TABLE chamado ADD COLUMN IF NOT EXISTS {nome} {tipo}" for nome, tipo in _COLUNAS_CHAMADO]
+    ddl.append("CREATE INDEX IF NOT EXISTS ix_chamado_conclusao ON chamado (conclusao)")
     with engine.begin() as conn:
         for stmt in ddl:
             conn.execute(text(stmt))

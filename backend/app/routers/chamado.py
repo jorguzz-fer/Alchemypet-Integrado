@@ -2,6 +2,10 @@
 from datetime import date
 from uuid import uuid4
 
+import shutil
+import tempfile
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
@@ -13,7 +17,9 @@ from ..ordenacao import MAX_EXPORTACAO, ordenar
 from ..reports import descrever_filtros, lista_xlsx
 from ..xlsx_resposta import _xlsx
 from ..exclusao_lote import ExclusaoFiltroIn, ExclusaoLoteIn, ExclusaoOut, excluir_filtro, excluir_ids
+from ..config import settings
 from ..models import Chamado
+from ..revisao_emails import CONCLUSOES, processar_arquivo
 from ..reports import chamados_pdf, chamados_xlsx
 from ..security import exige_admin
 from ..schemas import (
@@ -23,6 +29,8 @@ from ..schemas import (
     ChamadoOut,
     ChamadoPage,
     ChamadoUpdate,
+    ImportacaoEmailsOut,
+    PlacarRevisaoOut,
     TopItem,
 )
 
@@ -33,7 +41,11 @@ _ORDEM_COMPLEX = {"alta": 0, "media": 1, "baixa": 2}
 _ROTULO_COMPLEX = {"alta": "Alta", "media": "Média", "baixa": "Baixa"}
 
 
-def _filtrar(stmt, complexidade, motivo, status, busca, data_de=None, data_ate=None):
+def _filtrar(stmt, complexidade, motivo, status, busca, data_de=None, data_ate=None, conclusao=None):
+    if conclusao == "pendente":
+        stmt = stmt.where((Chamado.conclusao == "") | Chamado.conclusao.is_(None))
+    elif conclusao:
+        stmt = stmt.where(Chamado.conclusao == conclusao)
     if data_de:
         stmt = stmt.where(Chamado.data >= data_de)
     if data_ate:
@@ -64,6 +76,7 @@ ORDENAVEIS = {
     "complexidade": [_GRAVIDADE],
     "motivo": [Chamado.motivo],
     "status": [Chamado.status],
+    "conclusao": [Chamado.conclusao],
 }
 
 
@@ -75,10 +88,10 @@ def _ordenada(base, ordem, sort, direcao):
     return base.order_by(Chamado.data.desc().nullslast(), Chamado.created_at.desc())
 
 
-def _base(complexidade, motivo, status, busca, data_de, data_ate):
+def _base(complexidade, motivo, status, busca, data_de, data_ate, conclusao=None):
     if data_de and data_ate and data_de > data_ate:
         raise HTTPException(422, "A data inicial não pode ser maior que a data final")
-    return _filtrar(select(Chamado), complexidade, motivo, status, busca, data_de, data_ate)
+    return _filtrar(select(Chamado), complexidade, motivo, status, busca, data_de, data_ate, conclusao)
 
 
 @router.get("", response_model=ChamadoPage)
@@ -89,6 +102,7 @@ def listar(
     busca: str | None = None,
     data_de: date | None = None,
     data_ate: date | None = None,
+    conclusao: str | None = None,
     ordem: str | None = None,
     sort: str | None = None,
     dir: str | None = None,
@@ -96,7 +110,7 @@ def listar(
     per_page: int = Query(25, ge=1, le=500),
     db: Session = Depends(get_db),
 ):
-    base = _base(complexidade, motivo, status, busca, data_de, data_ate)
+    base = _base(complexidade, motivo, status, busca, data_de, data_ate, conclusao)
     total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
     stmt = _ordenada(base, ordem, sort, dir).offset((page - 1) * per_page).limit(per_page)
     items = list(db.scalars(stmt))
@@ -111,27 +125,33 @@ def exportar_lista(
     busca: str | None = None,
     data_de: date | None = None,
     data_ate: date | None = None,
+    conclusao: str | None = None,
     ordem: str | None = None,
     sort: str | None = None,
     dir: str | None = None,
     db: Session = Depends(get_db),
 ):
     """Todos os chamados do filtro, na ordem da tela, em planilha."""
-    base = _base(complexidade, motivo, status, busca, data_de, data_ate)
+    base = _base(complexidade, motivo, status, busca, data_de, data_ate, conclusao)
     stmt = _ordenada(base, ordem, sort, dir).limit(MAX_EXPORTACAO)
     rot = {"alta": "Alta", "media": "Média", "baixa": "Baixa"}
+    origem = {"email": "Lido do e-mail", "manual": "Marcado na tela"}
     linhas = (
         [c.data, c.assunto, c.remetente, rot.get(c.complexidade, c.complexidade), c.motivo,
-         "Resolvido" if c.status == "resolvido" else "Aberto", c.resposta, c.link_gmail]
+         "Resolvido" if c.status == "resolvido" else "Aberto",
+         CONCLUSOES.get(c.conclusao, ""), origem.get(c.conclusao_origem, ""), c.conclusao_trecho,
+         c.resposta, c.link_gmail]
         for c in db.scalars(stmt)
     )
     conteudo = lista_xlsx(
         "Caixa de chamados — lista",
         [("Data", 12), ("Assunto", 46), ("Remetente", 30), ("Complexidade", 13),
-         ("Motivo", 36), ("Status", 11), ("Resposta / observação", 46), ("Link do Gmail", 40)],
+         ("Motivo", 36), ("Status", 11), ("Conclusão da revisão", 26), ("Como foi classificado", 18),
+         ("Trecho da resposta", 60), ("Resposta / observação", 46), ("Link do Gmail", 40)],
         linhas,
         descrever_filtros(data_de=data_de, data_ate=data_ate, complexidade=complexidade,
-                          motivo=motivo, status=status, busca=busca),
+                          motivo=motivo, status=status, busca=busca,
+                          conclusao=CONCLUSOES.get(conclusao, "Pendente" if conclusao == "pendente" else None)),
     )
     return _xlsx(conteudo, "chamados")
 
@@ -192,6 +212,46 @@ def motivos(db: Session = Depends(get_db)):
     return list(rows)
 
 
+@router.get("/placar-revisao", response_model=PlacarRevisaoOut)
+def placar_revisao(
+    complexidade: str | None = None,
+    motivo: str | None = None,
+    status: str | None = None,
+    busca: str | None = None,
+    data_de: date | None = None,
+    data_ate: date | None = None,
+    db: Session = Depends(get_db),
+):
+    """Conclusões das revisões de resultado no filtro atual."""
+    base = _base(complexidade, motivo, status, busca, data_de, data_ate).subquery()
+    rows = db.execute(select(base.c.conclusao, func.count()).group_by(base.c.conclusao)).all()
+    cont = {k or "": q for k, q in rows}
+    out = {k: cont.get(k, 0) for k in ("erro_nosso", "correto", "nao_identificado")}
+    out["pendente"] = cont.get("", 0) + cont.get(None, 0)
+    return PlacarRevisaoOut(total=sum(cont.values()), **out)
+
+
+@router.post("/importar-emails", response_model=ImportacaoEmailsOut)
+def importar_emails(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Lê a exportação do Gmail (Takeout: .mbox, .zip ou .tgz) e conclui as
+    revisões de resultado pela nossa resposta. Marcações manuais são mantidas."""
+    nome = (file.filename or "").lower()
+    if not nome.endswith((".mbox", ".zip", ".tgz", ".tar.gz", ".tar")):
+        raise HTTPException(400, "Envie o arquivo exportado do Gmail (.mbox, ou o .zip/.tgz do Google Takeout)")
+    with tempfile.TemporaryDirectory() as tmp:
+        sufixo = ".tar.gz" if nome.endswith(".tar.gz") else Path(nome).suffix
+        destino = Path(tmp) / f"envio{sufixo}"
+        with open(destino, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+        try:
+            res = processar_arquivo(db, destino, settings.CHAMADOS_DOMINIO)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(422, f"Não foi possível ler os e-mails: {exc}") from exc
+    return ImportacaoEmailsOut(**res)
+
+
 @router.post("", response_model=ChamadoOut, status_code=201)
 def criar(dados: ChamadoCreate, db: Session = Depends(get_db)):
     campos = dados.model_dump()
@@ -222,6 +282,11 @@ def atualizar(chamado_id: str, dados: ChamadoUpdate, db: Session = Depends(get_d
         enviados["complexidade"] = normalizar_complexidade(enviados["complexidade"])
     if "motivo" in enviados:
         enviados["motivo"] = normalizar_motivo(enviados["motivo"])
+    if "conclusao" in enviados:
+        # Marcada na tela: vale mais que a leitura automática e não é sobrescrita.
+        enviados["conclusao_origem"] = "manual" if enviados["conclusao"] else ""
+        if not enviados["conclusao"]:
+            enviados["conclusao_trecho"] = ""
     for k, v in enviados.items():
         setattr(c, k, v)
     db.commit()
@@ -244,10 +309,11 @@ def excluir_por_filtro(
     busca: str | None = None,
     data_de: date | None = None,
     data_ate: date | None = None,
+    conclusao: str | None = None,
     db: Session = Depends(get_db),
 ):
     """Exclui todos os chamados do filtro atual (só admin)."""
-    base = _filtrar(select(Chamado), complexidade, motivo, status, busca, data_de, data_ate)
+    base = _filtrar(select(Chamado), complexidade, motivo, status, busca, data_de, data_ate, conclusao)
     return excluir_filtro(db, Chamado, base, body)
 
 
