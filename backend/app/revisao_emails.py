@@ -70,19 +70,28 @@ _NAO_CORRIGIR = re.compile(r"\bnao\s+(sera|foi|precisa|e necessari\w*|ha necessi
 _ERRO = [
     r"retific\w*",
     r"\bcorrigid[oa]s?\b",
-    r"\bcorrigimos\b",
+    r"\b(corrigimos|corrigi|atualizei|atualizamos|retifiquei|ajustei|ajustamos|alteramos)\b",
     r"correcao (do|no|de|dos|nos) (laudo|resultado|valor)",
     r"re-?emiti\w*|re-?emissao",
-    r"novo laudo|laudo (atualizado|alterado|corrigido|retificado)|nova versao do laudo",
-    r"(houve|ocorreu|identificamos|constatamos|verificamos|encontramos) (um |uma )?"
+    r"novo laudo|nova versao do laudo",
+    r"\blaudos? (atualizado|alterado|corrigido|retificado)s?\b",
+    r"atualizacao do (resultado|laudo)",
+    r"(houve|ocorreu|identificamos|constatamos|verificamos|encontramos|tinha dado|deu) (um |uma )?"
     r"(erro|equivoco|falha|inconsistencia|divergencia)",
-    r"\berro (de |na |no )?(digitacao|transcricao|liberacao|cadastro|lancamento|interno|nosso|analitico)",
+    r"\b(e |foi )?(um )?erro (de |na |no |da |do )?(digitacao|transcricao|liberacao|cadastro|lancamento|"
+    r"interno|nosso|analitico|mascara|sistema|pipetagem)",
+    r"falha (na|da|de|no) (pipetagem|digitacao|liberacao|analise|cadastro)",
     r"\bequivoco\b",
-    r"pedimos (sinceras )?(desculpas|perdao)|lamentamos (o|pelo) (ocorrido|transtorno)|desculpe(m)? (pelo|o) transtorno",
-    r"(resultado|laudo|valor)(es|s)? (ja )?(foi|foram|esta|estao) (devidamente )?"
+    r"(resultado|laudo|valor|guia)(es|s)? (ja )?(foi|foram|esta|estao) (devidamente )?"
     r"(ajustad|alterad|atualizad|corrigid|retificad)\w*",
-    r"\bajustamos\b|\balteramos\b",
+    r"\bajustad[oa]s?\b|ajustes? (ja )?(foram|foi) (realizad|feit)\w*",
+    r"guia \d+ (ja )?(foi|foram) atualizad",
+    r"perdao pela liberacao|liberad[oa] (por engano|errad)",
 ]
+# Erros "fortes": quando a mesma mensagem também confirma algo (ex.: "retificamos
+# o laudo, porém o hematócrito continua baixo"), a correção prevalece.
+_ERRO_FORTE = re.compile(r"retific|corrigid|corrigimos|laudos? (foi |foram |ja foi )?atualizad|equivoco|"
+                         r"(houve|ocorreu|tinha dado) (um |uma )?(erro|falha)|erro na|falha (na|da)")
 _CORRETO = [
     r"(resultado|valor|laudo)(es|s)? (esta|estao|foi|foram|encontra-se|encontram-se|se encontra|"
     r"permanece|permanecem|segue|seguem|e|sao) (correto|corretos|correta|confirmad\w*|mantid\w*|"
@@ -90,55 +99,100 @@ _CORRETO = [
     r"confirmamos (o|os|a|as) (resultado|valor|laudo|achado)",
     r"\bratific\w*",
     r"mantemos (o|os) (resultado|valor|laudo)",
-    r"(resultado|valor)(es|s)? (se )?mant(em|eve|iveram|ido)",
+    r"\bse mant(em|eve|iveram)\b|\bmantendo-se\b|\bpermanece(m)? (para|com|em|o|a|elevad|baix)",
     r"conforme (liberado|o laudo|laudo liberado|o resultado liberado)",
     r"(repetimos|refizemos|reprocessamos|reanalisamos|reavaliamos|revisamos|conferimos)[^.]{0,120}"
-    r"(confirm\w*|mesmo resultado|se manteve|reprodu\w*|correto|sem alteracao)",
+    r"(confirm\w*|mesmo resultado|reprodu\w*|correto|sem alteracao)",
+    r"\b(repetid|revisad|verificad|conferid|reavaliad)[oa]s? e confirmad[oa]s?",
+    r"\bresultados? (repetidos? e )?confirmad[oa]s?",
+    r"confirmad[oa] (por|em) (meio de )?(analise|lamina)|(que )?confirma(m)? (isso|o resultado)",
     r"mesmo resultado",
     r"(esta|estao|estava|estavam) corret[oa]s?",
+    r"\be isso mesmo\b",
+    r"compativ\w* com (o|os|a|as) (resultado|liberad|liberac)\w*|em concordancia com o resultado",
+    r"resultado originalmente liberado",
+    r"\b(revisamos|verificamos|reavaliamos|reanalisamos)[^.]{0,80}(realmente|nao ha presenca|nao foram identificad)",
+    r"\breavaliamos e realmente\b",
     r"#{6,}",
 ]
 _RE_ERRO = [re.compile(p) for p in _ERRO]
 _RE_CORRETO = [re.compile(p) for p in _CORRETO]
 
+# O que não é a nossa conclusão: perguntas e pedidos (muitas vezes a pergunta
+# da clínica repassada internamente) e trechos citados entre aspas.
+_PERGUNTA = re.compile(
+    r"\?|\bgostaria(mos)? de (saber|confirmar|entender|verificar|pedir|solicitar|refazer|falar)|\bpoderi(a|am)\b|\bpode(m)? (por favor |por gentileza )?(verificar|revisar|repetir|confirmar|"
+    r"ver|conferir|checar|refazer)|\bquer(ia|em)? saber|\b(verificar|confirmar|conferir|checar) se\b|"
+    r"segue (o |a )?(questionamento|solicitacao|mensagem)|\bsolicit(a|ou|ando|ou-se) (a )?(revisao|confirmacao|"
+    r"correcao)|esta certo mesmo|\bprecis(o|amos) (que|da confirmacao)|\bpedindo (correcao|revisao)"
+)
+_CITADO = re.compile(r"\"[^\"]{0,800}\"|“[^”]{0,800}”")
+_RUIDO = re.compile(r"\(\s*\d{10,13}\s*\)|\[image[^\]]*\]")
 
-def _frase(texto: str, ini: int, fim: int) -> str:
-    a = max(texto.rfind(".", 0, ini), texto.rfind("\n", 0, ini)) + 1
-    b_ponto, b_linha = texto.find(".", fim), texto.find("\n", fim)
-    cands = [x for x in (b_ponto, b_linha) if x != -1]
-    b = min(cands) + 1 if cands else len(texto)
-    return re.sub(r"\s+", " ", texto[a:b]).strip()[:300]
+
+def _frases(texto: str) -> list[str]:
+    texto = _CITADO.sub(" ", texto or "")
+    partes = re.split(r"(?<=[.!?])\s+|\n+", texto)
+    out = []
+    for p in partes:
+        p = re.sub(r"\s+", " ", p).strip()
+        if not p or _RUIDO.search(p):
+            continue
+        if _PERGUNTA.search(_sem_acento(p)):
+            continue
+        out.append(p)
+    return out
+
+
+def _sinal(frase: str) -> tuple[bool, bool, bool]:
+    """(erro, correto, erro_forte) numa frase."""
+    base = _sem_acento(frase)
+    base = _NEGACAO.sub(lambda m: "#" * len(m.group(0)), base)
+    base = _NAO_CORRIGIR.sub(lambda m: "#" * len(m.group(0)), base)
+    erro = any(r.search(base) for r in _RE_ERRO)
+    certo = any(r.search(base) for r in _RE_CORRETO)
+    return erro, certo, bool(erro and _ERRO_FORTE.search(base))
+
+
+def _decidir(texto: str) -> tuple[str, str] | None:
+    """Conclusão de uma mensagem, ou None se ela não diz nada conclusivo."""
+    erros, certos, forte = [], [], False
+    for f in _frases(texto):
+        e, c, fo = _sinal(f)
+        if e:
+            erros.append(f)
+            forte = forte or fo
+        if c:
+            certos.append(f)
+    if erros and not certos:
+        return "erro_nosso", erros[0][:300]
+    if certos and not erros:
+        return "correto", certos[0][:300]
+    if erros and certos:
+        if forte:
+            return "erro_nosso", erros[0][:300]
+        return "nao_identificado", erros[0][:300]
+    return None
 
 
 def classificar_resposta(texto: str) -> tuple[str, str]:
-    """(conclusao, trecho). `texto` é a nossa resposta (sem citações)."""
-    original = texto or ""
-    if not original.strip():
-        return "nao_identificado", ""
-    # Mesma posição de caracteres no texto normalizado (só tira acento/caixa).
-    base = _sem_acento(original)
-    if len(base) != len(original):
-        original = base
-    # Troca a frase negada por "#" do mesmo tamanho (as posições continuam
-    # valendo para recortar o trecho do texto original).
-    marcado = _NEGACAO.sub(lambda m: "#" * len(m.group(0)), base)
-    marcado = _NAO_CORRIGIR.sub(lambda m: "#" * len(m.group(0)), marcado)
+    """(conclusao, trecho) de uma resposta nossa."""
+    return _decidir(texto) or ("nao_identificado", "")
 
-    def achados(regras):
-        out = []
-        for r in regras:
-            for m in r.finditer(marcado):
-                out.append(m.span())
-        return sorted(out)
 
-    erros, certos = achados(_RE_ERRO), achados(_RE_CORRETO)
-    if erros and not certos:
-        return "erro_nosso", _frase(original, *erros[0])
-    if certos and not erros:
-        return "correto", _frase(original, *certos[0])
-    if erros and certos:
-        return "nao_identificado", _frase(original, *min(erros[0], certos[0]))
-    return "nao_identificado", ""
+def classificar_conversa(respostas: list[str]) -> tuple[str, str]:
+    """Nossas mensagens, da mais recente para a mais antiga: vale a mais
+    recente que conclui algo (a última palavra do laboratório)."""
+    for r in respostas:
+        d = _decidir(r)
+        if d and d[0] != "nao_identificado":
+            return d
+    for r in respostas:
+        d = _decidir(r)
+        if d:
+            return d
+    primeira = next((r for r in respostas if r.strip()), "")
+    return "nao_identificado", re.sub(r"\s+", " ", primeira).strip()[:300]
 
 
 # ------------------------------------------------------------------- e-mails
@@ -388,19 +442,12 @@ def _ligar_por_assunto(ch: Chamado, conversas: list[Conversa]) -> Conversa | Non
     return None if empate else melhor
 
 
-def nossa_resposta(conversa: Conversa, dominio: str) -> str:
-    """Texto das nossas mensagens para a clínica (a mais recente primeiro)."""
+def nossas_respostas(conversa: Conversa, dominio: str) -> list[str]:
+    """Textos das nossas mensagens, da mais recente para a mais antiga.
+    Inclui as internas: muitas vezes quem conclui é o técnico ("Laudo
+    atualizado, favor avisar a clínica")."""
     dominio = dominio.lower().lstrip("@")
-
-    def nossa(m: Mensagem) -> bool:
-        return m.de.endswith("@" + dominio)
-
-    def para_fora(m: Mensagem) -> bool:
-        return any(not a.endswith("@" + dominio) for a in m.para)
-
-    nossas = [m for m in conversa.mensagens if nossa(m)]
-    externas = [m for m in nossas if para_fora(m)] or nossas
-    return "\n\n".join(m.texto for m in reversed(externas) if m.texto)
+    return [m.texto for m in reversed(conversa.mensagens) if m.de.endswith("@" + dominio) and m.texto]
 
 
 def pedido_da_clinica(conversa: Conversa, dominio: str) -> str:
@@ -496,14 +543,12 @@ def processar(db: Session, arquivo: Path, dominio: str = DOMINIO_PADRAO, progres
             res["sem_email"] += 1
             continue
         res["ligados"] += 1
-        resposta = nossa_resposta(conversa, dominio)
-        if not resposta:
+        respostas = nossas_respostas(conversa, dominio)
+        if not respostas:
             res["sem_resposta"] += 1
             conclusao, trecho = "nao_identificado", "Sem resposta nossa na conversa exportada."
         else:
-            conclusao, trecho = classificar_resposta(resposta)
-            if not trecho:
-                trecho = re.sub(r"\s+", " ", resposta).strip()[:300]
+            conclusao, trecho = classificar_conversa(respostas)
         ch.conclusao, ch.conclusao_origem, ch.conclusao_trecho = conclusao, "email", trecho
         if not ch.texto:
             ch.texto = pedido_da_clinica(conversa, dominio)
