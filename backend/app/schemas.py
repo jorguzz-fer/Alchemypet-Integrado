@@ -291,6 +291,17 @@ class ImportacaoEmailsOut(BaseModel):
     manuais: int
 
 
+class TarefaEmailsOut(BaseModel):
+    id: str
+    # lendo | ligando | concluido | erro
+    fase: str
+    lidos: int = 0
+    tamanho: int = 0
+    emails: int = 0
+    resultado: ImportacaoEmailsOut | None = None
+    erro: str = ""
+
+
 class ChamadoCreate(BaseModel):
     assunto: str
     remetente: str = ""

@@ -50,8 +50,8 @@ import type {
   ChamadoInput,
   ChamadosResponse,
   FiltrosChamado,
-  ImportacaoEmailsResponse,
   PlacarRevisao,
+  TarefaEmails,
   Tratativa,
   Usuario,
   UsuarioUpdate,
@@ -405,13 +405,49 @@ export const api = {
     return request<PlacarRevisao>('/chamados/placar-revisao', { query: q, signal });
   },
 
-  importarEmailsRevisao(file: File): Promise<ImportacaoEmailsResponse> {
-    const fd = new FormData();
-    fd.append('file', file);
-    return request<ImportacaoEmailsResponse>('/chamados/importar-emails', {
-      method: 'POST',
-      formData: fd,
+  // Upload com progresso (arquivos do Takeout têm centenas de MB): XHR, pois
+  // fetch não informa o andamento do envio.
+  enviarEmailsRevisao(file: File, onEnvio: (pct: number) => void): Promise<TarefaEmails> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${API_BASE}/chamados/importar-emails`);
+      const token = getToken();
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onEnvio(Math.round((100 * e.loaded) / e.total));
+      };
+      xhr.onload = () => {
+        let dados: unknown = null;
+        try {
+          dados = JSON.parse(xhr.responseText);
+        } catch {
+          /* resposta sem JSON */
+        }
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(dados as TarefaEmails);
+          return;
+        }
+        const detalhe = (dados as { detail?: unknown } | null)?.detail;
+        reject(
+          new ApiError(
+            typeof detalhe === 'string'
+              ? detalhe
+              : xhr.status === 413
+                ? 'Arquivo grande demais para o servidor aceitar.'
+                : `Falha ao enviar o arquivo (erro ${xhr.status}).`,
+            xhr.status,
+          ),
+        );
+      };
+      xhr.onerror = () => reject(new ApiError('A conexão caiu durante o envio do arquivo. Tente de novo.', 0));
+      const fd = new FormData();
+      fd.append('file', file);
+      xhr.send(fd);
     });
+  },
+
+  statusEmailsRevisao(id: string, signal?: AbortSignal): Promise<TarefaEmails> {
+    return request<TarefaEmails>(`/chamados/importar-emails/${encodeURIComponent(id)}`, { signal });
   },
 
   exportarChamados(formato: 'xlsx' | 'pdf'): Promise<void> {
