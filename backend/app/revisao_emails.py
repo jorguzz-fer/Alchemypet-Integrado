@@ -151,6 +151,9 @@ class Mensagem:
     para: list[str]
     data: datetime | None
     texto: str
+    # Assunto do chamado na planilha, quando quem exportou já sabia de qual
+    # chamado é a conversa (script do Google: cabeçalho X-Alchemypet-Chamado).
+    chamado: str = ""
 
 
 @dataclass
@@ -250,6 +253,7 @@ def _mensagem(bruto: bytes, cab) -> Mensagem | None:
         para=_endereco(cab.get("to")) + _endereco(cab.get("cc")),
         data=dt,
         texto=sem_citacao(_corpo(msg)),
+        chamado=_decodificar(cab.get("x-alchemypet-chamado")).strip(),
     )
 
 
@@ -284,7 +288,7 @@ def ler_fluxo(fluxo, interessa, progresso=None):
                 no_cabecalho = False
                 cab = _cabecalho(b"".join(cab_linhas))
                 thread = str(cab.get("x-gm-thrid") or "").strip()
-                if interessa(thread, _decodificar(cab.get("subject"))):
+                if cab.get("x-alchemypet-chamado") or interessa(thread, _decodificar(cab.get("subject"))):
                     corpo = []
             else:
                 cab_linhas.append(linha)
@@ -362,6 +366,9 @@ def _semelhanca(a: str, b: str) -> float:
     na, nb = {p for p in pa if p.isdigit()}, {p for p in pb if p.isdigit()}
     if na and nb and not (na & nb):
         return 0.0
+    # Todas as palavras do chamado estão no assunto do e-mail (que tem mais).
+    if len(pa) >= 2 and pa <= pb:
+        return 0.85
     return len(pa & pb) / len(pa | pb)
 
 
@@ -466,6 +473,11 @@ def processar(db: Session, arquivo: Path, dominio: str = DOMINIO_PADRAO, progres
     conversas = agrupar(mensagens)
     por_thread = {c.chave[2:]: c for c in conversas.values() if c.chave.startswith("t:")}
     lista = list(conversas.values())
+    por_chamado: dict[str, Conversa] = {}
+    for c in lista:
+        for m in c.mensagens:
+            if m.chamado:
+                por_chamado.setdefault(assunto_base(m.chamado), c)
 
     res = {"emails": total_emails, "conversas": len(conversas), "revisoes": len(chamados), "ligados": 0,
            "erro_nosso": 0, "correto": 0, "nao_identificado": 0, "sem_email": 0,
@@ -476,6 +488,8 @@ def processar(db: Session, arquivo: Path, dominio: str = DOMINIO_PADRAO, progres
             continue
         tid = thread_do_link(ch.link_gmail)
         conversa = por_thread.get(tid) if tid else None
+        if conversa is None:
+            conversa = por_chamado.get(assunto_base(ch.assunto))
         if conversa is None:
             conversa = _ligar_por_assunto(ch, lista)
         if conversa is None:

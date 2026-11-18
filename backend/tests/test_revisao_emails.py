@@ -117,6 +117,27 @@ class ImportacaoTest(unittest.TestCase):
         self.db.refresh(self.c_outro)
         self.assertEqual(self.c_outro.conclusao, "")
 
+    def test_conversa_anotada_pelo_script(self):
+        # O script do Google marca de qual chamado é a conversa (assunto do
+        # e-mail diferente do da planilha).
+        texto = (
+            "From x@export Mon Mar 09 13:00:00 2026\n"
+            "From: vet@clinica.com\nTo: atendimento@alchemypet.com.br\nSubject: Duvida no exame\n"
+            "Date: Mon, 09 Mar 2026 13:00:00 GMT\nX-GM-THRID: 4242\n"
+            "X-Alchemypet-Chamado: =?UTF-8?B?QWxnbyBzZW0gZS1tYWls?=\n\nPodem ver?\n\n"
+            "From x@export Mon Mar 09 15:00:00 2026\n"
+            "From: atendimento@alchemypet.com.br\nTo: vet@clinica.com\nSubject: Re: Duvida no exame\n"
+            "Date: Mon, 09 Mar 2026 15:00:00 GMT\nX-GM-THRID: 4242\n"
+            "X-Alchemypet-Chamado: =?UTF-8?B?QWxnbyBzZW0gZS1tYWls?=\n"
+            "Content-Type: text/plain; charset=utf-8\nContent-Transfer-Encoding: 8bit\n\nO resultado está correto.\n\n"
+        )
+        caminho = Path(self.tmp.name) / "script.mbox"
+        caminho.write_text(texto, encoding="utf-8")
+        res = processar_arquivo(self.db, caminho)
+        self.assertEqual(res["ligados"], 1)
+        self.db.refresh(self.c_sem)
+        self.assertEqual(self.c_sem.conclusao, "correto")
+
     def test_marcacao_manual_e_placar(self):
         processar_arquivo(self.db, self.zip)
         rota.atualizar(self.c_link.id, ChamadoUpdate(conclusao="correto"), self.db)
