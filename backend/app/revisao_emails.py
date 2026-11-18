@@ -19,17 +19,16 @@ Classificação manual (feita na tela) nunca é sobrescrita.
 from __future__ import annotations
 
 import email
+import email.parser
 import html
-import mailbox
 import re
-import shutil
 import tarfile
-import tempfile
 import unicodedata
 import zipfile
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from email import policy
+from email.header import decode_header, make_header
 from email.utils import getaddresses, parsedate_to_datetime
 from pathlib import Path
 
@@ -215,60 +214,110 @@ def _endereco(v) -> list[str]:
         return []
 
 
-def ler_mbox(caminho: Path):
-    """Gera Mensagem de cada e-mail do .mbox (lendo um por vez)."""
-    caixa = mailbox.mbox(
-        str(caminho), factory=lambda f: email.message_from_binary_file(f, policy=policy.default), create=False
-    )
+# Leitura em fluxo, sem extrair o .zip para o disco: o Takeout costuma ter
+# vários GB (anexos com laudos). Primeiro olhamos só o cabeçalho de cada
+# e-mail; o corpo só é lido quando a conversa interessa (é de um chamado de
+# revisão). Assim o arquivo inteiro é percorrido uma vez, sem abrir anexos.
+
+def _cabecalho(bruto: bytes):
+    return email.parser.BytesHeaderParser(policy=policy.compat32).parsebytes(bruto)
+
+
+def _decodificar(v) -> str:
+    if v is None:
+        return ""
     try:
-        for msg in caixa:
-            if msg is None:
-                continue
-            try:
-                assunto = str(msg.get("subject") or "")
-                de = (_endereco(msg.get("from")) or [""])[0]
-                para = _endereco(msg.get("to")) + _endereco(msg.get("cc"))
-                try:
-                    dt = parsedate_to_datetime(str(msg.get("date"))) if msg.get("date") else None
-                    if dt is not None and dt.tzinfo is not None:
-                        dt = dt.replace(tzinfo=None)
-                except Exception:  # noqa: BLE001
-                    dt = None
-                thrid = str(msg.get("x-gm-thrid") or "").strip()
-                yield Mensagem(thread=thrid, assunto=assunto, de=de, para=para, data=dt,
-                               texto=sem_citacao(_corpo(msg)))
-            except Exception:  # noqa: BLE001
-                continue
-    finally:
-        caixa.close()
+        return str(make_header(decode_header(str(v))))
+    except Exception:  # noqa: BLE001
+        return str(v)
 
 
-def extrair_mboxes(arquivo: Path, destino: Path) -> list[Path]:
-    """Aceita .mbox, ou .zip/.tgz do Takeout com um ou mais .mbox dentro."""
+def _mensagem(bruto: bytes, cab) -> Mensagem | None:
+    try:
+        msg = email.message_from_bytes(bruto, policy=policy.default)
+    except Exception:  # noqa: BLE001
+        return None
+    try:
+        dt = parsedate_to_datetime(str(cab.get("date"))) if cab.get("date") else None
+        if dt is not None and dt.tzinfo is not None:
+            dt = dt.replace(tzinfo=None)
+    except Exception:  # noqa: BLE001
+        dt = None
+    return Mensagem(
+        thread=str(cab.get("x-gm-thrid") or "").strip(),
+        assunto=_decodificar(cab.get("subject")),
+        de=(_endereco(cab.get("from")) or [""])[0],
+        para=_endereco(cab.get("to")) + _endereco(cab.get("cc")),
+        data=dt,
+        texto=sem_citacao(_corpo(msg)),
+    )
+
+
+def ler_fluxo(fluxo, interessa, progresso=None):
+    """Percorre um .mbox (fluxo binário) e gera Mensagem só dos e-mails em que
+    `interessa(thread, assunto)` é verdadeiro. `progresso(bytes, emails)`."""
+    lidos = emails = 0
+    cab_linhas: list[bytes] = []
+    corpo: list[bytes] | None = None
+    no_cabecalho = False
+    cab = None
+
+    def fechar():
+        nonlocal emails
+        if cab is not None and corpo is not None:
+            return _mensagem(b"".join(cab_linhas) + b"\n" + b"".join(corpo), cab)
+        return None
+
+    for linha in fluxo:
+        lidos += len(linha)
+        if linha.startswith(b"From "):
+            m = fechar()
+            if m:
+                yield m
+            emails += 1
+            if progresso and emails % 500 == 0:
+                progresso(lidos, emails)
+            cab_linhas, corpo, cab, no_cabecalho = [], None, None, True
+            continue
+        if no_cabecalho:
+            if linha in (b"\n", b"\r\n"):
+                no_cabecalho = False
+                cab = _cabecalho(b"".join(cab_linhas))
+                thread = str(cab.get("x-gm-thrid") or "").strip()
+                if interessa(thread, _decodificar(cab.get("subject"))):
+                    corpo = []
+            else:
+                cab_linhas.append(linha)
+        elif corpo is not None:
+            corpo.append(linha)
+    m = fechar()
+    if m:
+        yield m
+    if progresso:
+        progresso(lidos, emails)
+
+
+def abrir_mboxes(arquivo: Path):
+    """Gera (fluxo binário, tamanho) de cada .mbox: o próprio arquivo, ou os
+    .mbox de dentro do .zip/.tgz do Takeout (lidos direto, sem extrair)."""
     nome = arquivo.name.lower()
-    saida: list[Path] = []
     if nome.endswith(".zip"):
         with zipfile.ZipFile(arquivo) as z:
-            for i, info in enumerate(z.infolist()):
+            for info in z.infolist():
                 if info.filename.lower().endswith(".mbox") and not info.is_dir():
-                    alvo = destino / f"{i}.mbox"  # nunca usa o nome de dentro do zip como caminho
-                    with z.open(info) as src, open(alvo, "wb") as dst:
-                        shutil.copyfileobj(src, dst)
-                    saida.append(alvo)
+                    with z.open(info) as f:
+                        yield f, info.file_size
     elif nome.endswith((".tgz", ".tar.gz", ".tar")):
         with tarfile.open(arquivo) as t:
-            for i, info in enumerate(t.getmembers()):
+            for info in t:
                 if info.isfile() and info.name.lower().endswith(".mbox"):
-                    src = t.extractfile(info)
-                    if src is None:
-                        continue
-                    alvo = destino / f"{i}.mbox"
-                    with src, open(alvo, "wb") as dst:
-                        shutil.copyfileobj(src, dst)
-                    saida.append(alvo)
+                    f = t.extractfile(info)
+                    if f is not None:
+                        with f:
+                            yield f, info.size
     else:
-        saida.append(arquivo)
-    return saida
+        with open(arquivo, "rb") as f:
+            yield f, arquivo.stat().st_size
 
 
 def agrupar(mensagens) -> dict[str, Conversa]:
@@ -354,18 +403,73 @@ def pedido_da_clinica(conversa: Conversa, dominio: str) -> str:
     return ""
 
 
-def processar(db: Session, mboxes: list[Path], dominio: str = DOMINIO_PADRAO) -> dict:
-    mensagens = (m for caminho in mboxes for m in ler_mbox(caminho))
+class _Alvos:
+    """O que procurar no arquivo: as conversas dos chamados de revisão."""
+
+    def __init__(self, chamados: list[Chamado]):
+        self.threads = {t for t in (thread_do_link(c.link_gmail) for c in chamados) if t}
+        self.assuntos = [assunto_base(c.assunto) for c in chamados if c.assunto]
+        # Índice palavra → assuntos, ignorando palavras comuns a muitos chamados.
+        indice: dict[str, set[int]] = {}
+        for i, a in enumerate(self.assuntos):
+            for p in _palavras(a):
+                indice.setdefault(p, set()).add(i)
+        limite = max(5, len(self.assuntos) // 10)
+        self.indice = {p: ids for p, ids in indice.items() if len(ids) <= limite}
+        self._cache: dict[str, bool] = {}
+
+    def interessa(self, thread: str, assunto: str) -> bool:
+        if thread and thread in self.threads:
+            return True
+        base = assunto_base(assunto)
+        if not base:
+            return False
+        if base in self._cache:
+            return self._cache[base]
+        candidatos: set[int] = set()
+        for p in _palavras(base):
+            candidatos |= self.indice.get(p, set())
+        ok = any(_semelhanca(self.assuntos[i], base) >= 0.6 for i in candidatos)
+        if len(self._cache) < 200_000:
+            self._cache[base] = ok
+        return ok
+
+
+def processar(db: Session, arquivo: Path, dominio: str = DOMINIO_PADRAO, progresso=None) -> dict:
+    chamados = [c for c in db.scalars(select(Chamado)) if eh_revisao(c.motivo)]
+    alvos = _Alvos(chamados)
+
+    mensagens: list[Mensagem] = []
+    total_emails = 0
+    achou_mbox = False
+    for fluxo, tamanho in abrir_mboxes(arquivo):
+        achou_mbox = True
+        base_emails = total_emails
+
+        def avisar(lidos, n, _t=tamanho, _b=base_emails):
+            if progresso:
+                progresso(fase="lendo", lidos=lidos, tamanho=_t, emails=_b + n)
+
+        contador = {"n": 0}
+
+        def avisar_conta(lidos, n, _f=avisar):
+            contador["n"] = n
+            _f(lidos, n)
+
+        mensagens.extend(ler_fluxo(fluxo, alvos.interessa, avisar_conta))
+        total_emails += contador["n"]
+    if not achou_mbox:
+        raise ValueError("Nenhum arquivo .mbox encontrado no envio.")
+    if progresso:
+        progresso(fase="ligando", emails=total_emails)
+
     conversas = agrupar(mensagens)
-    total_emails = sum(len(c.mensagens) for c in conversas.values())
     por_thread = {c.chave[2:]: c for c in conversas.values() if c.chave.startswith("t:")}
     lista = list(conversas.values())
 
-    res = {"emails": total_emails, "conversas": len(conversas), "revisoes": 0, "ligados": 0,
+    res = {"emails": total_emails, "conversas": len(conversas), "revisoes": len(chamados), "ligados": 0,
            "erro_nosso": 0, "correto": 0, "nao_identificado": 0, "sem_email": 0,
            "sem_resposta": 0, "manuais": 0}
-    chamados = [c for c in db.scalars(select(Chamado)) if eh_revisao(c.motivo)]
-    res["revisoes"] = len(chamados)
     for ch in chamados:
         if ch.conclusao_origem == "manual" and ch.conclusao:
             res["manuais"] += 1
@@ -394,9 +498,5 @@ def processar(db: Session, mboxes: list[Path], dominio: str = DOMINIO_PADRAO) ->
     return res
 
 
-def processar_arquivo(db: Session, arquivo: Path, dominio: str = DOMINIO_PADRAO) -> dict:
-    with tempfile.TemporaryDirectory() as tmp:
-        mboxes = extrair_mboxes(arquivo, Path(tmp))
-        if not mboxes:
-            raise ValueError("Nenhum arquivo .mbox encontrado no envio.")
-        return processar(db, mboxes, dominio)
+def processar_arquivo(db: Session, arquivo: Path, dominio: str = DOMINIO_PADRAO, progresso=None) -> dict:
+    return processar(db, arquivo, dominio, progresso)

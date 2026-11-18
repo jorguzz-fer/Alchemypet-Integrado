@@ -290,6 +290,16 @@ export interface PlacarRevisao {
   pendente: number;
 }
 
+export interface TarefaEmails {
+  id: string;
+  fase: 'lendo' | 'ligando' | 'concluido' | 'erro';
+  lidos: number;
+  tamanho: number;
+  emails: number;
+  resultado: ImportacaoEmailsResponse | null;
+  erro: string;
+}
+
 export interface ImportacaoEmailsResponse {
   emails: number;
   conversas: number;

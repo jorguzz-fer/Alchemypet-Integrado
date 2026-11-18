@@ -3500,3 +3500,33 @@ th.th-ord.ativo .th-seta {
     grid-template-columns: 1fr 1fr;
   }
 }
+.imp-prog {
+  margin-top: 14px;
+  background: #f5f8fb;
+  border: 1px solid var(--linha);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.imp-prog-tit {
+  font-weight: 700;
+  font-size: 0.86rem;
+  margin-bottom: 6px;
+}
+.imp-barra {
+  height: 8px;
+  background: #e3e8ee;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.imp-barra span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--marinho), #0f9b9b);
+  transition: width 0.4s;
+}
+.imp-prog small {
+  display: block;
+  margin-top: 6px;
+  color: var(--texto-suave);
+  font-size: 0.74rem;
+}

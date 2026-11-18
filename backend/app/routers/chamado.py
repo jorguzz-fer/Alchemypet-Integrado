@@ -2,8 +2,10 @@
 from datetime import date
 from uuid import uuid4
 
+import logging
 import shutil
 import tempfile
+import threading
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
@@ -12,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from ..chamado_classifier import classificar, normalizar_complexidade, normalizar_motivo
 from ..chamado_importer import importar_chamados_xlsx
-from ..database import get_db
+from ..database import SessionLocal, get_db
 from ..ordenacao import MAX_EXPORTACAO, ordenar
 from ..reports import descrever_filtros, lista_xlsx
 from ..xlsx_resposta import _xlsx
@@ -29,12 +31,13 @@ from ..schemas import (
     ChamadoOut,
     ChamadoPage,
     ChamadoUpdate,
-    ImportacaoEmailsOut,
     PlacarRevisaoOut,
+    TarefaEmailsOut,
     TopItem,
 )
 
 router = APIRouter(prefix="/chamados", tags=["chamados"])
+log = logging.getLogger(__name__)
 
 # Ordem canônica das complexidades no gráfico.
 _ORDEM_COMPLEX = {"alta": 0, "media": 1, "baixa": 2}
@@ -231,25 +234,62 @@ def placar_revisao(
     return PlacarRevisaoOut(total=sum(cont.values()), **out)
 
 
-@router.post("/importar-emails", response_model=ImportacaoEmailsOut)
-def importar_emails(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    """Lê a exportação do Gmail (Takeout: .mbox, .zip ou .tgz) e conclui as
-    revisões de resultado pela nossa resposta. Marcações manuais são mantidas."""
+# A leitura de uma exportação grande (centenas de MB a alguns GB) leva
+# minutos: roda em segundo plano e a tela acompanha o progresso. Um processo
+# só (uvicorn sem workers extras), então o estado fica em memória.
+_TAREFAS: dict[str, dict] = {}
+_TAREFAS_LOCK = threading.Lock()
+
+
+def _rodar_tarefa(tid: str, caminho: Path, pasta: str) -> None:
+    def progresso(**kw):
+        with _TAREFAS_LOCK:
+            _TAREFAS[tid].update(kw)
+
+    try:
+        with SessionLocal() as db:
+            res = processar_arquivo(db, caminho, settings.CHAMADOS_DOMINIO, progresso)
+        progresso(fase="concluido", resultado=res)
+    except ValueError as exc:
+        progresso(fase="erro", erro=str(exc))
+    except Exception as exc:  # noqa: BLE001
+        log.exception("Falha ao ler os e-mails exportados")
+        progresso(fase="erro", erro=f"Não foi possível ler os e-mails: {exc}")
+    finally:
+        shutil.rmtree(pasta, ignore_errors=True)
+
+
+@router.post("/importar-emails", response_model=TarefaEmailsOut, status_code=202)
+def importar_emails(file: UploadFile = File(...)):
+    """Recebe a exportação do Gmail (Takeout: .zip, .tgz ou .mbox) e conclui
+    as revisões de resultado pela nossa resposta, em segundo plano.
+    Marcações manuais são mantidas."""
     nome = (file.filename or "").lower()
     if not nome.endswith((".mbox", ".zip", ".tgz", ".tar.gz", ".tar")):
         raise HTTPException(400, "Envie o arquivo exportado do Gmail (.mbox, ou o .zip/.tgz do Google Takeout)")
-    with tempfile.TemporaryDirectory() as tmp:
-        sufixo = ".tar.gz" if nome.endswith(".tar.gz") else Path(nome).suffix
-        destino = Path(tmp) / f"envio{sufixo}"
-        with open(destino, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-        try:
-            res = processar_arquivo(db, destino, settings.CHAMADOS_DOMINIO)
-        except ValueError as exc:
-            raise HTTPException(422, str(exc)) from exc
-        except Exception as exc:  # noqa: BLE001
-            raise HTTPException(422, f"Não foi possível ler os e-mails: {exc}") from exc
-    return ImportacaoEmailsOut(**res)
+    with _TAREFAS_LOCK:
+        if any(t["fase"] in ("lendo", "ligando") for t in _TAREFAS.values()):
+            raise HTTPException(409, "Já há uma leitura de e-mails em andamento. Aguarde terminar.")
+    pasta = tempfile.mkdtemp(prefix="emails-")
+    sufixo = ".tar.gz" if nome.endswith(".tar.gz") else Path(nome).suffix
+    destino = Path(pasta) / f"envio{sufixo}"
+    with open(destino, "wb") as f:
+        shutil.copyfileobj(file.file, f, 1024 * 1024)
+    tid = uuid4().hex
+    with _TAREFAS_LOCK:
+        _TAREFAS[tid] = {"id": tid, "fase": "lendo", "lidos": 0, "tamanho": 0, "emails": 0,
+                         "resultado": None, "erro": ""}
+    threading.Thread(target=_rodar_tarefa, args=(tid, destino, pasta), daemon=True).start()
+    return TarefaEmailsOut(**_TAREFAS[tid])
+
+
+@router.get("/importar-emails/{tarefa_id}", response_model=TarefaEmailsOut)
+def status_importacao_emails(tarefa_id: str):
+    with _TAREFAS_LOCK:
+        t = _TAREFAS.get(tarefa_id)
+        if not t:
+            raise HTTPException(404, "Leitura não encontrada (o serviço pode ter reiniciado). Envie de novo.")
+        return TarefaEmailsOut(**t)
 
 
 @router.post("", response_model=ChamadoOut, status_code=201)
