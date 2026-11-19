@@ -5,6 +5,9 @@ const COR_TUBO: Record<string, string> = {
   amarelo: 'var(--tubo-amarelo)',
   roxo: 'var(--tubo-roxo)',
   cinza: 'var(--tubo-cinza)',
+  azul: '#00aeef',
+  verde: '#00a650',
+  branco: '#fff',
 };
 
 export function Tubos({ tubos, amostra, legenda }: { tubos: string[]; amostra?: string; legenda?: Record<string, string> }) {
@@ -16,7 +19,12 @@ export function Tubos({ tubos, amostra, legenda }: { tubos: string[]; amostra?: 
   return (
     <span className="enc-tubos" title={titulo}>
       {tubos.map((t, i) => (
-        <span key={i} className="enc-tubo" style={{ background: COR_TUBO[t] ?? '#999' }} aria-hidden />
+        <span
+          key={i}
+          className={`enc-tubo${t === 'branco' ? ' t-branco' : ''}`}
+          style={{ background: COR_TUBO[t] ?? '#999' }}
+          aria-hidden
+        />
       ))}
       {amostra ? <span className="enc-amostra">{amostra}</span> : null}
       <span className="sr-only">{titulo}</span>

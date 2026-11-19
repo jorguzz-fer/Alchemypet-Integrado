@@ -14,9 +14,12 @@ import type {
   Conta,
   ExameEncaminhamento,
   FormularioEncaminhamento,
+  GrupoExames,
   PedidoExame,
+  PontoLesao,
+  ValorCampo,
 } from '@/lib/types';
-import { Dados, faltando, visivel } from './regras';
+import { Contexto, Dados, faltando, visivel } from './regras';
 import { MarcaPerfil, Selo, Tubos } from './Marcas';
 
 const LEMBRAR = 'enc_ultimo_vet';
@@ -90,9 +93,9 @@ function Campo({
   lista,
 }: {
   campo: CampoEncaminhamento;
-  valor: string | boolean | undefined;
+  valor: ValorCampo | undefined;
   erro: boolean;
-  onChange: (v: string | boolean) => void;
+  onChange: (v: ValorCampo) => void;
   onClinica: (c: Conta | null) => void;
   estilo?: 'linha' | 'grade' | 'caixa';
   rotuloPapel?: string;
@@ -111,6 +114,41 @@ function Campo({
   );
   const cls = `enc-campo w-${campo.largura}${erro ? ' erro' : ''} t-${campo.tipo}${
     estilo ? ` e-${estilo}` : ''}${semRotulo ? ' sem-rotulo' : ''}`;
+
+  if (campo.tipo === 'multipla') {
+    // Várias escolhas, como os "( )" do papel (Mácula, Bolha, Pápula…).
+    const lista = Array.isArray(valor) ? (valor as string[]) : [];
+    return (
+      <fieldset className={cls} data-campo={campo.chave}>
+        <legend className="enc-rot">{rotulo}</legend>
+        <div className="enc-multi">
+          {campo.opcoes.map((o) => {
+            const ativo = lista.includes(o.valor);
+            return (
+              <label key={o.valor} className={`enc-multi-op${ativo ? ' ativo' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={ativo}
+                  onChange={() => onChange(ativo ? lista.filter((x) => x !== o.valor) : [...lista, o.valor])}
+                />
+                <span aria-hidden className="enc-par">( {ativo ? 'X' : ' '} )</span> {o.rotulo}
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+    );
+  }
+
+  if (campo.tipo === 'diagrama') {
+    return (
+      <div className={cls} data-campo={campo.chave}>
+        <span className="enc-rot">{rotulo}</span>
+        {campo.ajuda ? <span className="enc-ajuda-vis">{campo.ajuda}</span> : null}
+        <Diagrama pontos={Array.isArray(valor) ? (valor as PontoLesao[]) : []} onChange={onChange} />
+      </div>
+    );
+  }
 
   if (campo.tipo === 'marcar') {
     return (
@@ -248,12 +286,9 @@ const PLANTA: Record<string, Peca[][]> = {
     [{ chave: 'clinica', peso: 7 }, { chave: 'data_coleta', peso: 3 }],
     [{ chave: 'veterinario', peso: 7 }, { chave: 'crmv', peso: 3, estilo: 'caixa', rotulo: 'CRMV (com carimbo)' }],
     [{ chave: 'responsavel', peso: 7.6, estilo: 'grade' }, { chave: 'cpf', peso: 2.4 }],
-    [
-      { chave: 'paciente', peso: 4.4, estilo: 'grade' },
-      { chave: 'paciente_id', peso: 1.5, estilo: 'grade' },
-      { chave: 'plano_saude', peso: 2.3 },
-      { chave: 'matricula', peso: 1.8 },
-    ],
+    [{ chave: 'paciente', peso: 10, estilo: 'grade' }],
+    [{ chave: 'plano_saude', peso: 5.2 }, { chave: 'matricula', peso: 4.8 }],
+    [{ chave: 'categoria_plano', peso: 10 }],
     [
       { chave: 'especie', peso: 2.6 },
       { chave: 'especie_outro', peso: 1.6, semRotulo: true, lista: 'enc-lista-especies' },
@@ -262,10 +297,12 @@ const PLANTA: Record<string, Peca[][]> = {
       { chave: 'idade', peso: 2 },
     ],
     [
-      { chave: 'recoleta', peso: 2.5 },
-      { chave: 'material_faltante', peso: 2.5 },
-      { chave: 'fast_track', peso: 2.5 },
-      { chave: 'exame_urgente', peso: 2.5 },
+      { chave: 'recoleta', peso: 1.4 },
+      { chave: 'guia_recoleta', peso: 1.6, rotulo: 'Nº guia' },
+      { chave: 'material_faltante', peso: 2 },
+      { chave: 'guia_material', peso: 1.6, rotulo: 'Nº guia' },
+      { chave: 'fast_track', peso: 1.6 },
+      { chave: 'exame_urgente', peso: 1.8 },
     ],
   ],
   motivo: [
@@ -280,6 +317,8 @@ const PLANTA: Record<string, Peca[][]> = {
 const DEPENDE: Record<string, { chave: string; valor: string }> = {
   especie_outro: { chave: 'especie', valor: 'outros' },
   medicamentos: { chave: 'uso_medicamento', valor: 'sim' },
+  guia_recoleta: { chave: 'recoleta', valor: 'true' },
+  guia_material: { chave: 'material_faltante', valor: 'true' },
 };
 
 function chavesDaPlanta(secao: string): Set<string> {
@@ -307,7 +346,7 @@ function Planta({
   dados: Dados;
   pendentes: CampoEncaminhamento[];
   tentouEnviar: boolean;
-  set: (chave: string, v: string | boolean) => void;
+  set: (chave: string, v: ValorCampo) => void;
   onClinica: (c: Conta | null) => void;
 }) {
   const porChave = Object.fromEntries(campos.map((c) => [c.chave, c]));
@@ -359,7 +398,10 @@ function Planta({
           naLinha
           onChange={(v) => {
             set(c.chave, v);
-            if (dep && typeof v === 'string' && v.trim() && dados[dep.chave] !== dep.valor) set(dep.chave, dep.valor);
+            if (dep && typeof v === 'string' && v.trim()) {
+              const alvo = dep.valor === 'true' ? true : dep.valor;
+              if (dados[dep.chave] !== alvo) set(dep.chave, alvo);
+            }
           }}
           onClinica={onClinica}
         />
@@ -377,6 +419,47 @@ function Planta({
           </div>
         ) : null;
       })}
+    </div>
+  );
+}
+
+// Distribuição das lesões: toque no desenho (ventral à esquerda, dorsal à
+// direita) para marcar; toque num ponto para tirar.
+function Diagrama({ pontos, onChange }: { pontos: PontoLesao[]; onChange: (v: PontoLesao[]) => void }) {
+  function marcar(e: React.MouseEvent<HTMLDivElement>) {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    if (x < 0 || x > 1 || y < 0 || y > 0.93) return;
+    onChange([...pontos, { lado: x < 0.5 ? 'ventral' : 'dorsal', x: +x.toFixed(4), y: +y.toFixed(4) }]);
+  }
+  return (
+    <div className="enc-diagrama">
+      <div className="enc-diag-img" onClick={marcar} role="presentation">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/encaminhamento/distribuicao-lesoes.png" alt="Desenho do animal: vista ventral e dorsal" />
+        {pontos.map((p, i) => (
+          <button
+            key={i}
+            type="button"
+            className="enc-diag-ponto"
+            style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
+            aria-label={`Tirar marcação ${i + 1} (${p.lado})`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(pontos.filter((_, j) => j !== i));
+            }}
+          />
+        ))}
+      </div>
+      <div className="enc-diag-rodape">
+        {pontos.length ? `${pontos.length} marcação(ões)` : 'Nenhuma marcação'}
+        {pontos.length ? (
+          <button type="button" className="btn ghost sm" onClick={() => onChange([])}>
+            Limpar
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -657,14 +740,27 @@ export default function FormularioPedido() {
     [form],
   );
   const campos = useMemo(() => (form?.campos ?? []).filter((c) => c.secao !== 'laboratorio'), [form]);
-  const pendentes = form ? faltando(campos, dados) : [];
+  // Exames e grupos marcados: campos como a Histologia e as 3 amostras do 213
+  // só aparecem (e só são exigidos) quando o pedido tem esses exames.
+  const ctx: Contexto = useMemo(() => {
+    const exames = new Set(marcados);
+    const grupos = new Set<string>();
+    marcados.forEach((c) => {
+      if (exPorCodigo[c]) grupos.add(exPorCodigo[c].grupo);
+    });
+    (form?.grupos ?? []).forEach((g) => {
+      if ((g.itens ?? []).some((c) => exames.has(c))) grupos.add(g.id);
+    });
+    return { exames, grupos };
+  }, [marcados, exPorCodigo, form]);
+  const pendentes = form ? faltando(campos, dados, ctx) : [];
   const tubosPedido = useMemo(() => {
     const s = new Set<string>();
     marcados.forEach((c) => exPorCodigo[c]?.tubos.forEach((t) => s.add(t)));
-    return ['amarelo', 'roxo', 'cinza'].filter((t) => s.has(t));
+    return ['amarelo', 'roxo', 'cinza', 'azul', 'verde', 'branco'].filter((t) => s.has(t));
   }, [marcados, exPorCodigo]);
 
-  function set(chave: string, v: string | boolean) {
+  function set(chave: string, v: ValorCampo) {
     setDados((d) => ({ ...d, [chave]: v }));
   }
   function alternar(cod: string) {
@@ -700,7 +796,7 @@ export default function FormularioPedido() {
       const visiveis = Object.fromEntries(
         Object.entries(dados).filter(([k]) => {
           const c = campos.find((x) => x.chave === k);
-          return c ? visivel(c, dados) : false;
+          return c ? visivel(c, dados, ctx) : false;
         }),
       );
       const p = await api.criarPedido({ dados: visiveis, exames: marcados, clinica_id: clinicaId });
@@ -764,7 +860,53 @@ export default function FormularioPedido() {
     );
   }
 
-  const grupo = (id: string) => form.exames.filter((e) => e.grupo === id);
+  // Itens de um bloco na ordem do papel (um exame pode estar em mais de um
+  // bloco) e, depois, os incluídos na configuração.
+  const grupo = (id: string) => {
+    const g = form.grupos.find((x) => x.id === id);
+    const doPapel = (g?.itens ?? []).map((c) => exPorCodigo[c]).filter(Boolean);
+    const vistos = new Set(doPapel.map((e) => e.codigo));
+    return [...doPapel, ...form.exames.filter((e) => e.grupo === id && !vistos.has(e.codigo))];
+  };
+  const campoVisivel = (c: CampoEncaminhamento) => visivel(c, dados, ctx);
+  const camposHisto = campos.filter((c) => c.secao === 'histo' && campoVisivel(c));
+  // Campos de um exame (ex.: 1ª/2ª/3ª amostra do 213), mostrados logo abaixo dele.
+  const camposDoExame = (cod: string) =>
+    campos.filter((c) => c.secao === 'parasito' && (c.mostrar_se || '').split(/[:|]/).includes(cod) && campoVisivel(c));
+  const renderCampo = (c: CampoEncaminhamento) => (
+    <Campo
+      key={c.chave}
+      campo={c}
+      valor={dados[c.chave]}
+      erro={tentouEnviar && pendentes.some((p) => p.chave === c.chave)}
+      onChange={(v) => set(c.chave, v)}
+      onClinica={(conta) => setClinicaId(conta?.id ?? null)}
+    />
+  );
+  const listaGrupo = (g: GrupoExames) => {
+    const itens = grupo(g.id);
+    if (!itens.length) return null;
+    const n = itens.filter((e) => marcados.includes(e.codigo)).length;
+    return (
+      <details key={g.id} className={`enc-lista l-${g.id}`} open>
+        <summary className="enc-lista-tit">
+          <IconeFaixa tipo={g.id} />
+          <span className="enc-lista-nome">{g.titulo}</span>
+          {n ? <span className="enc-cont">{n}</span> : null}
+        </summary>
+        {g.aviso ? <div className="enc-lista-aviso">{g.aviso}</div> : null}
+        {itens.map((e) => (
+          <div key={e.codigo} className="enc-lista-item">
+            <CaixaExame exame={e} marcado={marcados.includes(e.codigo)}
+              onToggle={() => alternar(e.codigo)} legenda={form.tubos} variante="linha" />
+            {marcados.includes(e.codigo) && camposDoExame(e.codigo).length ? (
+              <div className="enc-exame-campos">{camposDoExame(e.codigo).map(renderCampo)}</div>
+            ) : null}
+          </div>
+        ))}
+      </details>
+    );
+  };
   const conhecidos = new Set(form.exames.map((e) => e.codigo));
   const foraDoFormulario = marcados.filter((c) => !conhecidos.has(c));
   const busca = codigo.trim().toLowerCase();
@@ -831,7 +973,7 @@ export default function FormularioPedido() {
           />
           <div className="enc-grade">
             {campos
-              .filter((c) => c.secao === s.id && visivel(c, dados) && !chavesDaPlanta(s.id).has(c.chave))
+              .filter((c) => c.secao === s.id && visivel(c, dados, ctx) && !chavesDaPlanta(s.id).has(c.chave))
               .map((c) => (
                 <Campo
                   key={c.chave}
@@ -871,27 +1013,40 @@ export default function FormularioPedido() {
         ) : null}
 
         <div className="enc-listas">
-          {form.grupos
-            .filter((g) => g.estilo === 'lista')
-            .map((g) => {
-              const itens = grupo(g.id);
-              if (!itens.length) return null;
-              const n = itens.filter((e) => marcados.includes(e.codigo)).length;
-              return (
-                <details key={g.id} className={`enc-lista l-${g.id}`} open>
-                  <summary className="enc-lista-tit">
-                    <IconeFaixa tipo={g.id} />
-                    <span className="enc-lista-nome">{g.titulo}</span>
-                    {n ? <span className="enc-cont">{n}</span> : null}
-                  </summary>
-                  {itens.map((e) => (
-                    <CaixaExame key={e.codigo} exame={e} marcado={marcados.includes(e.codigo)}
-                      onToggle={() => alternar(e.codigo)} legenda={form.tubos} variante="linha" />
-                  ))}
-                </details>
-              );
-            })}
+          {form.grupos.filter((g) => g.estilo === 'lista' && (g.pagina ?? 1) === 1).map(listaGrupo)}
         </div>
+
+        {[2, 3, 4].map((pg) => {
+          const blocos = form.grupos.filter((g) => g.estilo === 'lista' && g.pagina === pg);
+          if (!blocos.length) return null;
+          return (
+            <div key={pg} className="enc-pagina">
+              <h2 className="enc-pagina-tit">
+                Página {pg} <small>do formulário</small>
+              </h2>
+              <div className="enc-listas-3">{blocos.map(listaGrupo)}</div>
+              {pg === 2 ? (
+                <div className={`enc-histo${camposHisto.length ? '' : ' vazio'}`} id="enc-histo">
+                  <h3 className="enc-histo-tit">Histologia e Citologia</h3>
+                  {camposHisto.length ? (
+                    <>
+                      <p className="enc-histo-aviso">
+                        <b>Preenchimento obrigatório.</b> O laboratório não se responsabiliza por limitações
+                        diagnósticas decorrentes de informações ausentes, incompletas ou incorretas fornecidas nesta
+                        requisição.
+                      </p>
+                      <div className="enc-grade">{camposHisto.map(renderCampo)}</div>
+                    </>
+                  ) : (
+                    <p className="enc-histo-aviso">
+                      Aparece aqui quando o pedido tiver exame de Citologia, Histopatologia ou Imuno-histoquímica.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
 
         <div className="enc-nao-achou">
           <label htmlFor="enc-codigo">Se não achou seu exame, insira o código apresentado no portfólio &gt;&gt;&gt;</label>

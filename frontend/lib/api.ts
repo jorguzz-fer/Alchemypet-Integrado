@@ -52,6 +52,7 @@ import type {
   FiltrosChamado,
   PlacarRevisao,
   TarefaEmails,
+  ValorCampo,
   Tratativa,
   Usuario,
   UsuarioUpdate,
@@ -607,7 +608,7 @@ export const api = {
   },
 
   criarPedido(body: {
-    dados: Record<string, string | boolean>;
+    dados: Record<string, ValorCampo>;
     exames: string[];
     clinica_id?: string | null;
   }): Promise<PedidoExame> {

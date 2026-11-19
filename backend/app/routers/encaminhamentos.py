@@ -17,7 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..encaminhamento_catalogo import GRUPOS, REVISAO, SIGLAS, TUBOS
+from ..encaminhamento_catalogo import EXAMES, GRUPOS, REVISAO, SIGLAS, TUBOS
 from ..encaminhamento_pdf import gerar_pdf
 from ..models import CampoEncaminhamento, Clinica, Encaminhamento, ExameEncaminhamento, Usuario
 from ..ordenacao import MAX_EXPORTACAO, ordenar
@@ -28,8 +28,8 @@ from ..xlsx_resposta import _xlsx
 
 router = APIRouter(prefix="/encaminhamentos", tags=["encaminhamentos"])
 
-TIPOS = {"texto", "texto_longo", "data", "numero", "opcao", "marcar", "clinica"}
-SECOES = {"laudo", "motivo", "laboratorio"}
+TIPOS = {"texto", "texto_longo", "data", "numero", "opcao", "marcar", "clinica", "multipla", "diagrama"}
+SECOES = {"laudo", "motivo", "laboratorio", "histo", "parasito"}
 _BRASILIA = timezone(timedelta(hours=-3))
 
 
@@ -152,14 +152,25 @@ class ExameIn(BaseModel):
 
 # ----------------------------------------------------------------- regras
 
-def _visivel(campo: CampoEncaminhamento, dados: dict) -> bool:
-    """`mostrar_se`: "especie=outros" (valor igual) ou "recoleta" (marcado)."""
+def _visivel(campo: CampoEncaminhamento, dados: dict, exames: set | None = None,
+             grupos: set | None = None) -> bool:
+    """`mostrar_se`:
+    "especie=outros" (valor igual; em campo de várias opções, valor marcado),
+    "recoleta" (marcado), "exame:213" (exame no pedido),
+    "grupo:citologia|histopatologia" (algum exame desses grupos no pedido)."""
     regra = (campo.mostrar_se or "").strip()
     if not regra:
         return True
+    if regra.startswith("exame:"):
+        return bool(set(regra[6:].split("|")) & (exames or set()))
+    if regra.startswith("grupo:"):
+        return bool(set(regra[6:].split("|")) & (grupos or set()))
     if "=" in regra:
         chave, valor = regra.split("=", 1)
-        return str(dados.get(chave.strip(), "")) == valor.strip()
+        atual = dados.get(chave.strip(), "")
+        if isinstance(atual, list):
+            return valor.strip() in atual
+        return str(atual) == valor.strip()
     return bool(dados.get(regra))
 
 
@@ -192,6 +203,27 @@ def _normalizar(campo: CampoEncaminhamento, valor):
         if str(valor) not in rotulos:
             raise HTTPException(422, f"{campo.rotulo}: opção inválida")
         return str(valor), rotulos[str(valor)]
+    if t == "multipla":
+        rotulos = {o.get("valor"): o.get("rotulo") for o in campo.opcoes or []}
+        lista = valor if isinstance(valor, list) else [valor]
+        escolhidos = [str(v) for v in lista if str(v) in rotulos]
+        if not escolhidos:
+            return None, ""
+        return escolhidos, ", ".join(rotulos[v] for v in escolhidos)
+    if t == "diagrama":
+        # Pontos marcados no desenho: [{"lado": "ventral"|"dorsal", "x": 0..1, "y": 0..1}]
+        pontos = []
+        for p in valor if isinstance(valor, list) else []:
+            try:
+                lado, x, y = str(p.get("lado")), float(p.get("x")), float(p.get("y"))
+            except (AttributeError, TypeError, ValueError):
+                continue
+            if lado in ("ventral", "dorsal") and 0 <= x <= 1 and 0 <= y <= 1:
+                pontos.append({"lado": lado, "x": round(x, 4), "y": round(y, 4)})
+        if not pontos:
+            return None, ""
+        n_v = sum(1 for p in pontos if p["lado"] == "ventral")
+        return pontos[:60], f"{len(pontos)} marcação(ões): {n_v} ventral, {len(pontos) - n_v} dorsal"
     texto = str(valor).strip()[:2000]
     return texto, texto
 
@@ -236,15 +268,27 @@ def formulario(db: Session = Depends(get_db)):
 
 # ------------------------------------------------------------------ pedidos
 
+def _grupos_dos_exames(db: Session, codigos: set) -> set:
+    """Grupos do papel em que os exames do pedido aparecem (um exame pode
+    estar em mais de um bloco)."""
+    grupos = set(db.scalars(select(ExameEncaminhamento.grupo).where(ExameEncaminhamento.codigo.in_(codigos))))
+    for g in GRUPOS:
+        if codigos & set(g.get("itens", [])):
+            grupos.add(g["id"])
+    return grupos
+
+
 @router.post("", response_model=PedidoOut, status_code=201)
 def criar_pedido(body: PedidoIn, db: Session = Depends(get_db), usuario: Usuario = Depends(usuario_atual)):
     campos = db.scalars(
         select(CampoEncaminhamento).where(CampoEncaminhamento.ativo.is_(True))
         .order_by(CampoEncaminhamento.ordem)
     ).all()
+    codigos_pedido = {x.strip() for x in body.exames if x and x.strip()}
+    grupos_pedido = _grupos_dos_exames(db, codigos_pedido)
     dados, copia, faltando = {}, [], []
     for c in campos:
-        if c.secao == "laboratorio" or not _visivel(c, body.dados):
+        if c.secao == "laboratorio" or not _visivel(c, body.dados, codigos_pedido, grupos_pedido):
             continue
         valor, texto = _normalizar(c, body.dados.get(c.chave))
         if valor is None:
@@ -551,7 +595,8 @@ def excluir_exame(exame_id: str, db: Session = Depends(get_db)):
 def semear(db: Session) -> None:
     """Carrega os campos e exames do papel na primeira subida (idempotente:
     só insere o que ainda não existe, sem desfazer edições da equipe)."""
-    from ..encaminhamento_campos import CAMPOS, FORA_DO_IMPRESSO
+    from ..encaminhamento_campos import (CAMPOS, FORA_DO_IMPRESSO, SAEM_NO_IMPRESSO_4P,
+                                         VOLTAM_NO_IMPRESSO_4P)
     from ..encaminhamento_catalogo import EXAMES
     from ..models import Migracao
 
@@ -562,13 +607,42 @@ def semear(db: Session) -> None:
     existentes = set(db.scalars(select(ExameEncaminhamento.codigo)))
     for i, e in enumerate(EXAMES):
         if e["codigo"] not in existentes:
-            dados = {k: v for k, v in e.items() if k != "caixa"}
+            dados = {k: v for k, v in e.items() if k != "caixas"}
             db.add(ExameEncaminhamento(**dados, ordem=(i + 1) * 10, do_papel=True))
-    # Impresso atual (sem "Categoria do plano" e sem os "Nº guia"): roda uma vez.
+    # Impresso da foto (sem "Categoria do plano" e sem os "Nº guia"): roda uma vez.
     if not db.get(Migracao, "encaminhamento_impresso_v2"):
         db.flush()  # banco novo: os campos acabaram de ser incluídos
         for campo in db.scalars(select(CampoEncaminhamento).where(
                 CampoEncaminhamento.chave.in_(FORA_DO_IMPRESSO))):
             campo.ativo = False
         db.add(Migracao(chave="encaminhamento_impresso_v2"))
+    db.flush()
+    # Impresso de 4 páginas: catálogo novo (atualiza os exames do papel, inclui
+    # os novos e desativa os que saíram). Roda uma vez; depois vale a tela de
+    # configuração.
+    if not db.get(Migracao, "encaminhamento_catalogo_4p"):
+        atuais = {x.codigo: x for x in db.scalars(select(ExameEncaminhamento))}
+        novos = set()
+        for i, e in enumerate(EXAMES):
+            dados = {k: v for k, v in e.items() if k != "caixas"}
+            novos.add(e["codigo"])
+            x = atuais.get(e["codigo"])
+            if x is None:
+                db.add(ExameEncaminhamento(**dados, ordem=(i + 1) * 10, do_papel=True))
+            elif x.do_papel:
+                for k, v in dados.items():
+                    setattr(x, k, v)
+                x.ordem, x.ativo = (i + 1) * 10, True
+        for cod, x in atuais.items():
+            if x.do_papel and cod not in novos:
+                x.ativo = False
+        db.add(Migracao(chave="encaminhamento_catalogo_4p"))
+    if not db.get(Migracao, "encaminhamento_campos_4p"):
+        db.flush()
+        for campo in db.scalars(select(CampoEncaminhamento)):
+            if campo.chave in VOLTAM_NO_IMPRESSO_4P:
+                campo.ativo = True
+            elif campo.chave in SAEM_NO_IMPRESSO_4P:
+                campo.ativo = False
+        db.add(Migracao(chave="encaminhamento_campos_4p"))
     db.commit()
