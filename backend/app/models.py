@@ -385,7 +385,7 @@ class ExameEncaminhamento(Base):
     descricao: Mapped[str] = mapped_column(Text, default="")
     grupo: Mapped[str] = mapped_column(String(30), default="outros", index=True)
     tubos: Mapped[list] = mapped_column(JSON, default=list)
-    amostra: Mapped[str] = mapped_column(String(40), default="")
+    amostra: Mapped[str] = mapped_column(String(80), default="")
     selo: Mapped[str] = mapped_column(String(20), default="")
     destaque: Mapped[bool] = mapped_column(Boolean, default=False)
     marca: Mapped[str] = mapped_column(String(30), default="")
