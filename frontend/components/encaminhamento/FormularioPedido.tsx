@@ -52,27 +52,63 @@ function salvarLembrado(d: Dados) {
 
 // ---------------------------------------------------------------- campos
 
+// Quadrinhos de letra: mede a largura real de cada letra na fonte usada e
+// ajusta o espaçamento para cada letra cair no seu quadrinho.
+const QUADRINHO = 17;
+function useQuadrinhos(ativo: boolean) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!ativo || !el) return;
+    const ajustar = () => {
+      const cs = getComputedStyle(el);
+      const ctx = document.createElement('canvas').getContext('2d');
+      if (!ctx) return;
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const w = ctx.measureText('M').width;
+      const cx = Math.max(QUADRINHO, Math.ceil(w + 4));
+      el.style.letterSpacing = `${cx - w}px`;
+      el.style.paddingLeft = `${(cx - w) / 2}px`;
+      el.style.setProperty('--cx', `${cx}px`);
+    };
+    ajustar();
+    document.fonts?.ready.then(ajustar).catch(() => undefined);
+  }, [ativo]);
+  return ref;
+}
+
 function Campo({
   campo,
   valor,
   erro,
   onChange,
   onClinica,
+  estilo,
+  rotuloPapel,
+  semRotulo,
+  naLinha,
 }: {
   campo: CampoEncaminhamento;
   valor: string | boolean | undefined;
   erro: boolean;
   onChange: (v: string | boolean) => void;
   onClinica: (c: Conta | null) => void;
+  estilo?: 'linha' | 'grade' | 'caixa';
+  rotuloPapel?: string;
+  semRotulo?: boolean;
+  naLinha?: boolean;
 }) {
   const id = `enc-${campo.chave}`;
-  const rotulo = (
+  const refGrade = useQuadrinhos(estilo === 'grade');
+  const rotulo = semRotulo ? null : (
     <>
-      {campo.rotulo}
+      {rotuloPapel ?? campo.rotulo}
       {campo.obrigatorio ? <span className="enc-obrig">*</span> : null}
+      {rotuloPapel !== undefined && rotuloPapel.endsWith('?') ? '' : ':'}
     </>
   );
-  const cls = `enc-campo w-${campo.largura}${erro ? ' erro' : ''} t-${campo.tipo}`;
+  const cls = `enc-campo w-${campo.largura}${erro ? ' erro' : ''} t-${campo.tipo}${
+    estilo ? ` e-${estilo}` : ''}${semRotulo ? ' sem-rotulo' : ''}`;
 
   if (campo.tipo === 'marcar') {
     return (
@@ -88,10 +124,39 @@ function Campo({
     );
   }
 
+  if (campo.tipo === 'opcao' && naLinha) {
+    // Na linha do papel: rótulo e opções lado a lado (fieldset/legend não
+    // se alinham numa linha só).
+    return (
+      <div className={cls} data-campo={campo.chave} role="group" aria-labelledby={`${id}-rot`}>
+        <span id={`${id}-rot`} className={semRotulo ? 'sr-only' : 'enc-rot'}>
+          {semRotulo ? campo.rotulo : rotulo}
+        </span>
+        <div className="enc-opcoes" role="radiogroup" aria-labelledby={`${id}-rot`}>
+          {campo.opcoes.map((o) => {
+            const ativo = valor === o.valor;
+            return (
+              <button
+                key={o.valor}
+                type="button"
+                role="radio"
+                aria-checked={ativo}
+                className={`enc-opcao${ativo ? ' ativo' : ''}`}
+                onClick={() => onChange(ativo && !campo.obrigatorio ? '' : o.valor)}
+              >
+                {o.rotulo} <span aria-hidden>( {ativo ? 'X' : ' '} )</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   if (campo.tipo === 'opcao') {
     return (
       <fieldset className={cls} data-campo={campo.chave}>
-        <legend className="enc-rot">{rotulo}</legend>
+        <legend className={semRotulo ? 'sr-only' : 'enc-rot'}>{semRotulo ? campo.rotulo : rotulo}</legend>
         <div className="enc-opcoes" role="radiogroup">
           {campo.opcoes.map((o) => {
             const ativo = valor === o.valor;
@@ -115,24 +180,196 @@ function Campo({
 
   return (
     <div className={cls} data-campo={campo.chave}>
-      <label htmlFor={id} className="enc-rot">
-        {rotulo}
-        {campo.ajuda ? <span className="enc-ajuda">{campo.ajuda}</span> : null}
-      </label>
+      {semRotulo ? (
+        <label htmlFor={id} className="sr-only">
+          {campo.rotulo}
+        </label>
+      ) : (
+        <label htmlFor={id} className="enc-rot">
+          {rotulo}
+          {campo.ajuda ? <span className="enc-ajuda">{campo.ajuda}</span> : null}
+        </label>
+      )}
       {campo.tipo === 'texto_longo' ? (
-        <textarea id={id} value={String(valor ?? '')} rows={2} onChange={(e) => onChange(e.target.value)} />
+        <textarea
+          id={id}
+          value={String(valor ?? '')}
+          rows={estilo === 'linha' ? 1 : 2}
+          onChange={(e) => {
+            onChange(e.target.value);
+            if (estilo === 'linha') {
+              e.target.style.height = 'auto';
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }
+          }}
+        />
       ) : campo.tipo === 'clinica' ? (
         <BuscaClinica id={id} valor={String(valor ?? '')} onTexto={onChange} onEscolher={onClinica} />
       ) : (
         <input
           id={id}
+          ref={estilo === 'grade' ? refGrade : undefined}
           type={campo.tipo === 'data' ? 'date' : campo.tipo === 'numero' ? 'number' : 'text'}
           inputMode={campo.tipo === 'numero' ? 'numeric' : undefined}
+          placeholder={semRotulo ? campo.rotulo : undefined}
           min={campo.tipo === 'numero' ? 0 : undefined}
           value={String(valor ?? '')}
           onChange={(e) => onChange(e.target.value)}
         />
       )}
+    </div>
+  );
+}
+
+// ------------------------------------------------------------ planta do papel
+//
+// As seções "Informações para emissão de laudos" e "Motivo da solicitação"
+// seguem linha a linha o impresso (mesma ordem, mesma proporção de espaço),
+// para quem está acostumado com o papel achar cada campo no mesmo lugar.
+// Campos criados depois na configuração aparecem embaixo, na grade comum.
+
+type Peca = {
+  chave: string;
+  // proporção do espaço da linha (como no papel)
+  peso: number;
+  estilo?: 'linha' | 'grade' | 'caixa';
+  rotulo?: string;
+  semRotulo?: boolean;
+};
+
+const PLANTA: Record<string, Peca[][]> = {
+  laudo: [
+    [{ chave: 'clinica', peso: 7 }, { chave: 'data_coleta', peso: 3 }],
+    [{ chave: 'veterinario', peso: 7 }, { chave: 'crmv', peso: 3, estilo: 'caixa', rotulo: 'CRMV (com carimbo)' }],
+    [{ chave: 'responsavel', peso: 7.6, estilo: 'grade' }, { chave: 'cpf', peso: 2.4 }],
+    [
+      { chave: 'paciente', peso: 4.4, estilo: 'grade' },
+      { chave: 'paciente_id', peso: 1.5, estilo: 'grade' },
+      { chave: 'plano_saude', peso: 2.3 },
+      { chave: 'matricula', peso: 1.8 },
+    ],
+    [
+      { chave: 'especie', peso: 2.6 },
+      { chave: 'especie_outro', peso: 1.6, semRotulo: true },
+      { chave: 'genero', peso: 1.4 },
+      { chave: 'raca', peso: 2.4 },
+      { chave: 'idade', peso: 2 },
+    ],
+    [
+      { chave: 'recoleta', peso: 2.5 },
+      { chave: 'material_faltante', peso: 2.5 },
+      { chave: 'fast_track', peso: 2.5 },
+      { chave: 'exame_urgente', peso: 2.5 },
+    ],
+  ],
+  motivo: [
+    [{ chave: 'motivo', peso: 10, semRotulo: true }],
+    [{ chave: 'suspeita', peso: 10, estilo: 'linha' }],
+    [{ chave: 'uso_medicamento', peso: 3.6 }, { chave: 'medicamentos', peso: 6.4, rotulo: 'Qual(is)?' }],
+  ],
+};
+
+// Peças da planta que dependem de outra (ficam sempre à vista, como no papel:
+// escrever nelas marca a opção correspondente).
+const DEPENDE: Record<string, { chave: string; valor: string }> = {
+  especie_outro: { chave: 'especie', valor: 'outros' },
+  medicamentos: { chave: 'uso_medicamento', valor: 'sim' },
+};
+
+function chavesDaPlanta(secao: string): Set<string> {
+  const out = new Set<string>();
+  (PLANTA[secao] ?? []).flat().forEach((p) => {
+    if (p.chave === 'idade') {
+      out.add('idade_anos');
+      out.add('idade_meses');
+    } else out.add(p.chave);
+  });
+  return out;
+}
+
+function Planta({
+  secao,
+  campos,
+  dados,
+  pendentes,
+  tentouEnviar,
+  set,
+  onClinica,
+}: {
+  secao: string;
+  campos: CampoEncaminhamento[];
+  dados: Dados;
+  pendentes: CampoEncaminhamento[];
+  tentouEnviar: boolean;
+  set: (chave: string, v: string | boolean) => void;
+  onClinica: (c: Conta | null) => void;
+}) {
+  const porChave = Object.fromEntries(campos.map((c) => [c.chave, c]));
+  const comErro = (chave: string) => tentouEnviar && pendentes.some((p) => p.chave === chave);
+
+  function peca(p: Peca) {
+    if (p.chave === 'idade') {
+      const anos = porChave.idade_anos;
+      const meses = porChave.idade_meses;
+      if (!anos && !meses) return null;
+      const erro = comErro('idade_anos') || comErro('idade_meses');
+      return (
+        <div key="idade" className={`enc-campo e-idade${erro ? ' erro' : ''}`} style={{ flexGrow: p.peso }} data-campo="idade_anos">
+          <span className="enc-rot">
+            Idade{anos?.obrigatorio ? <span className="enc-obrig">*</span> : null}:
+          </span>
+          {anos ? (
+            <>
+              <label htmlFor="enc-idade_anos" className="sr-only">Idade em anos</label>
+              <input id="enc-idade_anos" type="number" inputMode="numeric" min={0}
+                value={String(dados.idade_anos ?? '')} onChange={(e) => set('idade_anos', e.target.value)} />
+              <span className="enc-suf" aria-hidden>A</span>
+            </>
+          ) : null}
+          {meses ? (
+            <>
+              <label htmlFor="enc-idade_meses" className="sr-only">Idade em meses</label>
+              <input id="enc-idade_meses" type="number" inputMode="numeric" min={0} max={11}
+                value={String(dados.idade_meses ?? '')} onChange={(e) => set('idade_meses', e.target.value)} />
+              <span className="enc-suf" aria-hidden>M</span>
+            </>
+          ) : null}
+        </div>
+      );
+    }
+    const c = porChave[p.chave];
+    if (!c) return null;
+    const dep = DEPENDE[p.chave];
+    return (
+      <div key={p.chave} className="enc-peca" style={{ flexGrow: p.peso }}>
+        <Campo
+          campo={c}
+          valor={dados[c.chave]}
+          erro={comErro(c.chave)}
+          estilo={p.estilo}
+          rotuloPapel={p.rotulo}
+          semRotulo={p.semRotulo}
+          naLinha
+          onChange={(v) => {
+            set(c.chave, v);
+            if (dep && typeof v === 'string' && v.trim() && dados[dep.chave] !== dep.valor) set(dep.chave, dep.valor);
+          }}
+          onClinica={onClinica}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`enc-planta p-${secao}`}>
+      {(PLANTA[secao] ?? []).map((linha, i) => {
+        const pecas = linha.map(peca).filter(Boolean);
+        return pecas.length ? (
+          <div key={i} className="enc-linha">
+            {pecas}
+          </div>
+        ) : null;
+      })}
     </div>
   );
 }
@@ -562,9 +799,18 @@ export default function FormularioPedido() {
             <IconeFaixa tipo={s.id} />
             {s.titulo} <small>(*dados obrigatórios)</small>
           </h2>
+          <Planta
+            secao={s.id}
+            campos={campos.filter((c) => c.secao === s.id)}
+            dados={dados}
+            pendentes={pendentes}
+            tentouEnviar={tentouEnviar}
+            set={set}
+            onClinica={(conta) => setClinicaId(conta?.id ?? null)}
+          />
           <div className="enc-grade">
             {campos
-              .filter((c) => c.secao === s.id && visivel(c, dados))
+              .filter((c) => c.secao === s.id && visivel(c, dados) && !chavesDaPlanta(s.id).has(c.chave))
               .map((c) => (
                 <Campo
                   key={c.chave}

@@ -539,8 +539,9 @@ def excluir_exame(exame_id: str, db: Session = Depends(get_db)):
 def semear(db: Session) -> None:
     """Carrega os campos e exames do papel na primeira subida (idempotente:
     só insere o que ainda não existe, sem desfazer edições da equipe)."""
-    from ..encaminhamento_campos import CAMPOS
+    from ..encaminhamento_campos import CAMPOS, FORA_DO_IMPRESSO
     from ..encaminhamento_catalogo import EXAMES
+    from ..models import Migracao
 
     existentes = set(db.scalars(select(CampoEncaminhamento.chave)))
     for i, c in enumerate(CAMPOS):
@@ -551,4 +552,11 @@ def semear(db: Session) -> None:
         if e["codigo"] not in existentes:
             dados = {k: v for k, v in e.items() if k != "caixa"}
             db.add(ExameEncaminhamento(**dados, ordem=(i + 1) * 10, do_papel=True))
+    # Impresso atual (sem "Categoria do plano" e sem os "Nº guia"): roda uma vez.
+    if not db.get(Migracao, "encaminhamento_impresso_v2"):
+        db.flush()  # banco novo: os campos acabaram de ser incluídos
+        for campo in db.scalars(select(CampoEncaminhamento).where(
+                CampoEncaminhamento.chave.in_(FORA_DO_IMPRESSO))):
+            campo.ativo = False
+        db.add(Migracao(chave="encaminhamento_impresso_v2"))
     db.commit()
