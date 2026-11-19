@@ -87,6 +87,7 @@ function Campo({
   rotuloPapel,
   semRotulo,
   naLinha,
+  lista,
 }: {
   campo: CampoEncaminhamento;
   valor: string | boolean | undefined;
@@ -97,6 +98,7 @@ function Campo({
   rotuloPapel?: string;
   semRotulo?: boolean;
   naLinha?: boolean;
+  lista?: string;
 }) {
   const id = `enc-${campo.chave}`;
   const refGrade = useQuadrinhos(estilo === 'grade');
@@ -212,6 +214,8 @@ function Campo({
           type={campo.tipo === 'data' ? 'date' : campo.tipo === 'numero' ? 'number' : 'text'}
           inputMode={campo.tipo === 'numero' ? 'numeric' : undefined}
           placeholder={semRotulo ? campo.rotulo : undefined}
+          list={lista}
+          autoComplete={lista ? 'off' : undefined}
           min={campo.tipo === 'numero' ? 0 : undefined}
           value={String(valor ?? '')}
           onChange={(e) => onChange(e.target.value)}
@@ -235,6 +239,8 @@ type Peca = {
   estilo?: 'linha' | 'grade' | 'caixa';
   rotulo?: string;
   semRotulo?: boolean;
+  // datalist com sugestões (listas do LIS)
+  lista?: string;
 };
 
 const PLANTA: Record<string, Peca[][]> = {
@@ -250,9 +256,9 @@ const PLANTA: Record<string, Peca[][]> = {
     ],
     [
       { chave: 'especie', peso: 2.6 },
-      { chave: 'especie_outro', peso: 1.6, semRotulo: true },
+      { chave: 'especie_outro', peso: 1.6, semRotulo: true, lista: 'enc-lista-especies' },
       { chave: 'genero', peso: 1.4 },
-      { chave: 'raca', peso: 2.4 },
+      { chave: 'raca', peso: 2.4, lista: 'enc-lista-racas' },
       { chave: 'idade', peso: 2 },
     ],
     [
@@ -349,6 +355,7 @@ function Planta({
           estilo={p.estilo}
           rotuloPapel={p.rotulo}
           semRotulo={p.semRotulo}
+          lista={p.lista}
           naLinha
           onChange={(v) => {
             set(c.chave, v);
@@ -784,6 +791,20 @@ export default function FormularioPedido() {
           <b>gerada ao enviar</b>
         </div>
       </header>
+
+      {/* Sugestões das listas do LIS (Raça e "Outros" da espécie) */}
+      <datalist id="enc-lista-racas">
+        {(form.racas ?? []).map((r) => (
+          <option key={r.codigo} value={r.nome} />
+        ))}
+      </datalist>
+      <datalist id="enc-lista-especies">
+        {(form.especies ?? [])
+          .filter((e) => !['canino', 'felino'].includes(e.nome.toLowerCase()))
+          .map((e) => (
+            <option key={e.codigo} value={e.nome} />
+          ))}
+      </datalist>
 
       <div className="enc-lab" aria-label="Para uso do laboratório">
         <b>Para uso do laboratório:</b>

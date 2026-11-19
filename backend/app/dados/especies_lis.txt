@@ -1,0 +1,127 @@
+107;Águia
+124;Andorinha
+183;Anta
+141;Arara
+53;Araracanga (Ara macao)
+59;Ararajuba (Guaruba guarouba)
+52;Ave
+146;Avestruz
+128;Azulao
+132;Babuíno
+214;Bicho-Preguiça
+178;Bovino
+210;BROTOGERIS TIRICA
+136;Bugio
+179;Cabra
+69;Cágado
+191;Calopsita
+78;Camundongo
+122;Canário
+1;Canino
+162;Capivara
+180;Carneiro
+74;Castor
+150;Castor das Montanhas
+143;Catatua
+79;Cegonha
+204;Cetáceos
+72;Chinchila
+104;Cisne
+170;Cobra
+116;Coelho
+64;Corucia Zebrata
+147;Coruja
+126;Corvo
+70;Criceto
+200;Curió
+164;Cutia
+145;Ema
+101;Equino
+73;Esquilo
+199;Faisão
+109;Falcão
+34;Felino
+203;Ferret
+186;Furão
+149;Gaivota
+112;Galinha
+111;Galo
+195;Gambá
+105;Ganso
+65;Garça
+108;Gavião
+76;Gerbilo
+134;Gorila
+127;Gralha
+156;Hamster
+201;Humano
+173;Iguana
+68;Jabuti
+102;Jaguatirica
+175;Javali
+155;Jerboas
+119;João de Barro
+172;Lagarto
+188;Leão
+117;Lebre
+157;Lemingues
+106;Lêmure
+133;Lêmure
+129;Macaco
+61;Macaco-prego
+144;Maritaca
+151;Marmota
+197;Marreco
+62;Mico
+176;Mini Pig
+75;Mus
+190;Onça
+137;Orangotango
+187;Ouriço
+192;Ovino
+165;Paca
+138;Papagaio
+125;Pardal
+118;Pássaro
+103;Pato
+114;Pavão
+202;Peixe
+168;Perereca
+139;Periquito
+113;Peru
+213;Phimosus infuscatus
+130;Pica Pau
+206;pinguim
+193;Pogona
+198;Pombo
+174;Porco
+161;Porco Espinho
+160;Porquinho da Índia
+66;Preá
+212;PYRRHURA FRONTALIS
+211;PYRRHURA FRONTALIS
+167;Rã
+71;Ratazana
+159;Rato
+140;Ring Neck
+182;Rinoceronte
+110;Rolinha
+121;Sabia
+63;Sagui
+166;Sapo
+169;Serpente
+208;Spizaetus Ornatus
+44;Tamanduá
+152;Tamia
+67;Tartaruga
+209;Tatu
+185;Texugo
+123;Tico Tico
+189;Tigre
+207;Tubarao
+131;Tucano
+77;Tuco-tuco
+205;Tursiops truncatus
+158;Vaca
+177;Veado
+184;Zebra

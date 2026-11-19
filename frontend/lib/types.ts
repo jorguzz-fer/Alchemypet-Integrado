@@ -669,6 +669,9 @@ export interface FormularioEncaminhamento {
   exames: ExameEncaminhamento[];
   siglas: Record<string, string>;
   tubos: Record<string, string>;
+  // Listas do LIS (código + nome) para sugerir enquanto digita.
+  racas?: { codigo: string; nome: string }[];
+  especies?: { codigo: string; nome: string }[];
 }
 
 export type ValorCampo = string | boolean;

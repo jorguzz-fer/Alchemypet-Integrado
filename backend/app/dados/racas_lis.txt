@@ -1,0 +1,571 @@
+520;Abissinio
+37;Affenpinscher
+36;Afghan Hound
+509;Agapornis
+35;Airedale Terrier
+38;Akita
+39;Akita Americano
+34;Alano Espanhol
+40;American Bully
+41;American Curl
+42;American Curl Short
+43;American Foxhound
+44;American Fuzzy Lop
+45;American Leopard Hound
+46;American Pit Bull Terrier
+47;American Shorthair
+48;American Staffordshire Terrier (Amstaff)
+49;American Water Spaniel
+50;American Wirehair
+51;Anglo Frances da Pequena Venerie
+52;Angora
+53;Angora Turco
+542;Angus
+523;Arara-azul-grande (Anodorhynchus hyacinthinus)
+524;Arara-azul-pequena (Anodorhynchus glaucus)
+525;Arara-canindé (Ara ararauna)
+477;Arara-militar (Ara militaris)
+479;Arara-vermelha (Ara chloropterus)
+54;Ashera
+55;Australian Cattle Dog
+56;Australian Kelpie
+57;Australian Shepherd
+58;Aves
+59;Azawakh
+60;Azul Russo
+529;Baixadeiro
+61;Balinês
+62;Basenji
+63;Basset Artesiano Normando
+64;Basset Azul da Gasconha
+65;Basset Fulvo da Bretanha
+66;Basset Hound
+1;Beagle
+67;Beagle-Harrier
+68;Bearded Collie
+69;Bedlington Terrier
+70;Bengal
+71;Bernese Mountain Dog
+72;Bichon Bolonhês
+73;Bichon Frisé
+74;Bichon Havanês
+75;Biewer Terrier
+76;Billy
+77;Birmanês
+78;Birmano
+80;Black and Tan Toy Terrier
+81;Black Mouth Cur
+82;Bloodhound
+607;Blue Heeler
+83;Bluetick Coonhound
+598;Boa Constrictor Imperador ( BCI)
+590;Bobtail Americano
+84;Bobtail Japonês
+85;Boerboel
+526;Boi
+86;Boiadeiro Australiano
+87;Boiadeiro da Flandres
+88;Boiadeiro de Entlebuch
+89;Bolonhês
+90;Bombaim
+91;Border Collie
+92;Border Terrier
+93;Borzoi
+94;Boston Terrier
+95;Boxer
+96;Boykin Spaniel
+97;Braco Alemão
+98;Braco Alemão de Pêlo Curto
+99;Braco Alemão de Pêlo Duro
+100;Braco de Ariège
+101;Braco de Auvérnia
+102;Braco de Bourbonnais
+103;Braco Húngaro
+104;Braco Húngaro de Pêlo Curto
+105;Braco Húngaro de Pêlo Duro
+106;Braco Italiano
+608;Bradypus tridactylus
+544;Brahman
+545;Brangus
+530;Brasileiro de hipismo
+603;Brazilian Shorthair
+107;British Shorthair
+108;Bugio
+109;Buldogue
+110;Buldogue Alemão
+111;Buldogue Campeiro
+112;Buldogue Espanhol
+113;Buldogue Francês
+114;Buldogue Serrano
+117;Bulldog Americano
+118;Bulldog Inglês
+119;Bullmastiff
+115;Bull Terrier
+116;Bull Terrier Miniatura
+120;Burmilla
+486;Cacatua
+121;Cachorro Americano
+574;Cachorro do Mato
+122;Cairn Terrier
+515;Calico
+501;Calopsita
+597;Calupoh
+531;Campeiro
+532;Campolina
+123;Canaan Dog
+125;Canário
+124;Canário-Belga
+549;Canchim
+126;Cane Corso
+127;Cane Corso Italiano
+130;Cão da Groenlandia
+131;Cão da Montanha dos Pirineus
+132;Cão da Serra da Estrela
+133;Cão das Montanhas do Atlas
+143;Cão de água Americano
+134;Cão de água Frisado
+129;Cão de água Irlandês
+135;Cão de água Português
+136;Cão de Artois
+137;Cão de Castro Laboreiro
+138;Cão de Crista Chinês
+139;Cão de Santo Humberto
+140;Cão Dinamarquês
+141;Cão do Ariége
+142;Cão do Canaã
+145;Cão Esquimó Americano
+146;Cão Fila de São Miguel
+147;Cão Híbrido
+148;Cão Lobo Tchecoslovaco
+149;Cão Pastor
+150;Cão Tailandês de Crista Dorsal
+151;Catahoula Cur
+152;Cavachon
+153;Cavalier King Charles Spaniel
+528;Cavalo
+154;Cavapoo
+478;Cavia (Gênero)
+483;Cavia porcellus (Espécie)
+155;Cavoodle
+519;Chartreux
+156;Chausie
+157;Chesapeake Bay Retriever
+158;Chihuahua
+159;Chow Chow
+160;Cimarron Uruguayo
+161;Cirneco do Etna
+162;Clumber Spaniel
+163;Cockapoo
+164;Cocker Spaniel
+165;Cocker Spaniel Americano
+166;Cocker Spaniel Inglês
+497;Coelho
+167;Collie
+168;Collie Pêlo Curto
+169;Collie Pêlo Longo
+513;Colorpoint
+512;Colorpoint de pêlo curto
+170;Comum Europeu
+171;Coonhound Inglês
+172;Coonhound Preto e Castanho
+174;Cornish Rex
+173;Corn Snake
+175;Coton de Tuléar
+533;Crioulo
+176;Curly Coated Retriever
+177;Dachshund
+178;Dackel
+179;Dálmata
+180;Dandie Dinmont Terrier
+181;Deerhound
+182;Devon Rex
+567;Dingo americano
+183;Dobermann
+184;Dogo Argentino
+185;Dogo Canário
+186;Dogue Alemão
+187;Dogue Argentino
+188;Dogue Brasileiro
+189;Dogue Canário
+190;Dogue de Bordeaux
+573;Dragão barbudo
+191;Duck Tolling Retriever da Nova Escócia
+192;Elkhound Noruegues Cinza
+193;Esquimó Americano
+194;Eurasier
+195;Europeu
+570;Exotic Bully
+196;Exótico
+592;Ferret
+197;Field Spaniel
+198;Fila Brasileiro
+199;Flat Coated Retriever
+204;Foxhound Americano
+205;Foxhound Inglês
+200;Fox Paulistinha
+201;Fox Terrier
+202;Fox Terrier Pêlo Duro
+203;Fox Terrier Pêlo Liso
+206;Galgo
+207;Galgo Afegão
+208;Galgo Escocês
+209;Galgo Espanhol
+210;Galgo Italiano
+517;Galinha
+558;Galo da Serra
+602;galo de angola
+575;Gambá
+588;Ganso Chinês do Bico Preto
+211;Gascão Saintongeois
+218;Gato-De-Bengala
+212;Gato de Pêlo Duro Americano
+213;Gato Escocês
+214;Gato Lobo
+516;Gato-maracaja
+215;Gato Oriental de Pêlo Curto
+216;Gato Ovelha
+217;Gato Selkirk Rex
+601;Gavião de Penacho
+606;Gavião pombo pequeno
+499;Gigante de Flandres
+554;Gir
+557;Girolando
+219;Golddust
+221;Golddust Yorkshire Terrier
+223;Goldendoodle
+222;Golden Retriever
+594;Golfinho
+224;Gos d'Atura
+225;Grande Azul da Gasconha
+226;Grande Boiadeiro Suiço
+227;Grande Munsterlander
+228;Greyhound
+229;Griffon de Bruxelas
+230;Griffon de Caça Checo
+231;Griffon Nivernais
+233;Grifo da Bélgica
+232;Grifo da Bélgica
+234;Grifo de Bruxelas
+555;Guzerá
+235;Hamster
+236;Havana
+547;Hereford
+237;Himalaio
+238;Hokkaido
+550;Holandesa
+584;Humano
+239;Husky Siberiano
+240;Iago Terrier
+241;Irish Soft Coated Wheaten Terrier
+476;Jabuti-piranga
+484;Jabuti-tinga
+242;Jack Russell Terrier
+243;Javanês
+551;Jersey
+244;Keeshond
+245;Kerry Blue Terrier
+246;King Charles Spaniel
+247;Komondor
+248;Korat
+249;Kromfohrländer
+250;Kuvasz
+251;Labradoodle
+252;Labrador Retriever
+593;Lagarto
+253;Lagotto Romagnolo
+254;Laika da Sibéria Ocidental
+255;Laika da Sibéria Oriental
+256;Laika da Yakutia
+257;Laika Russo-Europeu
+258;Lakeland Terrier
+259;Landseer
+260;LaPerm
+261;Leão da Rodésia
+263;Lébrel irlandês
+262;Lébrel irlandês Wolfhound
+264;Lebrel Italiano
+265;Leonberger
+266;Lhasa Apso
+498;Lion Head
+267;Loris
+500;Lulu da Pomerania
+268;Lykoi
+269;Maine Coon
+270;Malamute do Alasca
+271;Maltês
+272;Manchester Terrier
+273;Mangalarga
+534;Manga-larga marchador
+535;Manga-larga paulista
+536;Mangolino
+274;Manx
+559;Maracanã-guaçu (Ara severa)
+480;Maracanã-guaçu (Ara severa)
+481;Maracanã-nobre (Ara nobilis)
+560;Maracanã-nobre (Ara nobilis)
+537;Marajoara
+275;Mastiff
+276;Mastiff Tibetano
+277;Mastim dos Pireneus
+278;Mastim Espanhol
+279;Mastim Napolitano
+280;Mau egípcio
+282;Mestiço
+487;Mico
+568;Mico Leão Dourado
+283;Mini Holandês
+518;Mini Lop
+561;Mini Pig
+284;Mist Australiano
+591;Molinésia
+285;Montês
+595;Morkie
+286;Mudi
+287;Munchkin
+128;Munchkin (Basset Felino)
+289;Não Informado (NI)
+288;Nebelung
+144;Nebelung
+543;Nelore
+290;Norfolk Terrier
+291;Norueguês da Floresta
+292;Norwich Terrier
+293;Ocicat
+295;Olde English Bulldogge Brasileiro
+521;Old English Bulldog
+294;Old English Sheepdog
+296;Oriental
+297;Oriental Longhair
+298;Oriental Shorthair
+562;Ouriço pigmeu
+511;Ouriço pigmeu
+510;Ouriço pigmeu africano
+299;Ovelheiro Gaúcho
+539;Pampa
+538;Pantaneiro
+469;Papagaio
+563;Papagaio-charão (Amazona pretei)
+564;Papagaio-chauá (Amazona rhodocorytha)
+475;Papagaio-cinzento (Psittacus erithacus)
+473;Papagaio-da-patagónia (Cyanoliseus patagonus)
+471;Papagaio-de-cara-roxa (Amazona brasiliensis)
+462;Papagaio-de-hispaniola (Amazona ventralis)
+466;Papagaio-de-peito-roxo (Amazona vinacea)
+463;Papagaio-de-porto-rico (Amazona vittata)
+464;Papagaio-de-santa-lúcia (Amazona versicolor)
+465;Papagaio-de-são-vicente (Amazona guildingii)
+467;Papagaio-do-mangue (Amazona amazonica)
+474;Papagaio-escarlate (Eos bornea)
+468;Papagaio-galego (Amazona xanthops)
+470;Papagaio-grego (Amazona amazonica)
+472;Papagaio-moleiro (Amazona farinosa)
+461;Papagaio-verdadeiro (Amazona aestiva)
+300;Papillon
+552;Pardo Suíço
+302;Parson Russell Terrier
+301;Pássaro
+303;Pastor
+304;Pastor Alemão
+305;Pastor Americano Miniatura
+306;Pastor Australiano
+307;Pastor Belga
+504;Pastor Belga Groenendael
+505;Pastor Belga Laekenois
+489;Pastor Belga Malinois
+503;Pastor Belga Tervuren
+308;Pastor Branco Suiço
+309;Pastor Canadense
+310;Pastor da Anatolia
+311;Pastor da Ásia Central
+502;Pastor da mantiqueira
+312;Pastor de Beauce
+313;Pastor de Brie
+314;Pastor de Shetland
+315;Pastor do Cáucaso
+316;Pastor dos Pirineus de Cara Rosa
+317;Pastor dos Pirineus de Pêlo Curto
+319;Pastor dos Pirineus de Pêlo Longo
+318;Pastor dos Pirineus de Pêlo Longo
+320;Pastor Finlandês da Lapônia
+321;Pastor Holandês
+322;Pastor Maremano Abruzes
+323;Pastor Polonês da Planície
+324;Pastor Polonês de Tatra
+325;Pelado Mexicano
+326;Pelado Peruano
+508;Pêlo Curto Brasileiro
+327;Pêlo Curto Brasileiro (PCB)
+507;Pêlo Longo Brasileiro
+328;Pequeno Basset Griffon da Vendeia
+329;Pequeno Cão Leão
+330;Pequeno Lebrel Italiano
+331;Pequeno Spaniel Continental
+332;Pequinês
+333;Perdigueiro de Burgos
+334;Perdigueiro Português
+485;Periquito
+281;Periquito australiano
+605;Periquito rico -BROTOGERIS TIRICA
+335;Persa
+336;Peterbald
+337;Petit Basset Griffon Vendéen
+338;Petit Brabançon
+339;Pharaoh Hound
+596;pinguim
+340;Pinscher
+341;Pinscher Miniatura
+540;Piquira
+582;Pit Monster
+342;Pixie-Bob
+343;Podengo Canário
+344;Podengo Ibicenco
+345;Podengo Português
+346;Pointer Alemão
+347;Pointer Inglês
+348;Poitevin
+496;Pombo
+572;Pomsky
+506;Pomsky
+541;Pônei brasileiro
+349;Poodle
+350;Poodle Micro Toy
+351;Poodle Miniatura
+352;Poodle Standard
+2;Poodle Toy
+353;Porcelana
+460;Primata (Ordem)
+585;Pudelpointer
+354;Pug
+355;Pumi
+589;Quarto de Milha
+356;Rafeiro do Alentejo
+357;Ragdoll
+358;Rastreador Brasileiro
+565;Rato Canguru
+566;Rato de Bolso
+359;Rato Twister
+360;Retriever da Nova Escócia Duck Tolling
+361;Rhodesian Ridgeback
+362;Ringneck
+482;Roedor (Ordem)
+363;Rottweiler
+364;Russian Blue
+571;Russian Toy (Pequeno cão russo)
+365;Sabueso Espanhol
+366;Sabueso Italiano
+367;Sabujo de Hamilton
+368;Sabujo de Hygen
+369;Sagrado da Birmânia
+488;Sagui
+370;Saluki
+371;Samoieda
+372;São Bernardo
+576;Saruê
+373;Savannah
+374;Schillerstovare
+375;Schipperke
+376;Schnauzer
+377;Schnauzer Gigante
+378;Schnauzer Miniatura
+379;Scottish Deerhound
+380;Scottish Fold
+583;Scottish Straight
+381;Sealyham Terrier
+382;Selvagem
+383;Sem Raça Definida (SRD)
+546;Senepol
+384;Setter Gordon
+385;Setter Inglês
+386;Setter Irlandês Ruivo
+387;Setter Irlandês Vermelho e Branco
+388;Shar Pei
+389;Shetland Sheepdog
+390;Shiba
+391;Shiba Inu
+392;Shih Tzu
+393;Siames
+394;Siberiano
+395;Silky Terrier
+396;Silky Terrier Australiano
+556;Sindi
+397;Skye Terrier
+398;Smalandsstovare
+399;Smooth Collie
+400;Smoushond Holandês
+401;Snowshoe
+402;Soft Coated Wheaten Terrier
+403;Sokoke
+404;Somali
+405;Spaniel Bretão
+407;Spaniel da água Americano
+408;Spaniel da água Irlandês
+406;Spaniel da Picardia
+409;Spaniel Frances
+410;Spaniel Japonês
+411;Spaniel Tibetano
+412;Sphynx
+413;Spinone Italiano
+414;Spitz Alemão
+415;Spitz Finlandês
+416;Spitz Japonês
+417;Spottes Mist
+418;Springer Spaniel de Gales
+419;Springer Spaniel Inglês
+420;Stabyhoun
+421;Staffordshire Bull Terrier
+422;Sussex Spaniel
+548;Tabapuã
+581;Tamanduá
+577;Tamanduá-bandeira (Myrmecophaga tridactyla)
+580;Tamanduá-do-norte (Tamandua mexicana)
+579;Tamanduaí (Cyclopes didactylus)
+578;Tamanduá-mirim (Tamandua tetradactyla)
+587;Tapirus terrestris
+514;Tartaruga
+604;Tatu-Galinha
+423;Teckel
+424;Terra-Nova
+425;Terrier Alemão de Caça
+426;Terrier Australiano
+427;Terrier Brasileiro
+428;Terrier Checo
+429;Terrier Escocês
+430;Terrier Irlandês
+431;Terrier Irlandês do Glen do Imaal
+432;Terrier Japonês
+433;Terrier Negro Russo
+434;Terrier Norfolk
+435;Terrier Norwich
+436;Terrier Preto da Russia
+437;Terrier Tibetano
+586;Teste proradis
+438;Thai Ridgeback
+522;Tiffany Australiano
+439;Tonquinês
+440;Tosa
+441;Toy Fox Terrier
+600;Tubarao Lixa
+442;Turkish Van
+443;Urrador
+527;Vaca
+444;Van Turco
+599;Veadeiro Nacional
+445;Veadeiro Pampeano
+446;Vizsla
+447;Volpino Italiano
+448;Weimaraner
+449;Welsh Corgi
+450;Welsh Corgi Cardigan
+451;Welsh Corgi Pembroke
+452;Welsh Springer Spaniel
+453;Welsh Terrier
+454;West Highland White Terrier
+455;Whippet
+456;Wolfhound Irlandês
+457;Wolfspitz
+458;Xoloitzcuintli
+459;Yakutian Laika
+569;York (felino)
+220;Yorkshire Gold Dust
+79;Yorkshire Terrier
+553;Zebuína

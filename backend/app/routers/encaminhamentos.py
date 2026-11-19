@@ -23,6 +23,7 @@ from ..models import CampoEncaminhamento, Clinica, Encaminhamento, ExameEncaminh
 from ..ordenacao import MAX_EXPORTACAO, ordenar
 from ..reports import descrever_filtros, lista_xlsx
 from ..security import exige_admin, usuario_atual
+from .. import listas_lis
 from ..xlsx_resposta import _xlsx
 
 router = APIRouter(prefix="/encaminhamentos", tags=["encaminhamentos"])
@@ -76,6 +77,8 @@ class FormularioOut(BaseModel):
     exames: list[ExameOut]
     siglas: dict
     tubos: dict
+    racas: list = []
+    especies: list = []
 
 
 class PedidoIn(BaseModel):
@@ -227,7 +230,8 @@ def formulario(db: Session = Depends(get_db)):
         .order_by(ExameEncaminhamento.ordem)
     ).all()
     return FormularioOut(versao=REVISAO, grupos=GRUPOS, campos=campos, exames=exames,
-                         siglas=SIGLAS, tubos=TUBOS)
+                         siglas=SIGLAS, tubos=TUBOS, racas=listas_lis.racas(),
+                         especies=listas_lis.especies())
 
 
 # ------------------------------------------------------------------ pedidos
@@ -251,6 +255,14 @@ def criar_pedido(body: PedidoIn, db: Session = Depends(get_db), usuario: Usuario
         copia.append({"chave": c.chave, "rotulo": c.rotulo, "secao": c.secao, "valor": valor, "texto": texto})
     if faltando:
         raise HTTPException(422, "Preencha: " + ", ".join(faltando))
+
+    # Códigos do LIS (para integração): espécie e raça, quando casam com a lista.
+    nome_especie = {"canino": "Canino", "felino": "Felino"}.get(str(dados.get("especie", "")))
+    nome_especie = nome_especie or str(dados.get("especie_outro") or "")
+    if nome_especie and (cod := listas_lis.codigo("especies", nome_especie)):
+        dados["especie_lis"] = cod
+    if dados.get("raca") and (cod := listas_lis.codigo("racas", str(dados["raca"]))):
+        dados["raca_lis"] = cod
 
     codigos = list(dict.fromkeys(x.strip() for x in body.exames if x and x.strip()))
     if not codigos:
