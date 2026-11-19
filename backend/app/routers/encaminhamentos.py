@@ -137,12 +137,12 @@ class CampoIn(BaseModel):
 
 
 class ExameIn(BaseModel):
-    codigo: str | None = Field(None, pattern=r"^[0-9A-Za-z]{1,10}$")
+    codigo: str | None = Field(None, pattern=r"^[0-9A-Za-z-]{1,10}$")
     nome: str | None = Field(None, min_length=1, max_length=200)
     descricao: str | None = None
     grupo: str | None = None
     tubos: list[str] | None = None
-    amostra: str | None = Field(None, max_length=40)
+    amostra: str | None = Field(None, max_length=80)
     selo: str | None = Field(None, max_length=20)
     destaque: bool | None = None
     inclui: list[str] | None = None

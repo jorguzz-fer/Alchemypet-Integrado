@@ -1039,7 +1039,7 @@ export default function FormularioPedido() {
                     </>
                   ) : (
                     <p className="enc-histo-aviso">
-                      Aparece aqui quando o pedido tiver exame de Citologia, Histopatologia ou Imuno-histoquímica.
+                      Marque acima um exame de Citologia, Histopatologia ou Imuno-histoquímica e as perguntas (material, localização, características da lesão e o desenho para marcar as lesões) aparecem aqui.
                     </p>
                   )}
                 </div>

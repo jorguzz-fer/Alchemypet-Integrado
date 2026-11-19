@@ -158,6 +158,8 @@ def _migracao_leve() -> None:
     ddl += [f"CREATE INDEX IF NOT EXISTS ix_clinica_{nome} ON clinica ({nome})" for nome in _INDICES_CLINICA_CRM]
     ddl += [f"ALTER TABLE chamado ADD COLUMN IF NOT EXISTS {nome} {tipo}" for nome, tipo in _COLUNAS_CHAMADO]
     ddl.append("CREATE INDEX IF NOT EXISTS ix_chamado_conclusao ON chamado (conclusao)")
+    # Catálogo de 4 páginas: há amostras com mais de 40 letras.
+    ddl.append("ALTER TABLE exame_encaminhamento ALTER COLUMN amostra TYPE VARCHAR(80)")
     with engine.begin() as conn:
         for stmt in ddl:
             conn.execute(text(stmt))

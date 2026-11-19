@@ -111,6 +111,19 @@ class EncaminhamentoTest(unittest.TestCase):
         self.assertIn("90004", extra)  # rodapé tem 3 quadrinhos; o 4º vai para a página extra
         self.assertIn("PEDIDO", pdf.pages[0].extract_text())
 
+    def test_catalogo_cabe_nas_colunas(self):
+        # O SQLite não confere o tamanho das colunas; o Postgres recusa e a carga
+        # inteira do formulário é desfeita (aconteceu com uma amostra de 42 letras).
+        from app.encaminhamento_campos import CAMPOS
+        from app.encaminhamento_catalogo import EXAMES
+        for modelo, linhas in ((ExameEncaminhamento, EXAMES), (CampoEncaminhamento, CAMPOS)):
+            for linha in linhas:
+                for chave, valor in linha.items():
+                    col = modelo.__table__.columns.get(chave)
+                    tam = getattr(col.type, "length", None) if col is not None else None
+                    if isinstance(valor, str) and tam:
+                        self.assertLessEqual(len(valor), tam, f"{modelo.__tablename__}.{chave}: {valor!r}")
+
     def test_impresso_de_4_paginas(self):
         ativos = {c.chave for c in enc.formulario(self.db).campos}
         self.assertTrue({"categoria_plano", "guia_recoleta", "guia_material"} <= ativos)
