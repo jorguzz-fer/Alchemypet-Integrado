@@ -1,10 +1,14 @@
-"""Campos do Formulário de Encaminhamento Geral (rev. 1), na ordem do papel.
+"""Campos do Formulário de Encaminhamento Geral, na ordem do papel.
 
 São a carga inicial da tabela `campo_encaminhamento`: depois disso a equipe
 mantém os campos pela tela de configuração. `PDF` diz onde cada campo do
 papel é escrito no formulário original; campos criados depois vão para a
 página "Informações adicionais" do PDF.
 """
+
+# Campos do rev. 1 que não existem no impresso atual: desativados uma vez
+# (a equipe pode reativar na tela de configuração).
+FORA_DO_IMPRESSO = ("categoria_plano", "guia_recoleta", "guia_material")
 
 _SIM_NAO = [{"valor": "nao", "rotulo": "Não"}, {"valor": "sim", "rotulo": "Sim"}]
 
@@ -26,6 +30,7 @@ CAMPOS = [
     _c("responsavel", "Nome completo do responsável", "laudo", "texto", True, 2),
     _c("cpf", "CPF", "laudo", "texto", False, 2),
     _c("paciente", "Nome do paciente", "laudo", "texto", True, 1),
+    _c("paciente_id", "ID", "laudo", "texto", False, 4),
     _c("plano_saude", "Plano de saúde", "laudo", "texto", False, 2),
     _c("matricula", "Matrícula", "laudo", "texto", False, 2),
     _c("categoria_plano", "Categoria do plano", "laudo", "texto", False, 1),

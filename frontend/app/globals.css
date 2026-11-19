@@ -2350,7 +2350,7 @@ th.th-ord.ativo .th-seta {
   white-space: nowrap;
 }
 .enc-folha {
-  max-width: 920px;
+  max-width: 1080px;
   margin: 0 auto;
   background: #fff;
   border: 1px solid var(--linha);
@@ -2898,7 +2898,7 @@ th.th-ord.ativo .th-seta {
   gap: 10px;
   background: var(--papel-roxo);
   color: #fff;
-  font-size: 0.86rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   padding: 7px 14px;
@@ -3019,7 +3019,7 @@ th.th-ord.ativo .th-seta {
   background: var(--papel-roxo);
   color: #fff;
   text-align: center;
-  font-size: 0.86rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: 0 -12px 12px;
@@ -3529,4 +3529,191 @@ th.th-ord.ativo .th-seta {
   margin-top: 6px;
   color: var(--texto-suave);
   font-size: 0.74rem;
+}
+
+/* ===== Encaminhamento: laudos e motivo linha a linha, como no impresso ===== */
+.enc-planta {
+  padding: 4px 16px 6px;
+}
+.enc-linha {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px 20px;
+  min-height: 38px;
+}
+.enc-peca {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+}
+.enc-peca > .enc-campo {
+  flex: 1;
+  padding: 6px 0 2px;
+}
+.enc-planta .enc-campo.t-opcao {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+.enc-planta .enc-campo.t-opcao {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.enc-planta .enc-campo.t-opcao > .enc-rot {
+  float: none;
+  line-height: 1.2;
+}
+.enc-planta .enc-opcoes {
+  flex-wrap: nowrap;
+  gap: 2px 6px;
+}
+.enc-planta .enc-opcao {
+  padding: 3px 4px;
+  white-space: nowrap;
+}
+.enc-planta .enc-campo.t-marcar .enc-marcar {
+  min-height: 30px;
+}
+.p-motivo .enc-campo.t-opcao .enc-opcoes {
+  width: 100%;
+  justify-content: space-between;
+}
+.p-motivo .sem-rotulo.t-opcao {
+  width: 100%;
+}
+/* Quadrinhos de letra (nome do responsável, do paciente, ID) */
+.enc-campo.e-grade input {
+  --cx: 17px;
+  font-family: Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: calc(var(--cx) - 1ch);
+  padding: 4px 0 4px calc((var(--cx) - 1ch) / 2);
+  border: 1px solid #9aa3ab;
+  border-radius: 2px;
+  background-color: #fff;
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0 calc(var(--cx) - 1px),
+    #c3cad1 calc(var(--cx) - 1px) var(--cx)
+  );
+  background-origin: padding-box;
+  background-position: 0 0;
+}
+.enc-campo.e-grade input:focus {
+  border: 1px solid var(--destaque);
+  background-color: #f3fbfb;
+}
+/* CRMV: quadro para o carimbo */
+.enc-campo.e-caixa input {
+  border: 1px solid #9aa3ab;
+  border-radius: 3px;
+  padding: 6px 8px;
+  min-height: 34px;
+}
+/* Suspeita clínica: uma linha que cresce */
+.enc-campo.e-linha textarea {
+  min-height: 30px;
+  resize: none;
+  overflow: hidden;
+  padding: 4px;
+}
+.enc-campo.t-texto_longo.e-linha {
+  flex-wrap: nowrap;
+}
+.enc-campo.t-texto_longo.e-linha textarea {
+  flex-basis: auto;
+}
+/* Idade: ___ A ___ M */
+.enc-campo.e-idade {
+  align-items: flex-end;
+  gap: 4px;
+}
+.enc-campo.e-idade input {
+  flex: 0 0 40px;
+  width: 40px;
+  text-align: center;
+}
+.enc-suf {
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin: 0 6px 4px 2px;
+}
+.sem-rotulo.t-texto {
+  padding-left: 0;
+}
+@media (max-width: 760px) {
+  .enc-planta {
+    padding: 0 12px 8px;
+  }
+  .enc-planta .enc-campo {
+    width: 100%;
+  }
+  .enc-planta .enc-campo.t-opcao {
+    flex-direction: column;
+    align-items: stretch;
+    white-space: normal;
+  }
+  .enc-planta .enc-campo.t-opcao > .enc-rot {
+    text-align: left;
+  }
+  .enc-planta .enc-opcoes {
+    justify-content: flex-start;
+  }
+  .enc-linha {
+    display: block;
+  }
+  .enc-peca {
+    display: block;
+  }
+  .enc-planta .enc-campo.t-opcao {
+    flex-wrap: wrap;
+  }
+  .enc-planta .enc-opcoes {
+    flex-wrap: wrap;
+  }
+  .enc-campo.e-grade input {
+    --cx: 22px;
+    font-size: 16px;
+  }
+  .enc-campo.e-idade {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .enc-campo.e-idade .enc-rot {
+    flex-basis: 100%;
+  }
+}
+/* Opções e "( )" não encolhem além do próprio texto */
+.enc-peca:has(> .t-opcao),
+.enc-peca:has(> .t-marcar) {
+  min-width: max-content;
+}
+.p-motivo .enc-peca:has(> .t-opcao.sem-rotulo) {
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .enc-peca:has(> .t-opcao),
+  .enc-peca:has(> .t-marcar) {
+    min-width: 0;
+  }
+}
+
+.enc-linha {
+  gap: 4px 14px;
+}
+.enc-planta .enc-opcao {
+  padding: 3px 3px;
+  font-size: 0.8rem;
+}
+.enc-peca:has(> .sem-rotulo.t-texto) {
+  min-width: 70px;
+}
+.enc-peca:has(> [data-campo='raca']) {
+  min-width: 110px;
+}
+
+.enc-planta .enc-campo.t-opcao {
+  white-space: nowrap;
 }

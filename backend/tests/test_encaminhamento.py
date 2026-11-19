@@ -56,6 +56,17 @@ class EncaminhamentoTest(unittest.TestCase):
         self.assertEqual(textos["data_coleta"], "17/11/2026")
         self.assertEqual([e["codigo"] for e in p1.exames], ["861", "422"])
 
+    def test_listas_do_lis_e_codigos_no_pedido(self):
+        f = enc.formulario(self.db)
+        self.assertGreater(len(f.racas), 500)
+        self.assertIn({"codigo": "222", "nome": "Golden Retriever"}, f.racas)
+        p = self.criar({**DADOS, "raca": "golden retriever"})
+        self.assertEqual((p.dados["especie_lis"], p.dados["raca_lis"]), ("1", "222"))
+        p = self.criar({**DADOS, "especie": "outros", "especie_outro": "Coelho", "raca": "Mini Lop"})
+        self.assertEqual((p.dados["especie_lis"], p.dados["raca_lis"]), ("116", "518"))
+        p = self.criar({**DADOS, "raca": "Vira-lata caramelo"})  # fora da lista: só o nome
+        self.assertNotIn("raca_lis", p.dados)
+
     def test_obrigatorios_e_campos_condicionais(self):
         with self.assertRaises(HTTPException) as e:
             self.criar({**DADOS, "paciente": "", "raca": ""})
