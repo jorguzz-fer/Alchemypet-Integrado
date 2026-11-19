@@ -615,8 +615,9 @@ export interface CrmImportResponse {
 
 // ===== Formulário de Encaminhamento Geral (pedidos de exame) =====
 
-export type TipoCampo = 'texto' | 'texto_longo' | 'data' | 'numero' | 'opcao' | 'marcar' | 'clinica';
-export type SecaoCampo = 'laudo' | 'motivo' | 'laboratorio';
+export type TipoCampo =
+  | 'texto' | 'texto_longo' | 'data' | 'numero' | 'opcao' | 'marcar' | 'clinica' | 'multipla' | 'diagrama';
+export type SecaoCampo = 'laudo' | 'motivo' | 'laboratorio' | 'histo' | 'parasito';
 
 export interface OpcaoCampo {
   valor: string;
@@ -660,6 +661,11 @@ export interface GrupoExames {
   id: string;
   titulo: string;
   estilo: 'destaque' | 'cartoes' | 'perfis' | 'lista';
+  // página do impresso (1 a 4), aviso do bloco e a ordem do papel (códigos;
+  // um exame pode estar em mais de um bloco).
+  pagina?: number;
+  aviso?: string;
+  itens?: string[];
 }
 
 export interface FormularioEncaminhamento {
@@ -674,7 +680,9 @@ export interface FormularioEncaminhamento {
   especies?: { codigo: string; nome: string }[];
 }
 
-export type ValorCampo = string | boolean;
+// Ponto marcado no desenho de distribuição das lesões (x, y de 0 a 1).
+export type PontoLesao = { lado: 'ventral' | 'dorsal'; x: number; y: number };
+export type ValorCampo = string | boolean | string[] | PontoLesao[];
 
 export interface PedidoResumo {
   id: string;

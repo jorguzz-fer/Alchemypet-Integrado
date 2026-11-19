@@ -10,10 +10,12 @@ import { useAuth } from '@/lib/auth';
 import type { CampoEncaminhamento, ExameEncaminhamento, GrupoExames } from '@/lib/types';
 import { Tubos } from '@/components/encaminhamento/Marcas';
 
-const SECOES = { laudo: 'Emissão de laudos', motivo: 'Motivo da solicitação', laboratorio: 'Uso do laboratório' };
+const SECOES = { laudo: 'Emissão de laudos', motivo: 'Motivo da solicitação', laboratorio: 'Uso do laboratório',
+  histo: 'Histologia e Citologia', parasito: 'Amostras de exame (ex.: 213)' };
 const TIPOS = {
   texto: 'Texto curto', texto_longo: 'Texto longo', data: 'Data', numero: 'Número',
   opcao: 'Escolha (opções)', marcar: 'Marcar ( )', clinica: 'Clínica (busca no cadastro)',
+  multipla: 'Várias escolhas ( )', diagrama: 'Desenho (distribuição das lesões)',
 };
 const LARGURAS = { 1: 'Linha inteira', 2: 'Metade', 3: 'Um terço', 4: 'Um quarto' };
 
@@ -279,7 +281,7 @@ function ModalCampo({ campo, onClose, onSalvar }: {
               {Object.entries(LARGURAS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
-          {(novo ? f.tipo : campo.tipo) === 'opcao' ? (
+          {['opcao', 'multipla'].includes((novo ? f.tipo : campo.tipo) ?? '') ? (
             <div className="field col-2">
               <label htmlFor="cf-op">Opções (uma por linha)</label>
               <textarea id="cf-op" value={opcoesTxt} onChange={(e) => setOpcoesTxt(e.target.value)} />

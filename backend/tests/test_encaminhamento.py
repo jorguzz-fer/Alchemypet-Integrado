@@ -36,15 +36,15 @@ class EncaminhamentoTest(unittest.TestCase):
     def tearDown(self):
         self.db.close()
 
-    def criar(self, dados=None, exames=("861", "422")):
+    def criar(self, dados=None, exames=("424", "422")):
         return enc.criar_pedido(enc.PedidoIn(dados=dados or DADOS, exames=list(exames)), self.db, self.u)
 
     def test_semeia_o_papel_uma_vez(self):
         f = enc.formulario(self.db)
-        self.assertEqual(len(f.exames), 52)
+        self.assertEqual(len(f.exames), 345)
         self.assertEqual(f.campos[0].chave, "clinica")
         enc.semear(self.db)  # de novo: não duplica
-        self.assertEqual(len(enc.formulario(self.db).exames), 52)
+        self.assertEqual(len(enc.formulario(self.db).exames), 345)
 
     def test_cria_pedido_numerado_com_copia(self):
         p1, p2 = self.criar(), self.criar()
@@ -54,7 +54,7 @@ class EncaminhamentoTest(unittest.TestCase):
         textos = {c["chave"]: c["texto"] for c in p1.campos}
         self.assertEqual(textos["especie"], "Canino")
         self.assertEqual(textos["data_coleta"], "17/11/2026")
-        self.assertEqual([e["codigo"] for e in p1.exames], ["861", "422"])
+        self.assertEqual([e["codigo"] for e in p1.exames], ["424", "422"])
 
     def test_listas_do_lis_e_codigos_no_pedido(self):
         f = enc.formulario(self.db)
@@ -91,8 +91,8 @@ class EncaminhamentoTest(unittest.TestCase):
         enc.editar_exame(ex.id, enc.ExameIn(ativo=False), self.db)
         self.assertNotIn("422", [e.codigo for e in enc.formulario(self.db).exames])
         visto = enc.detalhar(antigo.id, self.db)
-        self.assertEqual([e["codigo"] for e in visto.exames], ["861", "422"])
-        novo = self.criar({**DADOS, "jejum": "12"}, exames=("861", "999"))
+        self.assertEqual([e["codigo"] for e in visto.exames], ["424", "422"])
+        novo = self.criar({**DADOS, "jejum": "12"}, exames=("424", "999"))
         self.assertEqual(novo.dados["jejum"], 12)
         self.assertEqual(novo.exames[1]["nome"], "Código do portfólio")
         # Campos do papel não podem ser excluídos.
@@ -102,14 +102,41 @@ class EncaminhamentoTest(unittest.TestCase):
 
     def test_pdf_do_formulario_com_pagina_extra(self):
         enc.criar_campo(enc.CampoIn(chave="jejum", rotulo="Jejum (horas)", tipo="numero"), self.db)
-        p = self.criar({**DADOS, "jejum": "12"}, exames=("861", "555", "556", "557", "558"))
+        p = self.criar({**DADOS, "jejum": "12"}, exames=("424", "90001", "90002", "90003", "90004"))
         resp = enc.baixar_pdf(p.id, self.db)
         pdf = PdfReader(io.BytesIO(resp.body))
-        self.assertEqual(len(pdf.pages), 2)  # papel + "Informações adicionais"
-        extra = pdf.pages[1].extract_text()
+        self.assertEqual(len(pdf.pages), 5)  # 4 páginas do impresso + "Informações adicionais"
+        extra = pdf.pages[4].extract_text()
         self.assertIn("Jejum (horas)", extra)
-        self.assertIn("558", extra)  # rodapé tem 3 quadrinhos; o 4º vai para a página extra
+        self.assertIn("90004", extra)  # rodapé tem 3 quadrinhos; o 4º vai para a página extra
         self.assertIn("PEDIDO", pdf.pages[0].extract_text())
+
+    def test_impresso_de_4_paginas(self):
+        ativos = {c.chave for c in enc.formulario(self.db).campos}
+        self.assertTrue({"categoria_plano", "guia_recoleta", "guia_material"} <= ativos)
+        self.assertNotIn("paciente_id", ativos)
+        f = enc.formulario(self.db)
+        self.assertEqual(len([g for g in f.grupos if g.get("pagina") == 4]), 12)
+        # 766 aparece em dois blocos da página 3 (Teste Rápido e Parasitologia)
+        from app.encaminhamento_catalogo import POR_CODIGO
+        self.assertEqual(len(POR_CODIGO["766"]["caixas"]), 3)
+
+    def test_histologia_obrigatoria_so_com_exame_de_histo(self):
+        self.criar(exames=("109",))  # bioquímica: não pede a seção de histologia
+        with self.assertRaises(HTTPException) as e:
+            self.criar(exames=("48",))  # oncohistopatológico
+        self.assertIn("Localização", e.exception.detail)
+        p = self.criar({**DADOS, "localizacao": "Mama M4", "caracteristicas": ["firme", "xx"],
+                        "distribuicao_lesoes": [{"lado": "ventral", "x": 0.2, "y": 0.5}, {"x": "a"}]},
+                       exames=("48",))
+        self.assertEqual(p.dados["caracteristicas"], ["firme"])
+        self.assertEqual(len(p.dados["distribuicao_lesoes"]), 1)
+
+    def test_amostras_do_213(self):
+        p = self.criar({**DADOS, "amostra_1": "19/11"}, exames=("109",))
+        self.assertNotIn("amostra_1", p.dados)  # sem o 213, o campo não vale
+        p = self.criar({**DADOS, "amostra_1": "19/11"}, exames=("213",))
+        self.assertEqual(p.dados["amostra_1"], "19/11")
 
     def test_chegada_no_laboratorio(self):
         p = self.criar()

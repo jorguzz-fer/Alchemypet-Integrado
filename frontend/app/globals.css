@@ -3717,3 +3717,182 @@ th.th-ord.ativo .th-seta {
 .enc-planta .enc-campo.t-opcao {
   white-space: nowrap;
 }
+
+/* ===== Encaminhamento: páginas 2 a 4, Histologia e Citologia ===== */
+.enc-pagina {
+  margin-top: 26px;
+}
+.enc-pagina-tit {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--texto-suave);
+  border-top: 2px dashed var(--papel-lilas-borda);
+  padding-top: 12px;
+  margin-bottom: 10px;
+}
+.enc-pagina-tit small {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.enc-listas-3 {
+  columns: 3 280px;
+  column-gap: 12px;
+}
+.enc-listas-3 .enc-lista {
+  break-inside: avoid;
+  columns: 1;
+  margin-bottom: 12px;
+  display: block;
+}
+.enc-lista-aviso {
+  color: var(--papel-vermelho);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-align: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--papel-lilas-borda);
+}
+.enc-lista-item {
+  break-inside: avoid;
+}
+.enc-exame-campos {
+  padding: 4px 12px 8px 36px;
+  background: var(--papel-lilas);
+  display: grid;
+  gap: 2px;
+}
+.enc-exame-campos .enc-campo {
+  padding: 2px 0;
+}
+.enc-histo {
+  border: 1px solid var(--papel-lilas-borda);
+  border-radius: 14px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.enc-histo-tit {
+  background: var(--papel-roxo);
+  color: #fff;
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 7px 14px;
+  margin: 0;
+}
+.enc-histo-aviso {
+  color: var(--papel-vermelho);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 8px 14px 0;
+}
+.enc-histo.vazio .enc-histo-aviso {
+  color: var(--texto-suave);
+  padding-bottom: 10px;
+}
+.enc-histo > .enc-grade {
+  padding: 4px 16px 14px;
+}
+.enc-multi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  padding-top: 4px;
+}
+.enc-multi-op {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 30px;
+  padding: 0 4px;
+  border-radius: 6px;
+}
+.enc-multi-op input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.enc-multi-op .enc-par {
+  color: #0b3d91;
+  font-weight: 800;
+  white-space: pre;
+}
+.enc-multi-op.ativo {
+  background: #eef3fb;
+  outline: 1px solid #0b3d91;
+}
+.enc-multi-op:focus-within {
+  outline: 2px solid var(--destaque);
+}
+.enc-campo.t-multipla {
+  flex-direction: column;
+  align-items: stretch;
+  border: none;
+}
+.enc-campo.t-diagrama {
+  flex-direction: column;
+  align-items: stretch;
+}
+.enc-ajuda-vis {
+  font-size: 0.74rem;
+  color: var(--texto-suave);
+}
+.enc-diagrama {
+  max-width: 420px;
+}
+.enc-diag-img {
+  position: relative;
+  cursor: crosshair;
+  border: 1px solid var(--papel-lilas-borda);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.enc-diag-img img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+}
+.enc-diag-ponto {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: #d0021b;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #d0021b;
+  cursor: pointer;
+  padding: 0;
+}
+.enc-diag-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+  padding-top: 6px;
+}
+@media (max-width: 760px) {
+  .enc-listas-3 {
+    columns: 1;
+  }
+  .enc-diag-ponto {
+    width: 22px;
+    height: 22px;
+    margin: -11px 0 0 -11px;
+  }
+  .enc-multi-op {
+    min-height: 40px;
+  }
+}
+.enc-tubo.t-branco {
+  box-shadow: inset 0 0 0 1.5px #555;
+}
