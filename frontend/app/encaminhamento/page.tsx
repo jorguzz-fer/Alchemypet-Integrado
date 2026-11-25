@@ -7,6 +7,7 @@ import { api, ApiError } from '@/lib/api';
 import type { FiltrosPedidos, PedidosResponse } from '@/lib/types';
 import { formatData, formatDataHora, formatNumero } from '@/lib/format';
 import ColunaOrdenavel from '@/components/ColunaOrdenavel';
+import ExtensaoLisModal from '@/components/encaminhamento/ExtensaoLisModal';
 
 const PER_PAGE = 25;
 const INICIAIS: FiltrosPedidos = { busca: '', data_de: '', data_ate: '', urgente: false, page: 1, per_page: PER_PAGE };
@@ -19,6 +20,7 @@ export default function PedidosPage() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [exportando, setExportando] = useState(false);
+  const [extensao, setExtensao] = useState(false);
 
   const carregar = useCallback(async (f: FiltrosPedidos, signal?: AbortSignal) => {
     setLoading(true);
@@ -71,6 +73,9 @@ export default function PedidosPage() {
           <div className="lead">Formulários de encaminhamento preenchidos no sistema.</div>
         </div>
         <div className="actions">
+          <button className="btn ghost" onClick={() => setExtensao(true)}>
+            Extensão do LaborLIS
+          </button>
           <button className="btn ghost" onClick={exportar} disabled={exportando || total === 0}>
             {exportando ? 'Gerando…' : 'Exportar planilha'}
           </button>
@@ -158,6 +163,7 @@ export default function PedidosPage() {
                       <span className={`stag ${p.recebido ? 'resolvido' : 'aberto'}`}>
                         {p.recebido ? 'Recebido no lab' : 'Aguardando amostra'}
                       </span>
+                      {p.lis ? <span className="stag resolvido" style={{ marginLeft: 6 }}>No LIS</span> : null}
                     </td>
                   </tr>
                 ))
@@ -179,6 +185,7 @@ export default function PedidosPage() {
           </div>
         </div>
       </div>
+      {extensao ? <ExtensaoLisModal onClose={() => setExtensao(false)} /> : null}
     </div>
   );
 }

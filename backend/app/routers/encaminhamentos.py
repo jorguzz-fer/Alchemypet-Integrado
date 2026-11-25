@@ -10,7 +10,7 @@ mudar o formulário nunca altera nem quebra um pedido já feito.
 """
 from datetime import date, datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -24,6 +24,7 @@ from ..ordenacao import MAX_EXPORTACAO, ordenar
 from ..reports import descrever_filtros, lista_xlsx
 from ..security import exige_admin, usuario_atual
 from .. import listas_lis
+from ..lis_integracao import dados_para_lis, zip_extensao
 from ..xlsx_resposta import _xlsx
 
 router = APIRouter(prefix="/encaminhamentos", tags=["encaminhamentos"])
@@ -105,6 +106,7 @@ class PedidoResumo(BaseModel):
     criado_por: str
     created_at: datetime
     recebido: bool
+    lis: bool = False
 
 
 class PedidoOut(PedidoResumo):
@@ -234,6 +236,7 @@ def _resumo(e: Encaminhamento) -> dict:
         "veterinario": e.veterinario, "data_coleta": e.data_coleta, "urgente": e.urgente,
         "codigos": [x["codigo"] for x in e.exames or []], "criado_por": e.criado_por,
         "created_at": e.created_at, "recebido": bool((e.dados or {}).get("data_chegada")),
+        "lis": bool((e.dados or {}).get("lis_lancado_em")),
     }
 
 
@@ -418,6 +421,54 @@ def exportar_lista(
         descrever_filtros(busca=busca, criado_de=data_de, criado_ate=data_ate, urgente=urgente),
     )
     return _xlsx(conteudo, "pedidos-de-exame")
+
+
+# ------------------------------------------------- lançamento no LIS (extensão)
+
+class LisIn(BaseModel):
+    lancado: bool = True
+
+
+@router.get("/extensao-lis.zip")
+def baixar_extensao(request: Request):
+    """Extensão do Chrome que preenche o pedido no LaborLIS (já aponta para esta API)."""
+    base = str(request.base_url).rstrip("/")
+    # Atrás do proxy do Coolify a API chega como http; o navegador usa https.
+    proto = request.headers.get("x-forwarded-proto")
+    if proto:
+        base = proto + base[base.index("://"):]
+    elif base.startswith("http://") and not any(h in base for h in ("localhost", "127.0.0.1")):
+        base = "https://" + base[len("http://"):]
+    return Response(content=zip_extensao(base), media_type="application/zip",
+                    headers={"Content-Disposition": 'attachment; filename="alchemypet-lis.zip"'})
+
+
+@router.get("/numero/{numero}/lis")
+def pedido_para_lis(numero: int, db: Session = Depends(get_db)):
+    """O pedido pelo número (o da etiqueta), no formato que a extensão preenche."""
+    e = db.scalar(select(Encaminhamento).where(Encaminhamento.numero == numero))
+    if e is None:
+        raise HTTPException(404, f"Pedido Nº {numero:08d} não encontrado")
+    return dados_para_lis(e)
+
+
+@router.post("/{pedido_id}/lis", response_model=PedidoOut)
+def marcar_lis(pedido_id: str, body: LisIn, db: Session = Depends(get_db),
+               usuario: Usuario = Depends(usuario_atual)):
+    """Marca (ou desmarca) o pedido como lançado no LIS."""
+    e = _pedido_ou_404(db, pedido_id)
+    dados = dict(e.dados or {})
+    if body.lancado:
+        agora = datetime.now(timezone.utc).astimezone(_BRASILIA)
+        dados["lis_lancado_em"] = agora.strftime("%d/%m/%Y %H:%M")
+        dados["lis_lancado_por"] = usuario.nome
+    else:
+        dados.pop("lis_lancado_em", None)
+        dados.pop("lis_lancado_por", None)
+    e.dados = dados
+    db.commit()
+    db.refresh(e)
+    return _detalhe(e)
 
 
 @router.get("/{pedido_id}", response_model=PedidoOut)

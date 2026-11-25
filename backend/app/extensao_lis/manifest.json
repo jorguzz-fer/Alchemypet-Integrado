@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Alchemypet → LaborLIS",
+  "description": "Preenche no LaborLIS o pedido feito no Formulário de Encaminhamento do Alchemypet Integrado.",
+  "version": "1.0.0",
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:8000/*", "https://*.laborlis.online/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://*.laborlis.online/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": { "default_title": "Alchemypet → LaborLIS", "default_icon": { "48": "icone-48.png", "128": "icone-128.png" } },
+  "icons": { "48": "icone-48.png", "128": "icone-128.png" }
+}
