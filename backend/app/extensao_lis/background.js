@@ -85,3 +85,22 @@ chrome.runtime.onMessage.addListener((msg, _remetente, responder) => {
   acao(msg).then(responder, (e) => responder({ erro: String(e && e.message ? e.message : e) }));
   return true; // resposta assíncrona
 });
+
+// Clique no ícone da extensão: abre o painel no LaborLIS (injeta o painel se a
+// aba foi aberta antes de instalar a extensão); em outra aba, abre o LaborLIS.
+const LIS_INICIO = 'https://alchemypet.laborlis.online/';
+chrome.action.onClicked.addListener(async (aba) => {
+  const ehLis = /^https:\/\/[^/]*\.laborlis\.online\//.test(aba.url || '');
+  if (!ehLis) {
+    chrome.tabs.create({ url: LIS_INICIO });
+    return;
+  }
+  try {
+    await chrome.tabs.sendMessage(aba.id, { acao: 'abrirPainel' });
+  } catch (e) {
+    await chrome.scripting.executeScript({ target: { tabId: aba.id }, files: ['content.js'] });
+    try {
+      await chrome.tabs.sendMessage(aba.id, { acao: 'abrirPainel' });
+    } catch (e2) { /* o painel abre sozinho na próxima carga */ }
+  }
+});
