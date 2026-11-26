@@ -67,6 +67,46 @@ class EncaminhamentoTest(unittest.TestCase):
         p = self.criar({**DADOS, "raca": "Vira-lata caramelo"})  # fora da lista: só o nome
         self.assertNotIn("raca_lis", p.dados)
 
+    def test_pedido_para_o_lis_e_marcar_lancado(self):
+        p = self.criar({**DADOS, "raca": "golden retriever", "cpf": "305.129.528-09", "idade_meses": "3",
+                        "suspeita": "Prurido"}, exames=("424", "170"))
+        d = enc.pedido_para_lis(p.numero, self.db)
+        self.assertEqual(d["numero_fmt"], "00000001")
+        self.assertEqual(d["paciente"]["sexo"], "M")
+        self.assertEqual((d["paciente"]["idade_anos"], d["paciente"]["idade_meses"]), (7, 3))
+        self.assertEqual(d["paciente"]["especie"]["codigo"], "1")
+        self.assertEqual(d["paciente"]["raca"], {"codigo": "222", "nome": "Golden Retriever"})
+        self.assertEqual(d["responsavel"]["cpf"], "30512952809")
+        self.assertEqual(d["solicitante"], {"nome": "Dra. Manoela", "crmv": "SP-123"})
+        self.assertEqual([x["codigo"] for x in d["exames"]], ["424", "170"])
+        self.assertIn("Pedido Alchemypet Nº 00000001", d["observacoes"])
+        self.assertIn("EXAME URGENTE", d["observacoes"])
+        self.assertIn("Medicamentos: Doxiciclina", d["observacoes"])
+        with self.assertRaises(HTTPException):
+            enc.pedido_para_lis(999, self.db)
+        out = enc.marcar_lis(p.id, enc.LisIn(lancado=True), self.db, self.u)
+        self.assertEqual(out.dados["lis_lancado_por"], "Recepção")
+        self.assertTrue(out.lis)
+        self.assertTrue(enc.listar(db=self.db, busca=None, data_de=None, data_ate=None, urgente=False,
+                                   sort=None, dir=None, page=1, per_page=25).items[0].lis)
+        self.assertEqual(enc.pedido_para_lis(p.numero, self.db)["lis"]["lancado_por"], "Recepção")
+        out = enc.marcar_lis(p.id, enc.LisIn(lancado=False), self.db, self.u)
+        self.assertFalse(out.lis)
+
+    def test_zip_da_extensao_aponta_para_a_api(self):
+        import json
+        import zipfile
+        from app.lis_integracao import zip_extensao
+        z = zipfile.ZipFile(io.BytesIO(zip_extensao("https://api.exemplo.com.br/")))
+        nomes = z.namelist()
+        for arq in ("manifest.json", "background.js", "content.js", "config.js", "icone-128.png"):
+            self.assertIn("alchemypet-lis/" + arq, nomes)
+        m = json.loads(z.read("alchemypet-lis/manifest.json"))
+        self.assertEqual(m["manifest_version"], 3)
+        self.assertIn("https://api.exemplo.com.br/*", m["host_permissions"])
+        self.assertNotIn("http://localhost:8000/*", m["host_permissions"])
+        self.assertIn('"https://api.exemplo.com.br"', z.read("alchemypet-lis/config.js").decode())
+
     def test_obrigatorios_e_campos_condicionais(self):
         with self.assertRaises(HTTPException) as e:
             self.criar({**DADOS, "paciente": "", "raca": ""})

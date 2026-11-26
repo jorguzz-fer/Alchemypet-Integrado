@@ -58,6 +58,18 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
     }
   }
 
+  async function marcarLis(lancado: boolean) {
+    if (!p) return;
+    setSalvando(true);
+    try {
+      setP(await api.marcarLis(p.id, lancado));
+    } catch (err) {
+      setAviso(err instanceof ApiError ? err.message : 'Não foi possível salvar.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   if (erro) return <div className="state"><div className="errbox"><p>{erro}</p></div></div>;
   if (!p) return <div className="state"><div className="spinner" /></div>;
 
@@ -107,6 +119,29 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
               ))}
             </ul>
             <div className="crm-sub">{p.versao}</div>
+          </div>
+          <div className="card" style={{ marginTop: 14 }}>
+            <h4>LaborLIS</h4>
+            {p.dados.lis_lancado_em ? (
+              <>
+                <div className="csub">
+                  <span className="stag resolvido">No LIS</span> Lançado em {String(p.dados.lis_lancado_em)} por{' '}
+                  {String(p.dados.lis_lancado_por ?? '—')}.
+                </div>
+                <button className="btn ghost sm" style={{ marginTop: 8 }} disabled={salvando} onClick={() => marcarLis(false)}>
+                  Desfazer
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="csub">
+                  Ainda não lançado. No LaborLIS, use a extensão <b>Alchemypet</b> com o Nº {numero}.
+                </div>
+                <button className="btn ghost sm" style={{ marginTop: 8 }} disabled={salvando} onClick={() => marcarLis(true)}>
+                  Marcar como lançado no LIS
+                </button>
+              </>
+            )}
           </div>
           <form className="card" style={{ marginTop: 14 }} onSubmit={salvarLab}>
             <h4>Para uso do laboratório</h4>

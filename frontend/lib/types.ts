@@ -696,6 +696,7 @@ export interface PedidoResumo {
   criado_por: string;
   created_at: string;
   recebido: boolean;
+  lis: boolean;
 }
 
 export interface PedidoExame extends PedidoResumo {

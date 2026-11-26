@@ -633,6 +633,16 @@ export const api = {
     });
   },
 
+  marcarLis(id: string, lancado: boolean): Promise<PedidoExame> {
+    return request<PedidoExame>(`/encaminhamentos/${encodeURIComponent(id)}/lis`, {
+      method: 'POST',
+      body: { lancado },
+    });
+  },
+  baixarExtensaoLis(): Promise<void> {
+    return baixarArquivo('/encaminhamentos/extensao-lis.zip', 'alchemypet-lis.zip');
+  },
+
   baixarPdfPedido(id: string, numero: number): Promise<void> {
     return baixarArquivo(
       `/encaminhamentos/${encodeURIComponent(id)}/pdf`,
