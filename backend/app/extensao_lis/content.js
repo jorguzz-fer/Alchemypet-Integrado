@@ -182,20 +182,46 @@
 
   // Liga (ou desliga) a chave ao lado do texto (ex.: "Animal"). Devolve
   // true se a chave ficou como pedido.
+  // A chave é a mais próxima do texto na tela (Nome Social e Animal ficam
+  // no mesmo bloco: não pode pegar a vizinha).
+  function chaveDe(rot) {
+    if (rot.tagName === 'LABEL' && rot.htmlFor) {
+      const alvo = document.getElementById(rot.htmlFor);
+      if (alvo && alvo.type === 'checkbox') return alvo;
+    }
+    const dentro = rot.querySelector && rot.querySelector('input[type=checkbox]');
+    if (dentro) return dentro;
+    const r = rot.getBoundingClientRect();
+    const cy = r.top + r.height / 2;
+    let caixa = rot.parentElement;
+    for (let i = 0; i < 4 && caixa; i++, caixa = caixa.parentElement) {
+      const chks = Array.from(caixa.querySelectorAll('input[type=checkbox]')).filter((c) => !doPainel(c));
+      if (!chks.length) continue;
+      const pos = (c) => {
+        let el = c;
+        let b = el.getBoundingClientRect();
+        while ((b.width < 2 || b.height < 2) && el.parentElement) {
+          el = el.parentElement;
+          b = el.getBoundingClientRect();
+        }
+        return Math.abs(b.top + b.height / 2 - cy);
+      };
+      return chks.sort((a, b) => pos(a) - pos(b))[0];
+    }
+    return null;
+  }
+
+  // Liga (ou desliga) a chave ao lado do texto (ex.: "Animal"). Devolve
+  // true se a chave ficou como pedido.
   async function ligar(texto, valor = true) {
     for (const rot of rotulos(texto)) {
-      let caixa = rot.parentElement;
-      for (let i = 0; i < 3 && caixa; i++, caixa = caixa.parentElement) {
-        const chk = caixa.querySelector('input[type=checkbox]');
-        if (chk && !doPainel(chk)) {
-          if (chk.checked !== valor) {
-            (rot.tagName === 'LABEL' ? rot : chk).click();
-            await esperar(200);
-            if (chk.checked !== valor) chk.click();
-          }
-          return chk.checked === valor;
-        }
+      const chk = chaveDe(rot);
+      if (!chk) continue;
+      if (chk.checked !== valor) {
+        chk.click();
+        await esperar(250);
       }
+      return chk.checked === valor;
     }
     return false;
   }
@@ -301,6 +327,20 @@
     } else log.falta('Nome');
     if (await ligar('Animal', false)) log.ok('Animal', 'desligado (é uma pessoa)');
     else log.aviso('Animal', 'confira que a chave "Animal" está desligada');
+    const r = p.responsavel;
+    const sexo = campos('Sexo biológico')[0] || campos('Sexo')[0];
+    if (!r.sexo) log.aviso('Sexo biológico', 'não veio no pedido: escolha no LaborLIS');
+    else if (sexo && (await escolherOpcao(sexo, r.sexo === 'M' ? /^(m|masc)/ : /^(f|fem)/))) {
+      log.ok('Sexo biológico', r.sexo === 'M' ? 'Masculino' : 'Feminino');
+    } else log.aviso('Sexo biológico', `escolha ${r.sexo === 'M' ? 'masculino' : 'feminino'}`);
+    const nasc = campos('Nascimento')[0];
+    if (!r.nascimento) log.aviso('Nascimento', 'não veio no pedido: preencha no LaborLIS');
+    else if (nasc) {
+      const [dia, mes, ano] = r.nascimento.split('/');
+      definir(nasc, nasc.type === 'date' ? `${ano}-${mes}-${dia}` : r.nascimento);
+      sair(nasc);
+      log.ok('Nascimento', r.nascimento);
+    } else log.falta('Nascimento');
     if (p.responsavel.cpf) {
       const cpf = campos('CPF')[0];
       if (cpf) {
@@ -361,6 +401,29 @@
     if (!titulo) return null;
     return camposAposRotulo(titulo).find((c) => c.tagName === 'INPUT') || null;
   }
+  // Quantos itens a guia tem (a aba "Exames" mostra o número: "Exames 64").
+  function contagemExames() {
+    for (const el of document.querySelectorAll('a,li,button,span,div,[role=tab]')) {
+      if (doPainel(el) || el.children.length > 3) continue;
+      const m = norm(el.textContent).match(/^exames\s*(\d+)$/);
+      if (m && visivel(el)) return parseInt(m[1], 10);
+    }
+    return null;
+  }
+  // Espera a contagem subir (o LIS demora um pouco para trazer os itens).
+  async function esperarSubir(antes) {
+    if (antes === null) return null;
+    for (let i = 0; i < 12; i++) {
+      await esperar(300);
+      const agora = contagemExames();
+      if (agora !== null && agora > antes) {
+        await esperar(500); // pacotes chegam em partes
+        return contagemExames() - antes;
+      }
+    }
+    return 0;
+  }
+
   async function incluirExames(p, log) {
     const plano = campos('Plano');
     if (plano.length && !plano.some((c) => c.value.trim())) {
@@ -384,6 +447,7 @@
         return;
       }
       const antes = new Set(itensVisiveis());
+      const qtdAntes = contagemExames();
       definir(alvo, ex.codigo);
       tecla(alvo, 'ArrowDown');
       await esperar(1400);
@@ -393,19 +457,24 @@
       }
       const opcoes = itensVisiveis().filter((x) => !antes.has(x));
       const exata = opcoes.find((x) => new RegExp(`(^|\\D)${ex.codigo}(\\D|$)`).test(x.textContent));
-      if (exata) {
-        exata.click();
-        await esperar(900);
-        log.ok(`Exame ${ex.codigo}`, ex.nome);
-      } else if (opcoes.length) {
+      if (opcoes.length && !exata) {
         log.aviso(`Exame ${ex.codigo}`, `${ex.nome}: escolha na lista e siga com os próximos`);
         return;
-      } else {
-        tecla(alvo, 'Enter');
+      }
+      if (exata) exata.click();
+      else tecla(alvo, 'Enter');
+      const novos = await esperarSubir(qtdAntes);
+      if (novos === null) {
         await esperar(900);
         log.aviso(`Exame ${ex.codigo}`, `${ex.nome}: confira se entrou`);
+      } else if (novos > 0) {
+        log.ok(`Exame ${ex.codigo}`, `${ex.nome} (+${novos} ${novos === 1 ? 'item' : 'itens'} na guia)`);
+      } else {
+        log.aviso(`Exame ${ex.codigo}`, `${ex.nome}: NÃO entrou. Inclua à mão (o código pode ser outro no LaborLIS)`);
       }
     }
+    const total = contagemExames();
+    if (total !== null) log.ok('Guia', `${total} itens no total (pacotes aparecem item por item)`);
   }
 
   // -------------------------------------------------------------- diagnóstico

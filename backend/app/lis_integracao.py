@@ -19,7 +19,7 @@ from .models import Encaminhamento
 PASTA_EXTENSAO = Path(__file__).parent / "extensao_lis"
 # Endereços do LIS onde a extensão funciona.
 LIS_URLS = ["https://*.laborlis.online/*"]
-VERSAO_EXTENSAO = "1.1.0"
+VERSAO_EXTENSAO = "1.2.1"
 
 
 def _texto(e: Encaminhamento, chave: str) -> str:
@@ -90,7 +90,12 @@ def dados_para_lis(e: Encaminhamento) -> dict:
             "especie": {"codigo": especie_cod, "nome": especie},
             "raca": {"codigo": raca_cod, "nome": raca},
         },
-        "responsavel": {"nome": e.responsavel, "cpf": re.sub(r"\D", "", _texto(e, "cpf"))},
+        "responsavel": {
+            "nome": e.responsavel,
+            "cpf": re.sub(r"\D", "", _texto(e, "cpf")),
+            "sexo": {"m": "M", "f": "F"}.get(str(d.get("responsavel_sexo") or ""), ""),
+            "nascimento": _texto(e, "responsavel_nascimento"),  # dd/mm/aaaa
+        },
         "solicitante": {"nome": e.veterinario, "crmv": _texto(e, "crmv")},
         "plano": {"nome": _texto(e, "plano_saude"), "matricula": _texto(e, "matricula")},
         "suspeita": suspeita,

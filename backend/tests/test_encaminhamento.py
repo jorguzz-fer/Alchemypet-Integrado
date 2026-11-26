@@ -16,7 +16,8 @@ from app.routers import encaminhamentos as enc  # noqa: E402
 
 DADOS = {
     "clinica": "CV Paiol - Penha", "data_coleta": "2026-11-17", "veterinario": "Dra. Manoela",
-    "crmv": "SP-123", "responsavel": "Fernando Jorge", "paciente": "Thor", "especie": "canino",
+    "crmv": "SP-123", "responsavel": "Fernando Jorge", "responsavel_sexo": "m",
+    "responsavel_nascimento": "1980-05-02", "paciente": "Thor", "especie": "canino",
     "genero": "m", "raca": "Golden", "idade_anos": "7", "motivo": "tratamento",
     "exame_urgente": True, "uso_medicamento": "sim", "medicamentos": "Doxiciclina",
 }
@@ -77,6 +78,7 @@ class EncaminhamentoTest(unittest.TestCase):
         self.assertEqual(d["paciente"]["especie"]["codigo"], "1")
         self.assertEqual(d["paciente"]["raca"], {"codigo": "222", "nome": "Golden Retriever"})
         self.assertEqual(d["responsavel"]["cpf"], "30512952809")
+        self.assertEqual((d["responsavel"]["sexo"], d["responsavel"]["nascimento"]), ("M", "02/05/1980"))
         self.assertEqual(d["solicitante"], {"nome": "Dra. Manoela", "crmv": "SP-123"})
         self.assertEqual([x["codigo"] for x in d["exames"]], ["424", "170"])
         self.assertIn("Pedido Alchemypet Nº 00000001", d["observacoes"])
