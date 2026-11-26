@@ -401,6 +401,29 @@
     if (!titulo) return null;
     return camposAposRotulo(titulo).find((c) => c.tagName === 'INPUT') || null;
   }
+  // Quantos itens a guia tem (a aba "Exames" mostra o número: "Exames 64").
+  function contagemExames() {
+    for (const el of document.querySelectorAll('a,li,button,span,div,[role=tab]')) {
+      if (doPainel(el) || el.children.length > 3) continue;
+      const m = norm(el.textContent).match(/^exames\s*(\d+)$/);
+      if (m && visivel(el)) return parseInt(m[1], 10);
+    }
+    return null;
+  }
+  // Espera a contagem subir (o LIS demora um pouco para trazer os itens).
+  async function esperarSubir(antes) {
+    if (antes === null) return null;
+    for (let i = 0; i < 12; i++) {
+      await esperar(300);
+      const agora = contagemExames();
+      if (agora !== null && agora > antes) {
+        await esperar(500); // pacotes chegam em partes
+        return contagemExames() - antes;
+      }
+    }
+    return 0;
+  }
+
   async function incluirExames(p, log) {
     const plano = campos('Plano');
     if (plano.length && !plano.some((c) => c.value.trim())) {
@@ -424,6 +447,7 @@
         return;
       }
       const antes = new Set(itensVisiveis());
+      const qtdAntes = contagemExames();
       definir(alvo, ex.codigo);
       tecla(alvo, 'ArrowDown');
       await esperar(1400);
@@ -433,19 +457,24 @@
       }
       const opcoes = itensVisiveis().filter((x) => !antes.has(x));
       const exata = opcoes.find((x) => new RegExp(`(^|\\D)${ex.codigo}(\\D|$)`).test(x.textContent));
-      if (exata) {
-        exata.click();
-        await esperar(900);
-        log.ok(`Exame ${ex.codigo}`, ex.nome);
-      } else if (opcoes.length) {
+      if (opcoes.length && !exata) {
         log.aviso(`Exame ${ex.codigo}`, `${ex.nome}: escolha na lista e siga com os próximos`);
         return;
-      } else {
-        tecla(alvo, 'Enter');
+      }
+      if (exata) exata.click();
+      else tecla(alvo, 'Enter');
+      const novos = await esperarSubir(qtdAntes);
+      if (novos === null) {
         await esperar(900);
         log.aviso(`Exame ${ex.codigo}`, `${ex.nome}: confira se entrou`);
+      } else if (novos > 0) {
+        log.ok(`Exame ${ex.codigo}`, `${ex.nome} (+${novos} ${novos === 1 ? 'item' : 'itens'} na guia)`);
+      } else {
+        log.aviso(`Exame ${ex.codigo}`, `${ex.nome}: NÃO entrou. Inclua à mão (o código pode ser outro no LaborLIS)`);
       }
     }
+    const total = contagemExames();
+    if (total !== null) log.ok('Guia', `${total} itens no total (pacotes aparecem item por item)`);
   }
 
   // -------------------------------------------------------------- diagnóstico
