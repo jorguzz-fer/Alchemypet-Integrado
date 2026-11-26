@@ -590,6 +590,15 @@
     if (b) acao(b.dataset.a);
   });
 
+  // Clique no ícone da extensão na barra do Chrome.
+  chrome.runtime.onMessage.addListener((msg, _r, responder) => {
+    if (msg && msg.acao === 'abrirPainel') {
+      aberto = true;
+      desenhar();
+      responder({ ok: true });
+    }
+  });
+
   // Abre sozinho quando já há um pedido em andamento (ex.: passou do paciente para a guia).
   enviar({ acao: 'estado' }).then((st) => {
     aberto = !!(st && st.pedido);
