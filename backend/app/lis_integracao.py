@@ -19,7 +19,7 @@ from .models import Encaminhamento
 PASTA_EXTENSAO = Path(__file__).parent / "extensao_lis"
 # Endereços do LIS onde a extensão funciona.
 LIS_URLS = ["https://*.laborlis.online/*"]
-VERSAO_EXTENSAO = "1.0.1"
+VERSAO_EXTENSAO = "1.1.0"
 
 
 def _texto(e: Encaminhamento, chave: str) -> str:

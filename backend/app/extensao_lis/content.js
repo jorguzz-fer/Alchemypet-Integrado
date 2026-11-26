@@ -148,32 +148,52 @@
   }
 
   // Busca por nome com lista de resultados: escolhe se só houver um.
+  // Confere se um resultado da lista é mesmo o procurado: todas as palavras
+  // do nome (ou os dígitos do CPF/código) aparecem no texto do resultado.
+  const digitos = (s) => String(s || '').replace(/\D/g, '');
+  function confere(textoItem, procurado) {
+    const t = norm(textoItem);
+    const d = digitos(procurado);
+    if (d && d.length === String(procurado).replace(/[.\-\/\s]/g, '').length) {
+      return digitos(textoItem).includes(d);
+    }
+    const palavras = norm(procurado).split(' ').filter((w) => w.length > 1);
+    return palavras.length > 0 && palavras.every((w) => t.includes(w));
+  }
+
+  // Digita na busca e escolhe o resultado que confere com o procurado.
+  // 'escolhido' | 'varios' (mais de um confere) | 'nada' (nenhum confere)
   async function buscarNome(el, texto) {
     const antes = new Set(itensVisiveis());
     definir(el, texto);
     tecla(el, 'ArrowDown');
     await esperar(1500);
     const novos = itensVisiveis().filter((x) => !antes.has(x));
-    if (novos.length === 1) {
-      novos[0].click();
-      await esperar(400);
+    // Só os itens "folha" (o <li>, não a lista inteira).
+    const itens = novos.filter((x) => !novos.some((o) => o !== x && x.contains(o)));
+    const bons = itens.filter((x) => confere(x.textContent, texto));
+    if (bons.length === 1) {
+      bons[0].click();
+      await esperar(500);
       return 'escolhido';
     }
-    return novos.length ? 'varios' : 'nada';
+    return bons.length > 1 ? 'varios' : 'nada';
   }
 
-  async function ligar(texto) {
+  // Liga (ou desliga) a chave ao lado do texto (ex.: "Animal"). Devolve
+  // true se a chave ficou como pedido.
+  async function ligar(texto, valor = true) {
     for (const rot of rotulos(texto)) {
       let caixa = rot.parentElement;
       for (let i = 0; i < 3 && caixa; i++, caixa = caixa.parentElement) {
         const chk = caixa.querySelector('input[type=checkbox]');
         if (chk && !doPainel(chk)) {
-          if (!chk.checked) {
+          if (chk.checked !== valor) {
             (rot.tagName === 'LABEL' ? rot : chk).click();
             await esperar(200);
-            if (!chk.checked) chk.click();
+            if (chk.checked !== valor) chk.click();
           }
-          return chk.checked;
+          return chk.checked === valor;
         }
       }
     }
@@ -247,13 +267,48 @@
       else log.aviso('Médico padrão', `${p.solicitante.nome}${p.solicitante.crmv ? ' (CRMV ' + p.solicitante.crmv + ')' : ''}: escolha na lista ou cadastre`);
     }
 
+    await escolherResponsavel(p, log);
+  }
+
+  // Responsável na tela do paciente: busca pelo nome (e, se não achar, pelo
+  // CPF) e só escolhe o resultado que confere.
+  async function escolherResponsavel(p, log) {
     const resp = campos('Responsável');
-    if (resp.length && p.responsavel.nome) {
-      const busca = resp[resp.length - 1];
-      let r = p.responsavel.cpf ? await buscarNome(busca, p.responsavel.cpf) : 'nada';
-      if (r !== 'escolhido') r = await buscarNome(busca, p.responsavel.nome);
-      if (r === 'escolhido') log.ok('Responsável', p.responsavel.nome);
-      else log.aviso('Responsável', `${p.responsavel.nome}${p.responsavel.cpf ? ' · CPF ' + p.responsavel.cpf : ''}: escolha na lista ou clique em + para cadastrar`);
+    if (!p.responsavel.nome) return;
+    if (!resp.length) {
+      log.falta('Responsável');
+      return;
+    }
+    const busca = resp[resp.length - 1];
+    let r = await buscarNome(busca, p.responsavel.nome);
+    if (r !== 'escolhido' && p.responsavel.cpf) {
+      const r2 = await buscarNome(busca, p.responsavel.cpf);
+      if (r2 === 'escolhido') r = r2;
+      else definir(busca, p.responsavel.nome); // deixa o nome na busca para a pessoa ver
+    }
+    if (r === 'escolhido') log.ok('Responsável', p.responsavel.nome);
+    else if (r === 'varios') log.aviso('Responsável', `há mais de um "${p.responsavel.nome}": escolha na lista (CPF ${p.responsavel.cpf || '—'})`);
+    else log.aviso('Responsável', `"${p.responsavel.nome}" não está cadastrado no LaborLIS: clique em + e, na aba que abrir, use "Cadastrar responsável" no painel. Depois de salvar, volte aqui e clique em "só o responsável".`);
+  }
+
+  // Cadastro do responsável (aba aberta pelo + do Responsável): é uma pessoa,
+  // não um animal.
+  async function cadastrarResponsavel(p, log) {
+    const nome = campos('Nome')[0];
+    if (nome) {
+      definir(nome, p.responsavel.nome);
+      log.ok('Nome', p.responsavel.nome);
+    } else log.falta('Nome');
+    if (await ligar('Animal', false)) log.ok('Animal', 'desligado (é uma pessoa)');
+    else log.aviso('Animal', 'confira que a chave "Animal" está desligada');
+    if (p.responsavel.cpf) {
+      const cpf = campos('CPF')[0];
+      if (cpf) {
+        const d = p.responsavel.cpf;
+        definir(cpf, d.length === 11 ? `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}` : d);
+        sair(cpf);
+        log.ok('CPF', d);
+      } else log.falta('CPF');
     }
   }
 
@@ -451,6 +506,9 @@
     .log div { padding: 2px 0; }
     .ok { color: #11743b; } .aviso { color: #a15c00; } .falta { color: #b42318; }
     .erro { color: #b42318; font-weight: 600; margin: 6px 0; }
+    .sub { font-size: 12px; margin: 4px 2px 0; }
+    .sub a { color: #512d78; cursor: pointer; text-decoration: underline; }
+    .info { color: #3b2160; background: #efeaf6; border-radius: 7px; padding: 6px 9px; margin: 8px 0 4px; }
     .lancado { background: #e7f6ec; color: #11743b; border-radius: 7px; padding: 6px 9px; margin-top: 8px; font-weight: 600; }
     .rodape { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; color: #6b7280; }
     .rodape a { color: #512d78; cursor: pointer; text-decoration: underline; }
@@ -466,6 +524,7 @@
   let ocupado = false;
   let linhasLog = [];
   let mensagem = '';
+  let mensagemInfo = false;
 
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const tela = () => (/atendimento\/paciente/.test(location.pathname) ? 'paciente'
@@ -499,6 +558,7 @@
           <div>Clínica: ${esc(p.clinica)}</div>
           <div class="exames" title="Clique para copiar o código">${p.exames.map((e) => `<span data-cod="${esc(e.codigo)}" title="${esc(e.nome)}">${esc(e.codigo)}</span>`).join('')}</div></div>
           <button class="btn ${tela() === 'paciente' ? 'atual' : 'sec'}" data-a="paciente">1. Preencher paciente <small>(Paciente › Novo)</small></button>
+          <div class="sub"><a data-a="responsavel">só o responsável</a> · <a data-a="cadastrar">cadastrar responsável</a> <small>(na aba aberta pelo +)</small></div>
           <button class="btn ${tela() === 'guia' ? 'atual' : 'sec'}" data-a="guia">2. Preencher guia <small>(Guia › Nova)</small></button>
           <button class="btn ${tela() === 'guia' ? 'atual' : 'sec'}" data-a="exames">3. Incluir os ${p.exames.length} exames</button>`;
         html += p.lis && p.lis.lancado_em
@@ -507,7 +567,7 @@
       } else {
         html += '<small>Digite o número do pedido (está no PDF e na etiqueta) ou passe o leitor no código de barras.</small>';
       }
-      if (mensagem) html += `<div class="erro">${esc(mensagem)}</div>`;
+      if (mensagem) html += `<div class="${mensagemInfo ? 'info' : 'erro'}">${esc(mensagem)}</div>`;
       if (linhasLog.length) html += `<div class="log">${linhasLog.map((l) => `<div class="${l.c}">${l.t}</div>`).join('')}<small>Confira e clique em Salvar no LaborLIS.</small></div>`;
       html += `<div class="rodape"><span>${esc(st.usuario)}</span><span><a data-a="diag">Diagnóstico da tela</a> · ${p ? '<a data-a="limpar">Fechar pedido</a> · ' : ''}<a data-a="sair">Sair</a></span></div>`;
     }
@@ -535,6 +595,7 @@
   async function acao(a, alvo) {
     if (ocupado) return;
     mensagem = '';
+    mensagemInfo = false;
     if (a === 'abrir') aberto = true;
     else if (a === 'fechar') aberto = false;
     else if (a === 'login') {
@@ -557,6 +618,7 @@
       try {
         await navigator.clipboard.writeText(diagnostico());
         mensagem = 'Diagnóstico copiado. Cole num arquivo .txt e mande para quem configura a extensão.';
+        mensagemInfo = true;
       } catch (e) {
         mensagem = 'Não consegui copiar: clique na página e tente de novo.';
       }
@@ -564,15 +626,27 @@
       try {
         await navigator.clipboard.writeText(alvo);
         mensagem = `Código ${alvo} copiado.`;
+        mensagemInfo = true;
       } catch (e) { /* sem permissão: ignora */ }
-    } else if (['paciente', 'guia', 'exames'].includes(a)) {
+    } else if (['paciente', 'guia', 'exames', 'responsavel', 'cadastrar'].includes(a)) {
       const st = await enviar({ acao: 'estado' });
       if (!st.pedido) return;
+      const deGuia = a === 'guia' || a === 'exames';
+      if (tela() && (tela() === 'guia') !== deGuia) {
+        mensagem = deGuia
+          ? 'Este passo é da tela Atendimento › Guia › Nova. Abra a guia e clique de novo.'
+          : 'Este passo é da tela Atendimento › Paciente. Abra o paciente e clique de novo.';
+        mensagemInfo = true;
+        await desenhar();
+        return;
+      }
       ocupado = true;
       raiz.querySelectorAll('.btn').forEach((b) => (b.disabled = true));
       const log = novoLog();
       try {
         if (a === 'paciente') await preencherPaciente(st.pedido, log);
+        else if (a === 'responsavel') await escolherResponsavel(st.pedido, log);
+        else if (a === 'cadastrar') await cadastrarResponsavel(st.pedido, log);
         else if (a === 'guia') await preencherGuia(st.pedido, log);
         else await incluirExames(st.pedido, log);
       } catch (e) {
@@ -615,5 +689,5 @@
   }, 800);
 
   // Expõe as funções para os testes automáticos.
-  window.__alchemypetLisTeste = { preencherPaciente, preencherGuia, incluirExames, diagnostico, campos };
+  window.__alchemypetLisTeste = { preencherPaciente, escolherResponsavel, cadastrarResponsavel, preencherGuia, incluirExames, diagnostico, campos };
 })();
