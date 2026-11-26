@@ -108,16 +108,27 @@ def zip_extensao(api_url: str) -> bytes:
     manifesto["version"] = VERSAO_EXTENSAO
     manifesto["host_permissions"] = [f"{api}/*", *LIS_URLS]
     manifesto["content_scripts"][0]["matches"] = LIS_URLS
+    def entrada(nome: str, pasta: bool = False) -> zipfile.ZipInfo:
+        # Permissões completas (tipo + modo): sem o tipo, o Utilitário de
+        # Compressão do Mac recusa o .zip (erro 513).
+        info = zipfile.ZipInfo(nome, date_time=(2026, 1, 1, 0, 0, 0))
+        info.create_system = 3  # Unix
+        info.external_attr = ((0o040755 if pasta else 0o100644) << 16) | (0x10 if pasta else 0)
+        info.compress_type = zipfile.ZIP_STORED if pasta else zipfile.ZIP_DEFLATED
+        return info
+
     buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr(entrada("alchemypet-lis/", pasta=True), b"")
         for arq in sorted(PASTA_EXTENSAO.rglob("*")):
             if not arq.is_file() or arq.name.startswith("."):
                 continue
             nome = "alchemypet-lis/" + arq.relative_to(PASTA_EXTENSAO).as_posix()
             if arq.name == "manifest.json":
-                z.writestr(nome, json.dumps(manifesto, ensure_ascii=False, indent=2))
+                conteudo = json.dumps(manifesto, ensure_ascii=False, indent=2).encode("utf-8")
             elif arq.name == "config.js":
-                z.writestr(nome, f"// Gerado no download.\nself.ALCHEMYPET_API = {json.dumps(api)};\n")
+                conteudo = f"// Gerado no download.\nself.ALCHEMYPET_API = {json.dumps(api)};\n".encode("utf-8")
             else:
-                z.write(arq, nome)
+                conteudo = arq.read_bytes()
+            z.writestr(entrada(nome), conteudo)
     return buf.getvalue()
