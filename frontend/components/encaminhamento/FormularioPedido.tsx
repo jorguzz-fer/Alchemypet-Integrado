@@ -286,6 +286,8 @@ const PLANTA: Record<string, Peca[][]> = {
     [{ chave: 'clinica', peso: 7 }, { chave: 'data_coleta', peso: 3 }],
     [{ chave: 'veterinario', peso: 7 }, { chave: 'crmv', peso: 3, estilo: 'caixa', rotulo: 'CRMV (com carimbo)' }],
     [{ chave: 'responsavel', peso: 7.6, estilo: 'grade' }, { chave: 'cpf', peso: 2.4 }],
+    // Fora do impresso: o LaborLIS exige para cadastrar o responsável.
+    [{ chave: 'responsavel_sexo', peso: 5 }, { chave: 'responsavel_nascimento', peso: 5 }],
     [{ chave: 'paciente', peso: 10, estilo: 'grade' }],
     [{ chave: 'plano_saude', peso: 5.2 }, { chave: 'matricula', peso: 4.8 }],
     [{ chave: 'categoria_plano', peso: 10 }],

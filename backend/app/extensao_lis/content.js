@@ -182,20 +182,46 @@
 
   // Liga (ou desliga) a chave ao lado do texto (ex.: "Animal"). Devolve
   // true se a chave ficou como pedido.
+  // A chave é a mais próxima do texto na tela (Nome Social e Animal ficam
+  // no mesmo bloco: não pode pegar a vizinha).
+  function chaveDe(rot) {
+    if (rot.tagName === 'LABEL' && rot.htmlFor) {
+      const alvo = document.getElementById(rot.htmlFor);
+      if (alvo && alvo.type === 'checkbox') return alvo;
+    }
+    const dentro = rot.querySelector && rot.querySelector('input[type=checkbox]');
+    if (dentro) return dentro;
+    const r = rot.getBoundingClientRect();
+    const cy = r.top + r.height / 2;
+    let caixa = rot.parentElement;
+    for (let i = 0; i < 4 && caixa; i++, caixa = caixa.parentElement) {
+      const chks = Array.from(caixa.querySelectorAll('input[type=checkbox]')).filter((c) => !doPainel(c));
+      if (!chks.length) continue;
+      const pos = (c) => {
+        let el = c;
+        let b = el.getBoundingClientRect();
+        while ((b.width < 2 || b.height < 2) && el.parentElement) {
+          el = el.parentElement;
+          b = el.getBoundingClientRect();
+        }
+        return Math.abs(b.top + b.height / 2 - cy);
+      };
+      return chks.sort((a, b) => pos(a) - pos(b))[0];
+    }
+    return null;
+  }
+
+  // Liga (ou desliga) a chave ao lado do texto (ex.: "Animal"). Devolve
+  // true se a chave ficou como pedido.
   async function ligar(texto, valor = true) {
     for (const rot of rotulos(texto)) {
-      let caixa = rot.parentElement;
-      for (let i = 0; i < 3 && caixa; i++, caixa = caixa.parentElement) {
-        const chk = caixa.querySelector('input[type=checkbox]');
-        if (chk && !doPainel(chk)) {
-          if (chk.checked !== valor) {
-            (rot.tagName === 'LABEL' ? rot : chk).click();
-            await esperar(200);
-            if (chk.checked !== valor) chk.click();
-          }
-          return chk.checked === valor;
-        }
+      const chk = chaveDe(rot);
+      if (!chk) continue;
+      if (chk.checked !== valor) {
+        chk.click();
+        await esperar(250);
       }
+      return chk.checked === valor;
     }
     return false;
   }
@@ -301,6 +327,20 @@
     } else log.falta('Nome');
     if (await ligar('Animal', false)) log.ok('Animal', 'desligado (é uma pessoa)');
     else log.aviso('Animal', 'confira que a chave "Animal" está desligada');
+    const r = p.responsavel;
+    const sexo = campos('Sexo biológico')[0] || campos('Sexo')[0];
+    if (!r.sexo) log.aviso('Sexo biológico', 'não veio no pedido: escolha no LaborLIS');
+    else if (sexo && (await escolherOpcao(sexo, r.sexo === 'M' ? /^(m|masc)/ : /^(f|fem)/))) {
+      log.ok('Sexo biológico', r.sexo === 'M' ? 'Masculino' : 'Feminino');
+    } else log.aviso('Sexo biológico', `escolha ${r.sexo === 'M' ? 'masculino' : 'feminino'}`);
+    const nasc = campos('Nascimento')[0];
+    if (!r.nascimento) log.aviso('Nascimento', 'não veio no pedido: preencha no LaborLIS');
+    else if (nasc) {
+      const [dia, mes, ano] = r.nascimento.split('/');
+      definir(nasc, nasc.type === 'date' ? `${ano}-${mes}-${dia}` : r.nascimento);
+      sair(nasc);
+      log.ok('Nascimento', r.nascimento);
+    } else log.falta('Nascimento');
     if (p.responsavel.cpf) {
       const cpf = campos('CPF')[0];
       if (cpf) {

@@ -35,6 +35,10 @@ CAMPOS = [
     _c("crmv", "CRMV", "laudo", "texto", True, 2),
     _c("responsavel", "Nome completo do responsável", "laudo", "texto", True, 2),
     _c("cpf", "CPF", "laudo", "texto", False, 2),
+    # Fora do impresso: o LIS exige para cadastrar o responsável.
+    _c("responsavel_sexo", "Sexo biológico do responsável", "laudo", "opcao", True, 4, [
+        {"valor": "f", "rotulo": "Feminino"}, {"valor": "m", "rotulo": "Masculino"}]),
+    _c("responsavel_nascimento", "Nascimento do responsável", "laudo", "data", True, 4),
     _c("paciente", "Nome do paciente", "laudo", "texto", True, 1),
     _c("paciente_id", "ID", "laudo", "texto", False, 4),
     _c("plano_saude", "Plano de saúde", "laudo", "texto", False, 2),
