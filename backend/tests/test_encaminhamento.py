@@ -106,6 +106,15 @@ class EncaminhamentoTest(unittest.TestCase):
         self.assertIn("https://api.exemplo.com.br/*", m["host_permissions"])
         self.assertNotIn("http://localhost:8000/*", m["host_permissions"])
         self.assertIn('"https://api.exemplo.com.br"', z.read("alchemypet-lis/config.js").decode())
+        # Todo item com tipo e permissão (o Mac recusa o .zip sem isso).
+        import stat
+        for info in z.infolist():
+            modo = info.external_attr >> 16
+            if info.is_dir():
+                self.assertTrue(stat.S_ISDIR(modo), info.filename)
+            else:
+                self.assertTrue(stat.S_ISREG(modo), info.filename)
+                self.assertEqual(stat.S_IMODE(modo), 0o644, info.filename)
 
     def test_obrigatorios_e_campos_condicionais(self):
         with self.assertRaises(HTTPException) as e:
