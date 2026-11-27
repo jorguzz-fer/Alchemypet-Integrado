@@ -46,8 +46,8 @@ export default function LoginPage() {
         width={200}
         height={39}
       />
-      <h1>Painel Convênio</h1>
-      <p className="login-sub">Entre para gerenciar as pendências de convênio.</p>
+      <h1>Alchemypet Integrado</h1>
+      <p className="login-sub">Entre com o seu e-mail e senha.</p>
 
       <form onSubmit={submeter}>
         <div className="field">
